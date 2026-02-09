@@ -645,7 +645,10 @@
 
         <!-- Driver Info (when logged in) -->
         <div class="driver-info-section" id="driverInfoSection" style="display: none;">
-            <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 12px; padding: 16px; margin-bottom: 16px; text-align: center;">
+            <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 12px; padding: 16px; margin-bottom: 16px; text-align: center; position: relative;">
+                <button onclick="logout()" style="position: absolute; top: 10px; left: 10px; background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 4px;">
+                    <span>🚪</span> خروج
+                </button>
                 <div style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">مرحباً</div>
                 <div style="font-size: 20px; font-weight: 700; color: #1e40af;" id="loggedInDriverName"></div>
                 <div style="font-size: 13px; color: #6b7280; margin-top: 4px;">الرقم الوظيفي: <span id="loggedInStaffNumber" style="direction: ltr;"></span></div>
@@ -827,6 +830,18 @@
                 } catch (e) {
                     console.log('No valid session found');
                 }
+            }
+        }
+
+        // Logout function - تسجيل الخروج
+        function logout() {
+            if (confirm('هل تريد تسجيل الخروج؟')) {
+                // Clear session
+                localStorage.removeItem('userSession');
+                localStorage.removeItem('selected_driver');
+                
+                // Redirect to login page
+                window.location.href = 'login.html';
             }
         }
 
