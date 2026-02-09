@@ -229,30 +229,40 @@
 
         .install-btn {
             display: none;
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+            width: auto;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
             color: var(--white);
             border: none;
-            border-radius: 10px;
-            font-size: 14px;
+            border-radius: 25px;
+            font-size: 13px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
             font-family: inherit;
             margin-top: 16px;
-            gap: 8px;
+            gap: 6px;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
         }
 
         .install-btn:hover {
             transform: translateY(-2px);
-            box-shadow: var(--shadow-lg);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
         }
 
         .install-btn.show {
-            display: flex;
+            display: inline-flex;
+        }
+
+        .install-btn .device-icon {
+            font-size: 16px;
+        }
+
+        .install-container {
+            text-align: center;
+            margin-top: 20px;
         }
 
         .input-icon {
@@ -351,9 +361,12 @@
             </button>
         </form>
 
-        <button class="install-btn" id="installBtn" onclick="installApp()">
-            📲 <span data-ar="تثبيت التطبيق" data-en="Install App">تثبيت التطبيق</span>
-        </button>
+        <div class="install-container">
+            <button class="install-btn" id="installBtn" onclick="installApp()">
+                <span class="device-icon" id="deviceIcon">📱</span>
+                <span data-ar="تثبيت التطبيق" data-en="Install App" id="installText">تثبيت التطبيق</span>
+            </button>
+        </div>
 
         <p class="footer-text" data-ar="© 2026 مركز حاسك الصحي - جميع الحقوق محفوظة" data-en="© 2026 Hasik Health Center - All Rights Reserved">© 2026 مركز حاسك الصحي - جميع الحقوق محفوظة</p>
     </div>
@@ -460,6 +473,9 @@
 
         // Check if app can be installed
         function checkInstallPrompt() {
+            // Detect device type and update icon
+            updateDeviceIcon();
+            
             window.addEventListener('beforeinstallprompt', (e) => {
                 e.preventDefault();
                 deferredPrompt = e;
@@ -471,6 +487,33 @@
                 document.getElementById('installBtn').classList.remove('show');
                 deferredPrompt = null;
             });
+        }
+
+        // Detect device type and update install button icon
+        function updateDeviceIcon() {
+            const deviceIcon = document.getElementById('deviceIcon');
+            const installText = document.getElementById('installText');
+            const userAgent = navigator.userAgent.toLowerCase();
+            
+            if (/android/i.test(userAgent)) {
+                // Android phone
+                deviceIcon.textContent = '📱';
+            } else if (/iphone|ipad|ipod/i.test(userAgent)) {
+                // iOS device
+                deviceIcon.textContent = '🍏';
+            } else if (/windows/i.test(userAgent)) {
+                // Windows PC
+                deviceIcon.textContent = '💻';
+            } else if (/macintosh|mac os x/i.test(userAgent)) {
+                // Mac
+                deviceIcon.textContent = '🖥️';
+            } else if (/linux/i.test(userAgent)) {
+                // Linux
+                deviceIcon.textContent = '🖥️';
+            } else {
+                // Default
+                deviceIcon.textContent = '📲';
+            }
         }
 
         // Install app
