@@ -567,9 +567,67 @@
                 font-size: 20px;
             }
         }
+        /* Connection Status Indicator */
+        .connection-status {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 8px 16px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+            z-index: 1000;
+            transition: all 0.3s;
+            display: none;
+        }
+
+        .connection-status.offline {
+            display: block;
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: white;
+        }
+
+        .connection-status.syncing {
+            display: block;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        .connection-status.synced {
+            display: block;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            animation: fadeOut 3s forwards;
+        }
+
+        @keyframes fadeOut {
+            0%, 70% { opacity: 1; }
+            100% { opacity: 0; display: none; }
+        }
+
+        .offline-badge {
+            display: inline-block;
+            background: #fef3c7;
+            color: #92400e;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        body.offline-mode .main-card {
+            border: 2px solid #f59e0b;
+        }
     </style>
 </head>
 <body>
+    <!-- Connection Status Bar -->
+    <div class="connection-status" id="connectionStatus">
+        <span id="connectionText"></span>
+    </div>
+
     <div class="header">
         <img src="moh-logo.png" alt="شعار وزارة الصحة" class="logo">
         <h1>المديرية العامة للخدمات الصحية بمحافظة ظفار</h1>
@@ -580,9 +638,21 @@
         <div class="welcome-section">
             <h3>تسجيل رحلة الإسعاف</h3>
             <p>سجّل وقت الذهاب والعودة بضغطة زر</p>
+            <div class="offline-badge" id="offlineBadge" style="display: none;">
+                ⚠️ وضع عدم الاتصال - سيتم الحفظ محلياً
+            </div>
         </div>
 
-        <!-- Driver Selection -->
+        <!-- Driver Info (when logged in) -->
+        <div class="driver-info-section" id="driverInfoSection" style="display: none;">
+            <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 12px; padding: 16px; margin-bottom: 16px; text-align: center;">
+                <div style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">مرحباً</div>
+                <div style="font-size: 20px; font-weight: 700; color: #1e40af;" id="loggedInDriverName"></div>
+                <div style="font-size: 13px; color: #6b7280; margin-top: 4px;">الرقم الوظيفي: <span id="loggedInStaffNumber" style="direction: ltr;"></span></div>
+            </div>
+        </div>
+
+        <!-- Driver Selection (when not logged in or admin) -->
         <div class="driver-select-section" id="driverSelection">
             <div class="form-group">
                 <label>اختر اسمك</label>
@@ -717,31 +787,43 @@
             if (session) {
                 try {
                     const userData = JSON.parse(session);
-                    if (userData.type === 'driver') {
-                        // Find driver in list and auto-select
-                        const driverIndex = DRIVERS_DATA.findIndex(d => 
-                            d.staffNumber === userData.staffNumber
-                        );
-                        
-                        if (driverIndex >= 0) {
-                            document.getElementById('driverName').value = driverIndex;
-                            selectDriver();
-                        } else {
-                            // Driver logged in but not in list - add temporarily
-                            DRIVERS_DATA.push({
-                                nameAr: userData.nameAr,
-                                nameEn: userData.nameEn,
-                                staffNumber: userData.staffNumber,
-                                type: 'employee'
-                            });
-                            initializeDriverDropdown();
-                            document.getElementById('driverName').value = DRIVERS_DATA.length - 1;
-                            selectDriver();
-                        }
-                        
-                        // Store logged in user
+                    
+                    // Check if user is admin with driver access
+                    if (userData.type === 'admin' && userData.canAccessDriver) {
+                        // Admin can select any driver - show dropdown
+                        document.getElementById('driverSelection').style.display = 'block';
+                        document.getElementById('driverInfoSection').style.display = 'none';
                         window.loggedInUser = userData;
+                        return;
                     }
+                    
+                    if (userData.type === 'driver') {
+                        // Hide dropdown and show driver info
+                        document.getElementById('driverSelection').style.display = 'none';
+                        document.getElementById('driverInfoSection').style.display = 'block';
+                        document.getElementById('loggedInDriverName').textContent = userData.nameAr;
+                        document.getElementById('loggedInStaffNumber').textContent = userData.staffNumber;
+                        
+                        // Set selected driver from session
+                        selectedDriver = {
+                            nameAr: userData.nameAr,
+                            nameEn: userData.nameEn,
+                            staffNumber: userData.staffNumber,
+                            type: 'employee'
+                        };
+                        
+                        document.getElementById('staffNumber').value = userData.staffNumber;
+                        document.getElementById('actionButtons').style.display = 'flex';
+                        
+                        // Load pending trip and history
+                        loadPendingTrip();
+                        loadTripHistory();
+                        updateButtons();
+                        
+                        window.loggedInUser = userData;
+                        return;
+                    }
+                    
                 } catch (e) {
                     console.log('No valid session found');
                 }
@@ -903,8 +985,9 @@
             }
 
             // Disable button during submission
-            document.getElementById('btnDeparture').disabled = true;
-            document.getElementById('btnDeparture').innerHTML = '<span>جاري الإرسال...</span>';
+            const btn = document.getElementById('btnDeparture');
+            btn.disabled = true;
+            btn.innerHTML = '<span>جاري الإرسال...</span>';
 
             const now = new Date();
             const date = now.toISOString().split('T')[0];
@@ -924,46 +1007,42 @@
                 departureTime: time
             };
 
-            try {
-                // Send to Google Sheets
-                const response = await fetch(WEB_APP_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'text/plain' },
-                    body: JSON.stringify(tripData)
-                });
+            // Save locally first (always)
+            pendingTrip = {
+                ...tripData,
+                departureTimestamp: now.getTime(),
+                offlineSaved: !isOnline
+            };
+            const key = `pending_trip_${selectedDriver.staffNumber}`;
+            localStorage.setItem(key, JSON.stringify(pendingTrip));
 
-                // Save locally as backup
-                pendingTrip = {
-                    ...tripData,
-                    departureTimestamp: now.getTime()
-                };
+            // Schedule reminder notification
+            scheduleReminder(pendingTrip);
 
-                const key = `pending_trip_${selectedDriver.staffNumber}`;
-                localStorage.setItem(key, JSON.stringify(pendingTrip));
-
-                // Schedule reminder notification
-                scheduleReminder(pendingTrip);
-
-                showSuccess('تم تسجيل وقت الذهاب', `${date} - ${time}`);
-                loadPendingTrip();
-
-            } catch (error) {
-                console.error('Error:', error);
-                alert('حدث خطأ أثناء الإرسال. تم الحفظ محلياً.');
-                
-                // Save locally anyway
-                pendingTrip = {
-                    ...tripData,
-                    departureTimestamp: now.getTime()
-                };
-                const key = `pending_trip_${selectedDriver.staffNumber}`;
-                localStorage.setItem(key, JSON.stringify(pendingTrip));
-                loadPendingTrip();
+            if (isOnline) {
+                try {
+                    // Send to Google Sheets
+                    await fetch(WEB_APP_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'text/plain' },
+                        body: JSON.stringify(tripData)
+                    });
+                    showSuccess('تم تسجيل وقت الذهاب', `${date} - ${time}`);
+                } catch (error) {
+                    console.error('Error:', error);
+                    // Queue for later sync
+                    queueOfflineData(tripData);
+                    showSuccess('تم الحفظ محلياً', `${date} - ${time}\nسيتم الإرسال عند توفر الإنترنت`);
+                }
+            } else {
+                // Offline - queue for later
+                queueOfflineData(tripData);
+                showSuccess('تم الحفظ محلياً', `${date} - ${time}\n⚠️ سيتم الإرسال عند توفر الإنترنت`);
             }
 
-            // Reset button
-            document.getElementById('btnDeparture').innerHTML = '<span>تسجيل وقت الذهاب</span>';
+            loadPendingTrip();
+            btn.innerHTML = '<span>→ تسجيل وقت الذهاب</span>';
         }
 
         async function recordReturn() {
@@ -973,8 +1052,9 @@
             }
 
             // Disable button during submission
-            document.getElementById('btnReturn').disabled = true;
-            document.getElementById('btnReturn').innerHTML = '<span>جاري الإرسال...</span>';
+            const btn = document.getElementById('btnReturn');
+            btn.disabled = true;
+            btn.innerHTML = '<span>جاري الإرسال...</span>';
 
             const now = new Date();
             const date = now.toISOString().split('T')[0];
@@ -992,77 +1072,45 @@
                 returnTime: time
             };
 
-            console.log('🚗 [DRIVER] Sending return data:', JSON.stringify(returnData));
+            // Complete the trip locally first (always)
+            pendingTrip.returnDate = date;
+            pendingTrip.returnTime = time;
+            pendingTrip.returnTimestamp = now.getTime();
+            pendingTrip.status = 'complete';
 
-            try {
-                // Send to Google Sheets - Try with cors first, fallback to no-cors
-                let response;
-                let serverSuccess = false;
-                
+            // Save to history
+            saveTripToHistory(pendingTrip);
+            
+            // Update pending_trips_for_nurse in localStorage
+            updatePendingTripForNurseWithReturn(selectedDriver.staffNumber, date, time);
+
+            // Clear reminder
+            clearReminder();
+
+            // Clear pending
+            const key = `pending_trip_${selectedDriver.staffNumber}`;
+            localStorage.removeItem(key);
+            pendingTrip = null;
+
+            if (isOnline) {
                 try {
-                    // First attempt with regular fetch to get response
-                    response = await fetch(WEB_APP_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'text/plain' },
-                        body: JSON.stringify(returnData)
-                    });
-                    
-                    if (response.ok) {
-                        const result = await response.json();
-                        console.log('🚗 [DRIVER] Server response:', result);
-                        serverSuccess = result.success;
-                    }
-                } catch (corsError) {
-                    console.log('🚗 [DRIVER] CORS error, trying no-cors mode:', corsError.message);
-                    // Fallback to no-cors (can't read response but request is sent)
+                    // Send to Google Sheets
                     await fetch(WEB_APP_URL, {
                         method: 'POST',
                         mode: 'no-cors',
                         headers: { 'Content-Type': 'text/plain' },
                         body: JSON.stringify(returnData)
                     });
-                    console.log('🚗 [DRIVER] Request sent via no-cors (response unknown)');
+                    showSuccessAndReload('✅ تم تسجيل وقت العودة بنجاح!', 'الرحلة مكتملة - جاهز لتسجيل رحلة جديدة');
+                } catch (error) {
+                    console.error('Error:', error);
+                    queueOfflineData(returnData);
+                    showSuccessAndReload('✅ تم الحفظ محلياً', 'سيتم الإرسال عند توفر الإنترنت');
                 }
-
-                // Complete the trip locally
-                pendingTrip.returnDate = date;
-                pendingTrip.returnTime = time;
-                pendingTrip.returnTimestamp = now.getTime();
-                pendingTrip.status = 'complete';
-
-                // Save to history
-                saveTripToHistory(pendingTrip);
-                
-                // Also update pending_trips_for_nurse in localStorage with return data
-                updatePendingTripForNurseWithReturn(selectedDriver.staffNumber, date, time);
-
-                // Clear reminder
-                clearReminder();
-
-                // Clear pending
-                const key = `pending_trip_${selectedDriver.staffNumber}`;
-                localStorage.removeItem(key);
-                pendingTrip = null;
-
-                // Show success and reload page
-                showSuccessAndReload('✅ تم إرسال البيانات بنجاح!', 'الرحلة مكتملة - جاهز لتسجيل رحلة جديدة');
-
-            } catch (error) {
-                console.error('🚗 [DRIVER] Error:', error);
-                // Still complete locally
-                pendingTrip.returnDate = date;
-                pendingTrip.returnTime = time;
-                pendingTrip.status = 'complete';
-                saveTripToHistory(pendingTrip);
-                
-                // Also update pending_trips_for_nurse
-                updatePendingTripForNurseWithReturn(selectedDriver.staffNumber, date, time);
-                
-                const key = `pending_trip_${selectedDriver.staffNumber}`;
-                localStorage.removeItem(key);
-                pendingTrip = null;
-                
-                showSuccessAndReload('✅ تم الحفظ محلياً', 'سيتم المزامنة لاحقاً');
+            } else {
+                // Offline - queue for later
+                queueOfflineData(returnData);
+                showSuccessAndReload('✅ تم الحفظ محلياً', '⚠️ سيتم الإرسال عند توفر الإنترنت');
             }
         }
         
@@ -1385,51 +1433,134 @@
         setInterval(autoRefreshHistory, 10000);
 
         // ============================================
+        // OFFLINE SUPPORT | دعم العمل بدون إنترنت
+        // ============================================
+        let isOnline = navigator.onLine;
+        const OFFLINE_QUEUE_KEY = 'offline_trip_queue';
+
+        // Monitor connection status
+        function updateConnectionStatus() {
+            const statusBar = document.getElementById('connectionStatus');
+            const statusText = document.getElementById('connectionText');
+            const offlineBadge = document.getElementById('offlineBadge');
+            
+            if (navigator.onLine) {
+                isOnline = true;
+                document.body.classList.remove('offline-mode');
+                offlineBadge.style.display = 'none';
+                
+                // Check if we have queued data to sync
+                const queue = JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]');
+                if (queue.length > 0) {
+                    statusBar.className = 'connection-status syncing';
+                    statusText.textContent = '🔄 جاري مزامنة البيانات المحفوظة...';
+                    syncOfflineQueue();
+                } else {
+                    statusBar.className = 'connection-status';
+                }
+            } else {
+                isOnline = false;
+                document.body.classList.add('offline-mode');
+                offlineBadge.style.display = 'inline-block';
+                statusBar.className = 'connection-status offline';
+                statusText.textContent = '⚠️ لا يوجد اتصال بالإنترنت - سيتم حفظ البيانات محلياً';
+            }
+        }
+
+        // Queue data for offline sync
+        function queueOfflineData(data) {
+            const queue = JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]');
+            queue.push({
+                ...data,
+                queuedAt: new Date().toISOString()
+            });
+            localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue));
+        }
+
+        // Sync offline queue when back online
+        async function syncOfflineQueue() {
+            const queue = JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]');
+            if (queue.length === 0) return;
+
+            const statusBar = document.getElementById('connectionStatus');
+            const statusText = document.getElementById('connectionText');
+            
+            let successCount = 0;
+            const newQueue = [];
+
+            for (const item of queue) {
+                try {
+                    await fetch(WEB_APP_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'text/plain' },
+                        body: JSON.stringify(item)
+                    });
+                    successCount++;
+                } catch (error) {
+                    // Keep failed items in queue
+                    newQueue.push(item);
+                }
+            }
+
+            localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(newQueue));
+
+            if (successCount > 0) {
+                statusBar.className = 'connection-status synced';
+                statusText.textContent = `✅ تم مزامنة ${successCount} رحلة بنجاح`;
+                
+                // Refresh data
+                setTimeout(() => {
+                    loadPendingTrip();
+                    loadTripHistory();
+                }, 1000);
+            }
+
+            if (newQueue.length > 0) {
+                setTimeout(syncOfflineQueue, 30000); // Retry in 30 seconds
+            }
+        }
+
+        // Listen for online/offline events
+        window.addEventListener('online', () => {
+            updateConnectionStatus();
+        });
+
+        window.addEventListener('offline', () => {
+            updateConnectionStatus();
+        });
+
+        // Listen for sync messages from Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('message', event => {
+                if (event.data && event.data.type === 'SYNC_SUCCESS') {
+                    const statusBar = document.getElementById('connectionStatus');
+                    const statusText = document.getElementById('connectionText');
+                    statusBar.className = 'connection-status synced';
+                    statusText.textContent = '✅ ' + event.data.message;
+                    loadPendingTrip();
+                    loadTripHistory();
+                }
+            });
+        }
+
+        // ============================================
         // PWA
         // ============================================
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js')
-                .then(reg => console.log('Service Worker registered'))
+                .then(reg => {
+                    console.log('Service Worker registered');
+                    // Request background sync
+                    if ('sync' in reg) {
+                        reg.sync.register('sync-offline-data');
+                    }
+                })
                 .catch(err => console.log('Service Worker registration failed:', err));
         }
 
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            showInstallButton();
-        });
-
-        function showInstallButton() {
-            const installBanner = document.createElement('div');
-            installBanner.id = 'installBanner';
-            installBanner.innerHTML = `
-                <div style="position: fixed; bottom: 15px; left: 15px; right: 15px; background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: white; padding: 14px 18px; border-radius: 14px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); display: flex; justify-content: space-between; align-items: center; z-index: 1000; flex-wrap: wrap; gap: 10px;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span style="font-size: 24px;">📲</span>
-                        <div>
-                            <strong style="display: block; font-size: 14px;">تثبيت التطبيق</strong>
-                            <span style="font-size: 12px; opacity: 0.9;">أضف للشاشة الرئيسية</span>
-                        </div>
-                    </div>
-                    <button onclick="installApp()" style="background: white; color: #1e40af; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 700; cursor: pointer; font-family: inherit; font-size: 14px;">تثبيت</button>
-                </div>
-            `;
-            document.body.appendChild(installBanner);
-        }
-
-        function installApp() {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                deferredPrompt.userChoice.then((choiceResult) => {
-                    if (choiceResult.outcome === 'accepted') {
-                        console.log('User accepted install');
-                    }
-                    deferredPrompt = null;
-                    document.getElementById('installBanner')?.remove();
-                });
-            }
-        }
+        // Initialize connection status on load
+        updateConnectionStatus();
 
         // Initialize on load
         init();
