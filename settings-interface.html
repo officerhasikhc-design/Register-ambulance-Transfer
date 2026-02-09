@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إعدادات النظام - سجل نشاط الإسعاف</title>
+    
+    <!-- Open Graph Meta Tags for WhatsApp, Email, etc -->
+    <meta name="description" content="إعدادات نظام تسجيل رحلات الإسعاف - المديرية العامة للخدمات الصحية بمحافظة ظفار - مركز حاسك الصحي">
+    <meta property="og:title" content="إعدادات النظام - نظام سجل الإسعاف">
+    <meta property="og:description" content="إعدادات نظام تسجيل رحلات الإسعاف - المديرية العامة للخدمات الصحية بمحافظة ظفار - مركز حاسك الصحي">
+    <meta property="og:image" content="https://superabdoo88-jpg.github.io/Ambulance-Activity-Log/moh-logo.png">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="ar_OM">
+    <meta property="og:site_name" content="نظام سجل الإسعاف">
+    <link rel="icon" type="image/png" href="moh-logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #1e40af;
+            --light-blue: #3b82f6;
+            --lighter-blue: #eff6ff;
+            --dark-blue: #1e3a8a;
+            --bg-blue: #dbeafe;
+            --white: #ffffff;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --border-color: #d1d5db;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cairo', 'IBM Plex Sans Arabic', sans-serif;
+            background: linear-gradient(135deg, var(--bg-blue) 0%, var(--lighter-blue) 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--text-primary);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-logo {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+        }
+
+        .header-info h1 {
+            color: var(--primary-blue);
+            font-size: 22px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-subtitle {
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        .header-subtitle-en {
+            font-size: 11px;
+            color: var(--text-secondary);
+            opacity: 0.8;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .nav-link {
+            padding: 10px 16px;
+            background: var(--lighter-blue);
+            color: var(--primary-blue);
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 500;
+            font-size: 13px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-link:hover {
+            background: var(--primary-blue);
+            color: var(--white);
+        }
+
+        .section {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--lighter-blue);
+        }
+
+        .section-header h2 {
+            color: var(--primary-blue);
+            font-size: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--light-blue) 100%);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: var(--white);
+        }
+
+        .btn-danger {
+            background: var(--error);
+            color: var(--white);
+        }
+
+        .btn-secondary {
+            background: var(--lighter-blue);
+            color: var(--primary-blue);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 14px;
+            text-align: right;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .data-table th {
+            background: var(--lighter-blue);
+            color: var(--primary-blue);
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .data-table tr:hover {
+            background: var(--lighter-blue);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-employee {
+            background: #d1fae5;
+            color: var(--success);
+        }
+
+        .badge-daily {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .action-btn.edit {
+            background: var(--lighter-blue);
+            color: var(--primary-blue);
+        }
+
+        .action-btn.delete {
+            background: #fee2e2;
+            color: var(--error);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--white);
+            padding: 32px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--lighter-blue);
+        }
+
+        .modal-header h3 {
+            color: var(--primary-blue);
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+        }
+
+        .close-btn:hover {
+            background: var(--lighter-blue);
+            color: var(--primary-blue);
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        .info-box {
+            background: #fef3c7;
+            border: 1px solid #fcd34d;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .info-box-icon {
+            font-size: 20px;
+        }
+
+        .info-box p {
+            color: #92400e;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .nav-links {
+                flex-direction: column;
+            }
+
+            .section-header {
+                flex-direction: column;
+                gap: 12px;
+                align-items: stretch;
+            }
+
+            .data-table {
+                font-size: 12px;
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: 10px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-brand">
+                <img src="moh-logo.png" alt="شعار وزارة الصحة" class="header-logo">
+                <div class="header-info">
+                    <h1>⚙️ إعدادات النظام</h1>
+                    <p class="header-subtitle">المديرية العامة للخدمات الصحية بمحافظة ظفار</p>
+                    <p class="header-subtitle">ولاية سدح - مركز حاسك الصحي</p>
+                </div>
+            </div>
+            <div class="nav-links">
+                <a href="nurse-interface.html" class="nav-link">🏥 صفحة التمريض</a>
+                <a href="admin-interface.html" class="nav-link">📊 لوحة الإدارة</a>
+                <a href="driver-interface.html" class="nav-link">🚗 صفحة السائق</a>
+            </div>
+        </div>
+
+        <!-- Info Box -->
+        <div class="info-box">
+            <span class="info-box-icon">ℹ️</span>
+            <p>التغييرات التي تجريها هنا ستُحفظ في المتصفح المحلي. لمشاركة البيانات بين أجهزة متعددة، يُفضل استخدام Google Sheets كمصدر للبيانات.</p>
+        </div>
+
+        <!-- Drivers Section -->
+        <div class="section">
+            <div class="section-header">
+                <h2>👨‍✈️ إدارة السائقين</h2>
+                <button class="btn btn-primary" onclick="openDriverModal()">
+                    <span>+</span> إضافة سائق
+                </button>
+            </div>
+            <div id="driversTable"></div>
+        </div>
+
+        <!-- Vehicles Section -->
+        <div class="section">
+            <div class="section-header">
+                <h2>🚑 إدارة سيارات الإسعاف</h2>
+                <button class="btn btn-primary" onclick="openVehicleModal()">
+                    <span>+</span> إضافة سيارة
+                </button>
+            </div>
+            <div id="vehiclesTable"></div>
+        </div>
+
+        <!-- Export/Import Section -->
+        <div class="section">
+            <div class="section-header">
+                <h2>💾 تصدير واستيراد البيانات</h2>
+            </div>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <button class="btn btn-success" onclick="exportData()">تصدير البيانات</button>
+                <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">استيراد البيانات</button>
+                <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
+                <button class="btn btn-danger" onclick="resetToDefaults()">إعادة للافتراضي</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Driver Modal -->
+    <div id="driverModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="driverModalTitle">إضافة سائق جديد</h3>
+                <button class="close-btn" onclick="closeDriverModal()">×</button>
+            </div>
+            <form id="driverForm" onsubmit="saveDriver(event)">
+                <input type="hidden" id="driverIndex" value="-1">
+                <div class="form-group">
+                    <label>الاسم بالعربي</label>
+                    <input type="text" id="driverNameAr" required placeholder="مثال: سعد زايد الجنيبي">
+                </div>
+                <div class="form-group">
+                    <label>الاسم بالإنجليزي</label>
+                    <input type="text" id="driverNameEn" required placeholder="e.g., SAAD ZAID AL-JUNAIBI" style="direction: ltr; text-align: left;">
+                </div>
+                <div class="form-group">
+                    <label>نوع التوظيف</label>
+                    <select id="driverType" required onchange="updateStaffLabel()">
+                        <option value="employee">موظف (رقم وظيفي)</option>
+                        <option value="daily-paid">أجر يومي (رقم مدني)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label id="staffNumberLabel">الرقم الوظيفي</label>
+                    <input type="text" id="driverStaffNumber" required placeholder="مثال: 39121" style="direction: ltr; text-align: left;">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">حفظ</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeDriverModal()">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Vehicle Modal -->
+    <div id="vehicleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="vehicleModalTitle">إضافة سيارة جديدة</h3>
+                <button class="close-btn" onclick="closeVehicleModal()">×</button>
+            </div>
+            <form id="vehicleForm" onsubmit="saveVehicle(event)">
+                <input type="hidden" id="vehicleIndex" value="-1">
+                <div class="form-group">
+                    <label>رقم السيارة</label>
+                    <input type="text" id="vehicleNumberInput" required placeholder="مثال: 612-23" style="direction: ltr; text-align: left;">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">حفظ</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeVehicleModal()">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Default data
+        const DEFAULT_DRIVERS = [
+            {
+                nameAr: 'سعد زايد الجنيبي',
+                nameEn: 'SAAD ZAID AL-JUNAIBI',
+                staffNumber: '39121',
+                type: 'employee'
+            },
+            {
+                nameAr: 'حسان ثابت رجب',
+                nameEn: 'HASSAN THABIT RAJAB',
+                staffNumber: '222975657',
+                type: 'daily-paid'
+            },
+            {
+                nameAr: 'محمد الرضه علي',
+                nameEn: 'MOHAMMED AL-RUDHA ALI',
+                staffNumber: '39634',
+                type: 'employee'
+            },
+            {
+                nameAr: 'عبدالعزيز مسلم النقش',
+                nameEn: 'ABDULAZIZ MUSALLEM AL-NAQSH',
+                staffNumber: '65870',
+                type: 'employee'
+            }
+        ];
+
+        const DEFAULT_VEHICLES = [
+            { number: '612-23' }
+        ];
+
+        // Load data from localStorage or use defaults
+        let drivers = JSON.parse(localStorage.getItem('ambulance_drivers')) || [...DEFAULT_DRIVERS];
+        let vehicles = JSON.parse(localStorage.getItem('ambulance_vehicles')) || [...DEFAULT_VEHICLES];
+
+        // Save data to localStorage
+        function saveToStorage() {
+            localStorage.setItem('ambulance_drivers', JSON.stringify(drivers));
+            localStorage.setItem('ambulance_vehicles', JSON.stringify(vehicles));
+        }
+
+        // Render drivers table
+        function renderDriversTable() {
+            const container = document.getElementById('driversTable');
+            
+            if (drivers.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">👨‍✈️</div>
+                        <p>لا يوجد سائقين مسجلين</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>الاسم بالعربي</th>
+                            <th>الاسم بالإنجليزي</th>
+                            <th>الرقم</th>
+                            <th>النوع</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${drivers.map((driver, index) => `
+                            <tr>
+                                <td><strong>${driver.nameAr}</strong></td>
+                                <td style="direction: ltr; text-align: right;">${driver.nameEn}</td>
+                                <td style="direction: ltr;">${driver.staffNumber}</td>
+                                <td>
+                                    <span class="badge ${driver.type === 'employee' ? 'badge-employee' : 'badge-daily'}">
+                                        ${driver.type === 'employee' ? 'موظف' : 'أجر يومي'}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="action-btns">
+                                        <button class="action-btn edit" onclick="editDriver(${index})">تعديل</button>
+                                        <button class="action-btn delete" onclick="deleteDriver(${index})">حذف</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // Render vehicles table
+        function renderVehiclesTable() {
+            const container = document.getElementById('vehiclesTable');
+            
+            if (vehicles.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🚑</div>
+                        <p>لا توجد سيارات مسجلة</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>رقم السيارة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${vehicles.map((vehicle, index) => `
+                            <tr>
+                                <td style="direction: ltr; text-align: right;"><strong>${vehicle.number}</strong></td>
+                                <td>
+                                    <div class="action-btns">
+                                        <button class="action-btn edit" onclick="editVehicle(${index})">تعديل</button>
+                                        <button class="action-btn delete" onclick="deleteVehicle(${index})">حذف</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // Driver Modal functions
+        function openDriverModal(index = -1) {
+            document.getElementById('driverIndex').value = index;
+            
+            if (index >= 0) {
+                document.getElementById('driverModalTitle').textContent = 'تعديل بيانات السائق';
+                document.getElementById('driverNameAr').value = drivers[index].nameAr;
+                document.getElementById('driverNameEn').value = drivers[index].nameEn;
+                document.getElementById('driverType').value = drivers[index].type;
+                document.getElementById('driverStaffNumber').value = drivers[index].staffNumber;
+            } else {
+                document.getElementById('driverModalTitle').textContent = 'إضافة سائق جديد';
+                document.getElementById('driverForm').reset();
+            }
+            
+            updateStaffLabel();
+            document.getElementById('driverModal').classList.add('active');
+        }
+
+        function closeDriverModal() {
+            document.getElementById('driverModal').classList.remove('active');
+        }
+
+        function updateStaffLabel() {
+            const type = document.getElementById('driverType').value;
+            const label = document.getElementById('staffNumberLabel');
+            const input = document.getElementById('driverStaffNumber');
+            
+            if (type === 'daily-paid') {
+                label.textContent = 'الرقم المدني';
+                input.placeholder = 'مثال: 222975657';
+            } else {
+                label.textContent = 'الرقم الوظيفي';
+                input.placeholder = 'مثال: 39121';
+            }
+        }
+
+        function saveDriver(event) {
+            event.preventDefault();
+            
+            const index = parseInt(document.getElementById('driverIndex').value);
+            const driver = {
+                nameAr: document.getElementById('driverNameAr').value.trim(),
+                nameEn: document.getElementById('driverNameEn').value.trim().toUpperCase(),
+                staffNumber: document.getElementById('driverStaffNumber').value.trim(),
+                type: document.getElementById('driverType').value
+            };
+
+            if (index >= 0) {
+                drivers[index] = driver;
+            } else {
+                drivers.push(driver);
+            }
+
+            saveToStorage();
+            renderDriversTable();
+            closeDriverModal();
+        }
+
+        function editDriver(index) {
+            openDriverModal(index);
+        }
+
+        function deleteDriver(index) {
+            if (confirm(`هل تريد حذف السائق "${drivers[index].nameAr}"؟`)) {
+                drivers.splice(index, 1);
+                saveToStorage();
+                renderDriversTable();
+            }
+        }
+
+        // Vehicle Modal functions
+        function openVehicleModal(index = -1) {
+            document.getElementById('vehicleIndex').value = index;
+            
+            if (index >= 0) {
+                document.getElementById('vehicleModalTitle').textContent = 'تعديل بيانات السيارة';
+                document.getElementById('vehicleNumberInput').value = vehicles[index].number;
+            } else {
+                document.getElementById('vehicleModalTitle').textContent = 'إضافة سيارة جديدة';
+                document.getElementById('vehicleForm').reset();
+            }
+            
+            document.getElementById('vehicleModal').classList.add('active');
+        }
+
+        function closeVehicleModal() {
+            document.getElementById('vehicleModal').classList.remove('active');
+        }
+
+        function saveVehicle(event) {
+            event.preventDefault();
+            
+            const index = parseInt(document.getElementById('vehicleIndex').value);
+            const vehicle = {
+                number: document.getElementById('vehicleNumberInput').value.trim()
+            };
+
+            if (index >= 0) {
+                vehicles[index] = vehicle;
+            } else {
+                vehicles.push(vehicle);
+            }
+
+            saveToStorage();
+            renderVehiclesTable();
+            closeVehicleModal();
+        }
+
+        function editVehicle(index) {
+            openVehicleModal(index);
+        }
+
+        function deleteVehicle(index) {
+            if (confirm(`هل تريد حذف السيارة "${vehicles[index].number}"؟`)) {
+                vehicles.splice(index, 1);
+                saveToStorage();
+                renderVehiclesTable();
+            }
+        }
+
+        // Export/Import functions
+        function exportData() {
+            const data = {
+                drivers: drivers,
+                vehicles: vehicles,
+                exportDate: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `ambulance_settings_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (data.drivers && Array.isArray(data.drivers)) {
+                        drivers = data.drivers;
+                    }
+                    if (data.vehicles && Array.isArray(data.vehicles)) {
+                        vehicles = data.vehicles;
+                    }
+                    
+                    saveToStorage();
+                    renderDriversTable();
+                    renderVehiclesTable();
+                    alert('تم استيراد البيانات بنجاح!');
+                } catch (error) {
+                    alert('خطأ في قراءة الملف. تأكد من أن الملف بتنسيق JSON صحيح.');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        function resetToDefaults() {
+            if (confirm('هل تريد إعادة البيانات للقيم الافتراضية؟ سيتم حذف جميع التغييرات.')) {
+                drivers = [...DEFAULT_DRIVERS];
+                vehicles = [...DEFAULT_VEHICLES];
+                saveToStorage();
+                renderDriversTable();
+                renderVehiclesTable();
+                alert('تم إعادة البيانات للقيم الافتراضية.');
+            }
+        }
+
+        // Initialize
+        renderDriversTable();
+        renderVehiclesTable();
+    </script>
+</body>
+</html>

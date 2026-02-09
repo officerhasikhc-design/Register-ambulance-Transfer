@@ -1,0 +1,2039 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ambulance Activity Log - Hasik Health Center</title>
+    
+    <!-- Open Graph Meta Tags for WhatsApp, Email, etc -->
+    <meta name="description" content="Ambulance Trip Registration and Documentation System - Hasik Health Center">
+    <meta property="og:title" content="Ambulance Trip Registration - Hasik Health Center">
+    <meta property="og:description" content="Ambulance Trip Registration and Documentation System - Hasik Health Center">
+    <meta property="og:image" content="https://superabdoo88-jpg.github.io/Ambulance-Activity-Log/moh-logo.png">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:site_name" content="Hasik Health Center">
+    <link rel="icon" type="image/png" href="moh-logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #1e40af;
+            --light-blue: #3b82f6;
+            --lighter-blue: #eff6ff;
+            --dark-blue: #1e3a8a;
+            --bg-blue: #dbeafe;
+            --white: #ffffff;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --border-color: #d1d5db;
+            --success: #10b981;
+            --success-light: #d1fae5;
+            --warning: #f59e0b;
+            --warning-light: #fef3c7;
+            --error: #ef4444;
+            --error-light: #fee2e2;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, var(--bg-blue) 0%, var(--lighter-blue) 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--text-primary);
+        }
+
+        [dir="rtl"] body {
+            font-family: 'Cairo', 'IBM Plex Sans', sans-serif;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* Header with Logo */
+        .header {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-logo {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+        }
+
+        .header-title {
+            flex: 1;
+        }
+
+        .header-title h1 {
+            color: var(--primary-blue);
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .header-title p {
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .header-title .subtitle-en {
+            font-size: 11px;
+            color: var(--text-secondary);
+            opacity: 0.8;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .lang-switch {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--lighter-blue);
+            padding: 4px;
+            border-radius: 10px;
+        }
+
+        .lang-btn {
+            padding: 8px 14px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-size: 13px;
+        }
+
+        .lang-btn.active {
+            background: var(--primary-blue);
+            color: var(--white);
+            box-shadow: 0 2px 8px rgba(30, 64, 175, 0.3);
+        }
+
+        .lang-btn:hover:not(.active) {
+            background: rgba(30, 64, 175, 0.1);
+        }
+
+        .nav-link {
+            padding: 10px 16px;
+            background: var(--lighter-blue);
+            color: var(--primary-blue);
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 500;
+            font-size: 13px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-link:hover {
+            background: var(--primary-blue);
+            color: var(--white);
+        }
+
+        /* Pending Trips Alert */
+        .pending-trips-alert {
+            background: var(--warning-light);
+            border: 2px solid var(--warning);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 24px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+        }
+
+        .pending-trips-alert h3 {
+            color: #92400e;
+            font-size: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pending-trip-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .pending-trip-info {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .btn-use-trip {
+            align-self: flex-start;
+        }
+
+        .pending-trip-info div {
+            font-size: 14px;
+        }
+
+        .pending-trip-info strong {
+            display: block;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 2px;
+        }
+
+        .btn-use-trip {
+            padding: 10px 20px;
+            background: var(--primary-blue);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-use-trip:hover {
+            background: var(--dark-blue);
+            transform: translateY(-2px);
+        }
+
+        /* Form Card */
+        .form-card {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+        }
+
+        .form-header {
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--lighter-blue);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .form-header-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--light-blue) 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: var(--white);
+        }
+
+        .form-header h2 {
+            color: var(--primary-blue);
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            padding: 14px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 15px;
+            transition: all 0.2s;
+            background: var(--white);
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.1);
+        }
+
+        .form-group input.error,
+        .form-group select.error {
+            border-color: var(--error);
+            background: var(--error-light);
+        }
+        
+        /* Shake animation for empty fields */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+            20%, 40%, 60%, 80% { transform: translateX(4px); }
+        }
+        
+        @keyframes pulse-border {
+            0%, 100% { border-color: #ef4444; box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            50% { border-color: #dc2626; box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1); }
+        }
+        
+        .field-error,
+        .time-select.field-error,
+        select.field-error,
+        input.field-error,
+        textarea.field-error {
+            animation: shake 0.5s ease-in-out, pulse-border 1s ease-in-out 2 !important;
+            border-color: #ef4444 !important;
+            background: #fef2f2 !important;
+        }
+        
+        .field-error-label {
+            color: #ef4444 !important;
+        }
+        
+        /* Ensure validation message is visible */
+        .validation-message.show {
+            display: flex !important;
+            animation: shake 0.3s ease-in-out;
+        }
+
+        input[type="date"] {
+            direction: ltr;
+            text-align: left;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        /* Time Picker - 12 Hour Format */
+        .time-picker-container {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .time-select {
+            padding: 14px 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 15px;
+            background: var(--white);
+            cursor: pointer;
+            min-width: 70px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .time-select:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.1);
+        }
+
+        .time-select.error {
+            border-color: var(--error);
+            background: var(--error-light);
+        }
+
+        .time-separator {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-secondary);
+        }
+
+        .ampm-select {
+            padding: 14px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            background: var(--lighter-blue);
+            cursor: pointer;
+            min-width: 65px;
+            text-align: center;
+            transition: all 0.2s;
+            color: var(--primary-blue);
+        }
+
+        .ampm-select:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--light-blue) 100%);
+            color: var(--white);
+            box-shadow: 0 4px 15px rgba(30, 64, 175, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(30, 64, 175, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: var(--lighter-blue);
+            color: var(--primary-blue);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-blue);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+
+        /* Validation Message */
+        .validation-message {
+            display: none;
+            background: var(--error-light);
+            border: 1px solid var(--error);
+            color: #991b1b;
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .validation-message.show {
+            display: flex;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--white);
+            padding: 32px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: var(--shadow-xl);
+            animation: slideUp 0.3s;
+            text-align: center;
+        }
+
+        .modal-icon {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 20px;
+            background: var(--success-light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+        }
+
+        .modal h3 {
+            color: var(--text-primary);
+            font-size: 22px;
+            margin-bottom: 8px;
+        }
+
+        .modal p {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+            font-size: 15px;
+        }
+
+        /* Records Section */
+        .records-section {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .records-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .records-header h2 {
+            color: var(--primary-blue);
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group select {
+            padding: 10px 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 14px;
+            background: var(--white);
+        }
+
+        .stats-card {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--light-blue) 100%);
+            padding: 12px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(30, 64, 175, 0.3);
+        }
+
+        .stats-card strong {
+            color: var(--white);
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .stats-card span {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 13px;
+        }
+
+        .record-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+
+        .record-table th,
+        .record-table td {
+            padding: 14px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .record-table th {
+            background: var(--lighter-blue);
+            color: var(--primary-blue);
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .record-table td {
+            font-size: 14px;
+        }
+
+        .record-table tr:hover {
+            background: var(--lighter-blue);
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn.view {
+            background: var(--lighter-blue);
+            color: var(--primary-blue);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 48px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 56px;
+            margin-bottom: 16px;
+            opacity: 0.4;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* RTL Support */
+        [dir="rtl"] .header,
+        [dir="rtl"] .form-card,
+        [dir="rtl"] .records-section {
+            text-align: right;
+        }
+
+        [dir="rtl"] .record-table th,
+        [dir="rtl"] .record-table td {
+            text-align: right;
+        }
+
+        [dir="rtl"] .time-picker-container {
+            direction: ltr;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .header-brand {
+                justify-content: center;
+            }
+
+            .header-actions {
+                justify-content: center;
+            }
+
+            .record-table {
+                font-size: 12px;
+            }
+
+            .record-table th,
+            .record-table td {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-brand">
+                <img src="moh-logo.png" alt="MOH Logo" class="header-logo">
+                <div class="header-title">
+                    <h1 data-en="Ambulance Activity Log" data-ar="سجل نشاط الإسعاف">Ambulance Activity Log</h1>
+                    <p data-en="Directorate General of Health Services - Dhofar" data-ar="المديرية العامة للخدمات الصحية - ظفار">Directorate General of Health Services - Dhofar</p>
+                    <p data-en="Sadah Wilayat - Hasik Health Center" data-ar="ولاية سدح - مركز حاسك الصحي">Sadah Wilayat - Hasik Health Center</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="lang-switch">
+                    <button class="lang-btn active" data-lang="en">EN</button>
+                    <button class="lang-btn" data-lang="ar">عربي</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Trips from Drivers -->
+        <div class="pending-trips-alert" id="pendingTripsAlert">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h3 data-en="🚗 Driver Trips" data-ar="🚗 رحلات السائقين" style="margin: 0;">🚗 Driver Trips</h3>
+                <button onclick="loadPendingTrips(true, true)" style="background: #92400e; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 13px;" data-en="🔄 Refresh" data-ar="🔄 تحديث">🔄 Refresh</button>
+            </div>
+            <div id="pendingTripsContainer">
+                <div style="background: white; padding: 16px; border-radius: 10px; text-align: center; color: #6b7280;">
+                    <span data-en="No pending trips from drivers" data-ar="لا توجد رحلات قيد الانتظار">No pending trips from drivers</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Registration Form -->
+        <div class="form-card">
+            <div class="form-header">
+                <div class="form-header-icon">🚑</div>
+                <h2 data-en="Register New Ambulance Case" data-ar="تسجيل حالة إسعاف جديدة">Register New Ambulance Case</h2>
+            </div>
+
+            <!-- Validation Message -->
+            <div class="validation-message" id="validationMessage">
+                <span>⚠️</span>
+                <span id="validationText"></span>
+            </div>
+
+            <form id="ambulanceForm" novalidate>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label data-en="Vehicle Number" data-ar="رقم السيارة">Vehicle Number</label>
+                        <select id="vehicleNumber" required>
+                            <option value="" data-en="Select Vehicle" data-ar="اختر السيارة">Select Vehicle</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label data-en="Driver Name" data-ar="اسم السائق">Driver Name</label>
+                        <select id="driverName" required onchange="updateStaffNumber()">
+                            <option value="" data-en="Select Driver" data-ar="اختر السائق">Select Driver</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label data-en="Staff Number" data-ar="الرقم الوظيفي">Staff Number</label>
+                        <input type="text" id="staffNumber" required readonly style="background: #f3f4f6; cursor: not-allowed;">
+                    </div>
+                    <div class="form-group">
+                        <label data-en="Departure Date" data-ar="تاريخ المغادرة">Departure Date</label>
+                        <input type="date" id="departureDate" required onchange="validateDates()">
+                    </div>
+                    <div class="form-group">
+                        <label data-en="Departure Time" data-ar="ساعة المغادرة">Departure Time</label>
+                        <div class="time-picker-container">
+                            <select id="departureTimeHour" class="time-select" required onchange="validateTimes()">
+                                <option value="">--</option>
+                            </select>
+                            <span class="time-separator">:</span>
+                            <select id="departureTimeMinute" class="time-select" required onchange="validateTimes()">
+                                <option value="">--</option>
+                            </select>
+                            <select id="departureTimeAmPm" class="ampm-select" onchange="validateTimes()">
+                                <option value="AM">AM</option>
+                                <option value="PM">PM</option>
+                            </select>
+                            <input type="hidden" id="departureTime">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label data-en="Return Date" data-ar="تاريخ العودة">Return Date</label>
+                        <input type="date" id="returnDate" required onchange="validateDates()">
+                    </div>
+                    <div class="form-group">
+                        <label data-en="Return Time" data-ar="ساعة العودة">Return Time</label>
+                        <div class="time-picker-container">
+                            <select id="returnTimeHour" class="time-select" required onchange="validateTimes()">
+                                <option value="">--</option>
+                            </select>
+                            <span class="time-separator">:</span>
+                            <select id="returnTimeMinute" class="time-select" required onchange="validateTimes()">
+                                <option value="">--</option>
+                            </select>
+                            <select id="returnTimeAmPm" class="ampm-select" onchange="validateTimes()">
+                                <option value="AM">AM</option>
+                                <option value="PM">PM</option>
+                            </select>
+                            <input type="hidden" id="returnTime">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label data-en="Transfer Destination" data-ar="الجهة المحول إليها">Transfer Destination</label>
+                        <input type="text" id="destination" required data-placeholder-en="e.g., Hospital/Center name" data-placeholder-ar="مثال: اسم المستشفى/المركز">
+                    </div>
+                    <div class="form-group full-width">
+                        <label data-en="Patient Condition / Diagnosis" data-ar="حالة المريض / التشخيص">Patient Condition / Diagnosis</label>
+                        <textarea id="diagnosis" required data-placeholder-en="Enter patient condition and diagnosis..." data-placeholder-ar="أدخل حالة المريض والتشخيص..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label data-en="Registered By (Nurse Name)" data-ar="المسجل (اسم الممرضة)">Registered By (Nurse Name)</label>
+                        <input type="text" id="nurseName" required>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="submitBtn" data-en="📤 Submit Record" data-ar="📤 إرسال السجل">📤 Submit Record</button>
+                    <button type="button" class="btn btn-secondary" onclick="resetForm()" data-en="🗑️ Clear Form" data-ar="🗑️ مسح النموذج">🗑️ Clear Form</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Records Section -->
+        <div class="records-section">
+            <div class="records-header">
+                <h2 data-en="📋 Previous Records" data-ar="📋 السجلات السابقة">📋 Previous Records</h2>
+                <div class="filter-group">
+                    <select id="yearFilter">
+                        <option value="2026">2026</option>
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                    </select>
+                    <select id="monthFilter">
+                        <option value="all" data-en="All Months" data-ar="كل الشهور">All Months</option>
+                        <option value="1" data-en="January" data-ar="يناير">January</option>
+                        <option value="2" data-en="February" data-ar="فبراير">February</option>
+                        <option value="3" data-en="March" data-ar="مارس">March</option>
+                        <option value="4" data-en="April" data-ar="أبريل">April</option>
+                        <option value="5" data-en="May" data-ar="مايو">May</option>
+                        <option value="6" data-en="June" data-ar="يونيو">June</option>
+                        <option value="7" data-en="July" data-ar="يوليو">July</option>
+                        <option value="8" data-en="August" data-ar="أغسطس">August</option>
+                        <option value="9" data-en="September" data-ar="سبتمبر">September</option>
+                        <option value="10" data-en="October" data-ar="أكتوبر">October</option>
+                        <option value="11" data-en="November" data-ar="نوفمبر">November</option>
+                        <option value="12" data-en="December" data-ar="ديسمبر">December</option>
+                    </select>
+                    <div class="stats-card">
+                        <strong id="totalCount">0</strong>
+                        <span data-en="cases" data-ar="حالة">cases</span>
+                    </div>
+                </div>
+            </div>
+            <div id="recordsContainer"></div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-icon">✓</div>
+            <h3 data-en="Record Submitted Successfully" data-ar="تم إرسال السجل بنجاح">Record Submitted Successfully</h3>
+            <p data-en="The ambulance case has been registered and notification sent." data-ar="تم تسجيل حالة الإسعاف وإرسال الإشعار.">The ambulance case has been registered and notification sent.</p>
+            <button class="btn btn-primary" onclick="closeModal()" data-en="Close" data-ar="إغلاق">Close</button>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // 🔍 DIAGNOSTIC SCRIPT - سكريبت التشخيص
+        // ============================================
+        const DIAGNOSTIC_MODE = false; // Set to true to enable diagnostics
+        
+        function diagLog(category, message, data = null) {
+            if (!DIAGNOSTIC_MODE) return;
+            const timestamp = new Date().toLocaleTimeString('en-US', { hour12: true });
+            const prefix = `[${timestamp}] [${category}]`;
+            if (data) {
+                console.log(`%c${prefix} ${message}`, 'color: #1e40af; font-weight: bold;', data);
+            } else {
+                console.log(`%c${prefix} ${message}`, 'color: #1e40af; font-weight: bold;');
+            }
+        }
+        
+        // Diagnostic Panel UI
+        function createDiagnosticPanel() {
+            if (!DIAGNOSTIC_MODE) return;
+            
+            const panel = document.createElement('div');
+            panel.id = 'diagnosticPanel';
+            panel.innerHTML = `
+                <style>
+                    #diagnosticPanel {
+                        position: fixed;
+                        bottom: 10px;
+                        right: 10px;
+                        width: 400px;
+                        max-height: 300px;
+                        background: #1f2937;
+                        color: #10b981;
+                        font-family: monospace;
+                        font-size: 11px;
+                        border-radius: 8px;
+                        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                        z-index: 9999;
+                        overflow: hidden;
+                    }
+                    #diagHeader {
+                        background: #111827;
+                        padding: 8px 12px;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        cursor: move;
+                    }
+                    #diagHeader h4 { margin: 0; color: #f59e0b; }
+                    #diagContent {
+                        padding: 10px;
+                        max-height: 200px;
+                        overflow-y: auto;
+                    }
+                    #diagLog { white-space: pre-wrap; }
+                    .diag-btn {
+                        background: #374151;
+                        color: white;
+                        border: none;
+                        padding: 4px 8px;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        margin: 2px;
+                        font-size: 10px;
+                    }
+                    .diag-btn:hover { background: #4b5563; }
+                    .diag-success { color: #10b981; }
+                    .diag-error { color: #ef4444; }
+                    .diag-warning { color: #f59e0b; }
+                    .diag-info { color: #3b82f6; }
+                </style>
+                <div id="diagHeader">
+                    <h4>🔍 Diagnostic Panel</h4>
+                    <div>
+                        <button class="diag-btn" onclick="runFullDiagnostic()">🔄 Full Test</button>
+                        <button class="diag-btn" onclick="diagnoseGoogleSheets()">📊 Raw Data</button>
+                        <button class="diag-btn" onclick="testDriverReturn()">🚗 Test Return</button>
+                        <button class="diag-btn" onclick="clearDiagLog()">🗑️ Clear</button>
+                        <button class="diag-btn" onclick="toggleDiagPanel()">_</button>
+                    </div>
+                </div>
+                <div id="diagContent">
+                    <div id="diagLog">Diagnostic ready. Click "Full Test" to start.</div>
+                </div>
+            `;
+            document.body.appendChild(panel);
+        }
+        
+        function addDiagMessage(type, message) {
+            const log = document.getElementById('diagLog');
+            if (!log) return;
+            const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+            const typeClass = type === 'success' ? 'diag-success' : 
+                              type === 'error' ? 'diag-error' : 
+                              type === 'warning' ? 'diag-warning' : 'diag-info';
+            log.innerHTML += `\n<span class="${typeClass}">[${time}] ${message}</span>`;
+            log.parentElement.scrollTop = log.parentElement.scrollHeight;
+        }
+        
+        function clearDiagLog() {
+            const log = document.getElementById('diagLog');
+            if (log) log.innerHTML = 'Log cleared.';
+        }
+        
+        function toggleDiagPanel() {
+            const content = document.getElementById('diagContent');
+            content.style.display = content.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        // Main diagnostic function
+        async function runFullDiagnostic() {
+            addDiagMessage('info', '========== STARTING FULL DIAGNOSTIC ==========');
+            
+            // Step 1: Test API Connection
+            addDiagMessage('info', '1️⃣ Testing Google Sheets API connection...');
+            await testGoogleSheetsConnection();
+            
+            // Step 2: Check PendingTrips data
+            addDiagMessage('info', '2️⃣ Fetching PendingTrips from Google Sheets...');
+            await checkPendingTripsData();
+            
+            // Step 3: Check localStorage
+            addDiagMessage('info', '3️⃣ Checking localStorage data...');
+            checkLocalStorage();
+            
+            // Step 4: Check data format
+            addDiagMessage('info', '4️⃣ Analyzing data format issues...');
+            analyzeDataFormat();
+            
+            addDiagMessage('success', '========== DIAGNOSTIC COMPLETE ==========');
+        }
+        
+        async function testGoogleSheetsConnection() {
+            try {
+                const startTime = Date.now();
+                const response = await fetch(`${WEB_APP_URL}?action=getPendingTrips`);
+                const endTime = Date.now();
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addDiagMessage('success', `✅ API Connected (${endTime - startTime}ms)`);
+                    addDiagMessage('info', `   Response: success=${data.success}, trips=${data.trips?.length || 0}`);
+                    return data;
+                } else {
+                    addDiagMessage('error', `❌ API Error: HTTP ${response.status}`);
+                    return null;
+                }
+            } catch (error) {
+                addDiagMessage('error', `❌ API Connection Failed: ${error.message}`);
+                return null;
+            }
+        }
+        
+        async function checkPendingTripsData() {
+            try {
+                const response = await fetch(`${WEB_APP_URL}?action=getPendingTrips`);
+                const result = await response.json();
+                
+                if (result.success && result.trips) {
+                    addDiagMessage('success', `✅ Found ${result.trips.length} trips in Google Sheets`);
+                    
+                    result.trips.forEach((trip, i) => {
+                        const hasReturnDate = trip.returnDate && trip.returnDate.trim() !== '';
+                        const hasReturnTime = trip.returnTime && trip.returnTime.trim() !== '';
+                        const status = trip.status || 'unknown';
+                        
+                        addDiagMessage('info', `   Trip ${i+1}: ${trip.driverName}`);
+                        addDiagMessage('info', `      Staff#: ${trip.staffNumber}`);
+                        addDiagMessage('info', `      Status: ${status}`);
+                        addDiagMessage('info', `      Departure: ${trip.departureDate} ${trip.departureTime}`);
+                        addDiagMessage(hasReturnDate ? 'success' : 'warning', 
+                            `      Return Date: "${trip.returnDate}" (${hasReturnDate ? 'EXISTS' : 'EMPTY'})`);
+                        addDiagMessage(hasReturnTime ? 'success' : 'warning', 
+                            `      Return Time: "${trip.returnTime}" (${hasReturnTime ? 'EXISTS' : 'EMPTY'})`);
+                        
+                        // Check for data type issues
+                        if (typeof trip.returnDate !== 'string') {
+                            addDiagMessage('error', `      ⚠️ returnDate type: ${typeof trip.returnDate}`);
+                        }
+                        if (typeof trip.returnTime !== 'string') {
+                            addDiagMessage('error', `      ⚠️ returnTime type: ${typeof trip.returnTime}`);
+                        }
+                    });
+                } else {
+                    addDiagMessage('warning', '⚠️ No trips found or API error');
+                }
+            } catch (error) {
+                addDiagMessage('error', `❌ Error fetching trips: ${error.message}`);
+            }
+        }
+        
+        function checkLocalStorage() {
+            const localTrips = localStorage.getItem('pending_trips_for_nurse');
+            if (localTrips) {
+                try {
+                    const trips = JSON.parse(localTrips);
+                    addDiagMessage('info', `   localStorage has ${trips.length} trips`);
+                    trips.forEach((trip, i) => {
+                        addDiagMessage('info', `   Local Trip ${i+1}: ${trip.driverName}, status=${trip.status}`);
+                    });
+                } catch (e) {
+                    addDiagMessage('error', `   ❌ localStorage parse error: ${e.message}`);
+                }
+            } else {
+                addDiagMessage('warning', '   ⚠️ No trips in localStorage');
+            }
+        }
+        
+        function analyzeDataFormat() {
+            if (currentPendingTrips && currentPendingTrips.length > 0) {
+                currentPendingTrips.forEach((trip, i) => {
+                    // Check date format
+                    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+                    const timeRegex = /^\d{1,2}:\d{2}\s*(AM|PM)$/i;
+                    
+                    if (trip.departureDate && !dateRegex.test(trip.departureDate)) {
+                        addDiagMessage('warning', `   Trip ${i+1}: departureDate format issue: "${trip.departureDate}"`);
+                    }
+                    if (trip.returnDate && trip.returnDate.trim() !== '' && !dateRegex.test(trip.returnDate)) {
+                        addDiagMessage('warning', `   Trip ${i+1}: returnDate format issue: "${trip.returnDate}"`);
+                    }
+                    if (trip.departureTime && !timeRegex.test(trip.departureTime)) {
+                        addDiagMessage('warning', `   Trip ${i+1}: departureTime format issue: "${trip.departureTime}"`);
+                    }
+                    if (trip.returnTime && trip.returnTime.trim() !== '' && !timeRegex.test(trip.returnTime)) {
+                        addDiagMessage('warning', `   Trip ${i+1}: returnTime format issue: "${trip.returnTime}"`);
+                    }
+                });
+            } else {
+                addDiagMessage('warning', '   No trips loaded in currentPendingTrips');
+            }
+        }
+        
+        // Diagnose raw data from Google Sheets
+        async function diagnoseGoogleSheets() {
+            addDiagMessage('info', '========== FETCHING RAW DATA FROM GOOGLE SHEETS ==========');
+            
+            try {
+                const response = await fetch(`${WEB_APP_URL}?action=diagnosePendingTrips`);
+                const result = await response.json();
+                
+                if (result.success && result.diagnosis) {
+                    const diag = result.diagnosis;
+                    
+                    addDiagMessage('success', `✅ Sheet exists: ${diag.sheetExists}`);
+                    addDiagMessage('info', `   Has data: ${diag.hasData}`);
+                    addDiagMessage('info', `   Total rows: ${diag.totalRows || 0}`);
+                    
+                    if (diag.headers) {
+                        addDiagMessage('info', `   Headers: ${diag.headers.join(', ')}`);
+                    }
+                    
+                    if (diag.rows && diag.rows.length > 0) {
+                        diag.rows.forEach((row, i) => {
+                            addDiagMessage('info', `\n   === ROW ${row.rowNumber} ===`);
+                            addDiagMessage('info', `   Driver: ${row.driverName}`);
+                            addDiagMessage('info', `   Staff#: ${row.staffNumber} (type: ${row.staffNumberType})`);
+                            addDiagMessage('info', `   Status: ${row.status.stringValue} (type: ${row.status.type})`);
+                            
+                            // Return Date analysis
+                            if (row.returnDate.isEmpty) {
+                                addDiagMessage('error', `   ❌ Return Date: EMPTY`);
+                            } else {
+                                addDiagMessage('success', `   ✅ Return Date: "${row.returnDate.stringValue}" (type: ${row.returnDate.type})`);
+                            }
+                            
+                            // Return Time analysis
+                            if (row.returnTime.isEmpty) {
+                                addDiagMessage('error', `   ❌ Return Time: EMPTY`);
+                            } else {
+                                addDiagMessage('success', `   ✅ Return Time: "${row.returnTime.stringValue}" (type: ${row.returnTime.type})`);
+                            }
+                        });
+                    }
+                } else {
+                    addDiagMessage('error', `❌ Diagnosis failed: ${result.error || 'Unknown error'}`);
+                }
+            } catch (error) {
+                addDiagMessage('error', `❌ Error: ${error.message}`);
+            }
+            
+            addDiagMessage('info', '========== RAW DATA DIAGNOSIS COMPLETE ==========');
+        }
+        
+        // Test driver return - simulate driver recording return
+        async function testDriverReturn(staffNumber) {
+            if (!staffNumber) {
+                staffNumber = prompt('Enter Staff Number to test (e.g., 39634):');
+                if (!staffNumber) return;
+            }
+            
+            addDiagMessage('info', `========== TESTING DRIVER RETURN FOR ${staffNumber} ==========`);
+            
+            const now = new Date();
+            const date = now.toISOString().split('T')[0];
+            let hours = now.getHours();
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12 || 12;
+            const time = `${hours}:${minutes} ${ampm}`;
+            
+            const returnData = {
+                action: 'driverReturn',
+                staffNumber: staffNumber,
+                returnDate: date,
+                returnTime: time
+            };
+            
+            addDiagMessage('info', `   Sending: ${JSON.stringify(returnData)}`);
+            
+            try {
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify(returnData)
+                });
+                
+                const result = await response.json();
+                addDiagMessage('success', `   ✅ Response: ${JSON.stringify(result)}`);
+                
+                if (result.success) {
+                    addDiagMessage('success', `   ✅ Return recorded successfully!`);
+                    addDiagMessage('info', `   Now click "Raw Data" to verify the update in Google Sheets`);
+                } else {
+                    addDiagMessage('error', `   ❌ Failed: ${result.error}`);
+                }
+            } catch (error) {
+                addDiagMessage('error', `   ❌ Error: ${error.message}`);
+                addDiagMessage('warning', `   Trying with no-cors mode...`);
+                
+                try {
+                    await fetch(WEB_APP_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'text/plain' },
+                        body: JSON.stringify(returnData)
+                    });
+                    addDiagMessage('warning', `   Request sent (no-cors) - cannot verify response`);
+                } catch (e2) {
+                    addDiagMessage('error', `   ❌ no-cors also failed: ${e2.message}`);
+                }
+            }
+            
+            addDiagMessage('info', '========== TEST COMPLETE ==========');
+        }
+        
+        // Initialize diagnostic panel on load
+        document.addEventListener('DOMContentLoaded', () => {
+            if (DIAGNOSTIC_MODE) {
+                createDiagnosticPanel();
+                addDiagMessage('info', '🚀 Diagnostic mode enabled');
+                addDiagMessage('info', 'Click "Full Test" to run complete diagnostic');
+            }
+        });
+        
+        // ============================================
+        // CONFIGURATION
+        // ============================================
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzgjramV6C5fGt3QM1je34oRXAbfje__vrbxJGoBkkOo2oodydEcdUfkB4avqf2-PR8lg/exec';
+
+        // ============================================
+        // LANGUAGE
+        // ============================================
+        let currentLang = 'en';
+        const langBtns = document.querySelectorAll('.lang-btn');
+
+        langBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                currentLang = btn.dataset.lang;
+                langBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                updateLanguage();
+            });
+        });
+
+        function updateLanguage() {
+            const dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+            document.documentElement.setAttribute('dir', dir);
+            document.documentElement.setAttribute('lang', currentLang);
+
+            document.querySelectorAll('[data-en]').forEach(el => {
+                const text = el.dataset[currentLang];
+                if (text) {
+                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                        el.placeholder = text;
+                    } else {
+                        el.textContent = text;
+                    }
+                }
+            });
+
+            // Update placeholders
+            document.querySelectorAll('[data-placeholder-en]').forEach(el => {
+                el.placeholder = el.dataset[`placeholder${currentLang === 'en' ? 'En' : 'Ar'}`] || '';
+            });
+
+            initializeDropdowns();
+            loadRecords();
+            loadPendingTrips();
+        }
+
+        // ============================================
+        // TIME PICKER - 12 Hour Format with all minutes
+        // ============================================
+        function initializeTimePickers() {
+            const hourSelects = ['departureTimeHour', 'returnTimeHour'];
+            const minuteSelects = ['departureTimeMinute', 'returnTimeMinute'];
+
+            // Hours 1-12
+            hourSelects.forEach(id => {
+                const select = document.getElementById(id);
+                select.innerHTML = '<option value="">--</option>';
+                for (let h = 1; h <= 12; h++) {
+                    select.innerHTML += `<option value="${h}">${h}</option>`;
+                }
+            });
+
+            // Minutes 00-59 (all minutes, not just 5-minute intervals)
+            minuteSelects.forEach(id => {
+                const select = document.getElementById(id);
+                select.innerHTML = '<option value="">--</option>';
+                for (let m = 0; m < 60; m++) {
+                    const minute = m.toString().padStart(2, '0');
+                    select.innerHTML += `<option value="${minute}">${minute}</option>`;
+                }
+            });
+        }
+
+        function updateTimeInputs() {
+            const depHour = document.getElementById('departureTimeHour').value;
+            const depMin = document.getElementById('departureTimeMinute').value;
+            const depAmPm = document.getElementById('departureTimeAmPm').value;
+            if (depHour && depMin) {
+                document.getElementById('departureTime').value = `${depHour}:${depMin} ${depAmPm}`;
+            }
+
+            const retHour = document.getElementById('returnTimeHour').value;
+            const retMin = document.getElementById('returnTimeMinute').value;
+            const retAmPm = document.getElementById('returnTimeAmPm').value;
+            if (retHour && retMin) {
+                document.getElementById('returnTime').value = `${retHour}:${retMin} ${retAmPm}`;
+            }
+        }
+
+        // ============================================
+        // VALIDATION - Return time must be after departure
+        // ============================================
+        function convertTo24Hour(hour, minute, ampm) {
+            let h = parseInt(hour);
+            if (ampm === 'PM' && h !== 12) h += 12;
+            if (ampm === 'AM' && h === 12) h = 0;
+            return h * 60 + parseInt(minute);
+        }
+
+        function validateDates() {
+            const depDate = document.getElementById('departureDate').value;
+            const retDate = document.getElementById('returnDate').value;
+
+            if (depDate && retDate && retDate < depDate) {
+                showValidation(currentLang === 'en' 
+                    ? 'Return date cannot be before departure date!' 
+                    : 'تاريخ العودة لا يمكن أن يكون قبل تاريخ المغادرة!');
+                document.getElementById('returnDate').classList.add('error');
+                return false;
+            }
+
+            document.getElementById('returnDate').classList.remove('error');
+            hideValidation();
+            return true;
+        }
+
+        function validateTimes() {
+            updateTimeInputs();
+            // Note: Time validation removed because drivers record current time automatically
+            // It's not possible for return time to be before departure time in normal usage
+            // The system automatically captures the current time when driver clicks return
+            return true;
+        }
+
+        function showValidation(message) {
+            const msgDiv = document.getElementById('validationMessage');
+            document.getElementById('validationText').textContent = message;
+            msgDiv.classList.add('show');
+        }
+
+        function hideValidation() {
+            document.getElementById('validationMessage').classList.remove('show');
+        }
+        
+        // Scroll to field with error and focus it
+        function scrollToField(fieldId) {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                setTimeout(() => field.focus(), 300);
+            }
+        }
+        
+        // Show ALL field errors at once with shake animation
+        function showAllFieldErrors(emptyFields) {
+            // Remove previous error classes
+            document.querySelectorAll('.field-error').forEach(el => {
+                el.classList.remove('field-error');
+            });
+            document.querySelectorAll('.field-error-label').forEach(el => {
+                el.classList.remove('field-error-label');
+            });
+            
+            // Collect field names for message
+            const fieldNames = [];
+            const uniqueNames = new Set();
+            
+            // Add error class to ALL empty elements
+            emptyFields.forEach(({ element, name }) => {
+                element.classList.add('field-error');
+                
+                // Find and highlight the label
+                let formGroup = element.closest('.form-group');
+                if (!formGroup) {
+                    formGroup = element.closest('.time-picker-container')?.closest('.form-group');
+                }
+                
+                if (formGroup) {
+                    const label = formGroup.querySelector('label');
+                    if (label) label.classList.add('field-error-label');
+                }
+                
+                // Add unique field names
+                if (!uniqueNames.has(name)) {
+                    uniqueNames.add(name);
+                    fieldNames.push(name);
+                }
+            });
+            
+            // Show validation message with all field names
+            const message = `Please fill in: ${fieldNames.join(', ')}`;
+            showValidation(message);
+            
+            // Scroll to first empty field
+            if (emptyFields.length > 0) {
+                scrollToField(emptyFields[0].element.id);
+            }
+            
+            // Remove error classes after animation
+            setTimeout(() => {
+                document.querySelectorAll('.field-error').forEach(el => {
+                    el.classList.remove('field-error');
+                });
+                document.querySelectorAll('.field-error-label').forEach(el => {
+                    el.classList.remove('field-error-label');
+                });
+                hideValidation();
+            }, 4000);
+        }
+
+        // ============================================
+        // PENDING TRIPS FROM DRIVERS
+        // ============================================
+        // Cache and loading state for pending trips
+        let cachedPendingTrips = null;
+        let isLoadingPendingTrips = false;
+        
+        async function loadPendingTrips(showLoading = true, forceRefresh = false) {
+            const container = document.getElementById('pendingTripsContainer');
+            
+            // Clear cache if force refresh
+            if (forceRefresh) {
+                cachedPendingTrips = null;
+            }
+            
+            // Show loading
+            if (showLoading) {
+                container.innerHTML = `
+                    <div style="background: white; padding: 16px; border-radius: 10px; text-align: center; color: #6b7280;">
+                        <span>... ${currentLang === 'en' ? 'Loading...' : 'جاري التحميل...'}</span>
+                    </div>
+                `;
+            }
+            
+            // Prevent multiple simultaneous loads
+            if (isLoadingPendingTrips) return;
+            isLoadingPendingTrips = true;
+
+            try {
+                // Fetch from Google Sheets
+                const response = await fetch(`${WEB_APP_URL}?action=getPendingTrips`);
+                const result = await response.json();
+                
+                isLoadingPendingTrips = false;
+                
+                if (result.success && result.trips) {
+                    cachedPendingTrips = result.trips;
+                    displayPendingTrips(result.trips);
+                } else {
+                    // Fallback to localStorage or cache
+                    if (cachedPendingTrips) {
+                        displayPendingTrips(cachedPendingTrips);
+                    } else {
+                        const localTrips = JSON.parse(localStorage.getItem('pending_trips_for_nurse')) || [];
+                        displayPendingTrips(localTrips.filter(t => !t.submittedToSystem));
+                    }
+                }
+            } catch (error) {
+                isLoadingPendingTrips = false;
+                // Fallback to cache or localStorage
+                if (cachedPendingTrips) {
+                    displayPendingTrips(cachedPendingTrips);
+                } else {
+                    const localTrips = JSON.parse(localStorage.getItem('pending_trips_for_nurse')) || [];
+                    displayPendingTrips(localTrips.filter(t => !t.submittedToSystem));
+                }
+            }
+        }
+
+        // Store trips globally for usePendingTrip function
+        let currentPendingTrips = [];
+
+        function displayPendingTrips(pendingTrips) {
+            const container = document.getElementById('pendingTripsContainer');
+            
+            // Store trips for later use
+            currentPendingTrips = pendingTrips || [];
+            localStorage.setItem('pending_trips_for_nurse', JSON.stringify(currentPendingTrips));
+
+            if (!pendingTrips || pendingTrips.length === 0) {
+                container.innerHTML = `
+                    <div style="background: white; padding: 16px; border-radius: 10px; text-align: center; color: #6b7280;">
+                        <span>${currentLang === 'en' ? 'No pending trips from drivers' : 'لا توجد رحلات قيد الانتظار من السائقين'}</span>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = pendingTrips.map((trip, index) => {
+                // Check if return is recorded (status is complete OR return date/time exists and not empty/null)
+                const returnDateExists = trip.returnDate && trip.returnDate.toString().trim() !== '' && trip.returnDate !== 'null' && trip.returnDate !== 'undefined';
+                const returnTimeExists = trip.returnTime && trip.returnTime.toString().trim() !== '' && trip.returnTime !== 'null' && trip.returnTime !== 'undefined';
+                const hasReturn = trip.status === 'complete' || (returnDateExists && returnTimeExists);
+                
+                const tripIdDisplay = trip.tripId || '-';
+                
+                return `
+                <div class="pending-trip-card" id="trip-card-${index}" data-trip-id="${trip.tripId}" style="border-right: 4px solid ${hasReturn ? '#10b981' : '#f59e0b'}; transition: all 0.4s ease-out;">
+                    <div class="pending-trip-info">
+                        <div style="grid-column: span 2; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                            <span style="background: #e0e7ff; color: #1e40af; padding: 4px 10px; border-radius: 8px; font-size: 13px; font-weight: 700;">
+                                ${tripIdDisplay}
+                            </span>
+                            <span style="background: ${hasReturn ? '#d1fae5' : '#fef3c7'}; color: ${hasReturn ? '#065f46' : '#92400e'}; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                                ${hasReturn ? 
+                                    (currentLang === 'en' ? '✓ Departure & Return Recorded' : '✓ تم تسجيل الذهاب والعودة') : 
+                                    (currentLang === 'en' ? '⏳ Departure Only - Waiting Return' : '⏳ ذهاب فقط - العودة لم تُسجل بعد')}
+                            </span>
+                        </div>
+                        <div>
+                            <strong>${currentLang === 'en' ? 'Driver' : 'السائق'}</strong>
+                            ${trip.driverName || trip.driverNameAr}
+                        </div>
+                        <div>
+                            <strong>${currentLang === 'en' ? 'Staff #' : 'الرقم الوظيفي'}</strong>
+                            ${trip.staffNumber}
+                        </div>
+                        <div>
+                            <strong>${currentLang === 'en' ? 'Departure' : 'الذهاب'}</strong>
+                            ${trip.departureDate} ${trip.departureTime}
+                        </div>
+                        <div>
+                            <strong>${currentLang === 'en' ? 'Return' : 'العودة'}</strong>
+                            ${hasReturn ? 
+                                `${trip.returnDate} ${trip.returnTime}` : 
+                                `<span style="color: #f59e0b; font-weight: 600;">${currentLang === 'en' ? 'Not recorded yet' : 'لم تُسجل بعد'}</span>`}
+                        </div>
+                    </div>
+                    <button class="btn-use-trip" onclick="usePendingTrip(${index})">
+                        ${currentLang === 'en' ? 'Complete Data' : 'إكمال البيانات'}
+                    </button>
+                </div>`;
+            }).join('');
+        }
+        
+        // Store the selected trip for animation after submit
+        let selectedTripIndex = null;
+        let selectedTripId = null;
+        
+        function usePendingTrip(index) {
+            // Use the globally stored trips (updated from Google Sheets)
+            const trip = currentPendingTrips[index];
+
+            if (!trip) return;
+            
+            // Store the selected trip info for later animation
+            selectedTripIndex = index;
+            selectedTripId = trip.tripId;
+
+            // Fill form with trip data
+            const driverSelect = document.getElementById('driverName');
+            for (let i = 0; i < driverSelect.options.length; i++) {
+                if (driverSelect.options[i].value === trip.driverName) {
+                    driverSelect.selectedIndex = i;
+                    updateStaffNumber();
+                    break;
+                }
+            }
+
+            // Helper function to parse date from various formats
+            function parseDate(dateValue) {
+                if (!dateValue) return '';
+                const dateStr = dateValue.toString().trim();
+                if (!dateStr) return '';
+                
+                // Already in YYYY-MM-DD format
+                if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+                    return dateStr;
+                }
+                
+                // Try to parse as Date object string (e.g., "Sat Feb 08 2026...")
+                try {
+                    const date = new Date(dateStr);
+                    if (!isNaN(date.getTime())) {
+                        return date.toISOString().split('T')[0];
+                    }
+                } catch (e) {}
+                
+                // Return as-is if can't parse
+                return dateStr;
+            }
+            
+            // Fill departure date
+            const depDate = parseDate(trip.departureDate);
+            if (depDate) {
+                document.getElementById('departureDate').value = depDate;
+            }
+            
+            // Parse departure time
+            if (trip.departureTime) {
+                const timeParts = trip.departureTime.toString().match(/(\d+):(\d+)\s*(AM|PM)/i);
+                if (timeParts) {
+                    document.getElementById('departureTimeHour').value = timeParts[1];
+                    document.getElementById('departureTimeMinute').value = timeParts[2];
+                    document.getElementById('departureTimeAmPm').value = timeParts[3].toUpperCase();
+                }
+            }
+
+            // Fill return date
+            const retDate = parseDate(trip.returnDate);
+            if (retDate) {
+                document.getElementById('returnDate').value = retDate;
+            }
+
+            // Parse return time
+            if (trip.returnTime && trip.returnTime.toString().trim() !== '') {
+                const timeParts = trip.returnTime.toString().match(/(\d+):(\d+)\s*(AM|PM)/i);
+                if (timeParts) {
+                    document.getElementById('returnTimeHour').value = timeParts[1];
+                    document.getElementById('returnTimeMinute').value = timeParts[2];
+                    document.getElementById('returnTimeAmPm').value = timeParts[3].toUpperCase();
+                }
+            }
+
+            updateTimeInputs();
+
+            // Scroll down to the form fields that need completion (destination field)
+            setTimeout(() => {
+                const destinationField = document.getElementById('destination');
+                if (destinationField) {
+                    destinationField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    destinationField.focus();
+                }
+            }, 500);
+        }
+
+        // ============================================
+        // DRIVERS AND VEHICLES DATA
+        // ============================================
+        const DEFAULT_DRIVERS = [
+            { nameAr: 'سعد زايد الجنيبي', nameEn: 'SAAD ZAID AL-JUNAIBI', staffNumber: '39121', type: 'employee' },
+            { nameAr: 'حسان ثابت رجب', nameEn: 'HASSAN THABIT RAJAB', staffNumber: '222975657', type: 'daily-paid' },
+            { nameAr: 'محمد الرضه علي', nameEn: 'MOHAMMED AL-RUDHA ALI', staffNumber: '39634', type: 'employee' },
+            { nameAr: 'عبدالعزيز مسلم النقش', nameEn: 'ABDULAZIZ MUSALLEM AL-NAQSH', staffNumber: '65870', type: 'employee' }
+        ];
+
+        const DEFAULT_VEHICLES = [{ number: '612-23' }];
+
+        const DRIVERS_DATA = JSON.parse(localStorage.getItem('ambulance_drivers')) || DEFAULT_DRIVERS;
+        const VEHICLES_DATA = JSON.parse(localStorage.getItem('ambulance_vehicles')) || DEFAULT_VEHICLES;
+
+        if (!localStorage.getItem('ambulance_drivers')) {
+            localStorage.setItem('ambulance_drivers', JSON.stringify(DEFAULT_DRIVERS));
+        }
+        if (!localStorage.getItem('ambulance_vehicles')) {
+            localStorage.setItem('ambulance_vehicles', JSON.stringify(DEFAULT_VEHICLES));
+        }
+
+        function initializeDropdowns() {
+            const vehicleSelect = document.getElementById('vehicleNumber');
+            vehicleSelect.innerHTML = `<option value="">${currentLang === 'en' ? 'Select Vehicle' : 'اختر السيارة'}</option>`;
+            VEHICLES_DATA.forEach(vehicle => {
+                vehicleSelect.innerHTML += `<option value="${vehicle.number}">${vehicle.number}</option>`;
+            });
+
+            const driverSelect = document.getElementById('driverName');
+            driverSelect.innerHTML = `<option value="">${currentLang === 'en' ? 'Select Driver' : 'اختر السائق'}</option>`;
+            DRIVERS_DATA.forEach(driver => {
+                const displayName = currentLang === 'en' ? driver.nameEn : driver.nameAr;
+                const typeLabel = driver.type === 'daily-paid' ? (currentLang === 'en' ? ' (Daily-paid)' : ' (أجر يومي)') : '';
+                driverSelect.innerHTML += `<option value="${driver.nameEn}" data-staff="${driver.staffNumber}" data-type="${driver.type}">${displayName}${typeLabel}</option>`;
+            });
+        }
+
+        function updateStaffNumber() {
+            const driverSelect = document.getElementById('driverName');
+            const staffInput = document.getElementById('staffNumber');
+            const selectedOption = driverSelect.options[driverSelect.selectedIndex];
+
+            if (selectedOption && selectedOption.dataset.staff) {
+                staffInput.value = selectedOption.dataset.staff;
+                if (selectedOption.dataset.type === 'daily-paid') {
+                    staffInput.style.background = '#fef3c7';
+                } else {
+                    staffInput.style.background = '#f3f4f6';
+                }
+            } else {
+                staffInput.value = '';
+                staffInput.style.background = '#f3f4f6';
+            }
+        }
+
+        // ============================================
+        // FORM SUBMISSION
+        // ============================================
+        document.getElementById('ambulanceForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Validate before submit and scroll to first error field
+            if (!validateDates()) {
+                scrollToField('returnDate');
+                return;
+            }
+            
+            if (!validateTimes()) {
+                scrollToField('returnTimeHour');
+                return;
+            }
+
+            // Check all required fields - highlight ALL empty fields at once
+            const requiredFields = [
+                { id: 'vehicleNumber', name: 'Vehicle Number' },
+                { id: 'driverName', name: 'Driver Name' },
+                { id: 'departureDate', name: 'Departure Date' },
+                { id: 'departureTimeHour', name: 'Departure Time' },
+                { id: 'departureTimeMinute', name: 'Departure Time' },
+                { id: 'returnDate', name: 'Return Date' },
+                { id: 'returnTimeHour', name: 'Return Time' },
+                { id: 'returnTimeMinute', name: 'Return Time' },
+                { id: 'destination', name: 'Destination' },
+                { id: 'diagnosis', name: 'Diagnosis' },
+                { id: 'nurseName', name: 'Nurse Name' }
+            ];
+            
+            // Find all empty fields
+            const emptyFields = [];
+            for (const field of requiredFields) {
+                const element = document.getElementById(field.id);
+                if (!element.value || element.value.trim() === '') {
+                    emptyFields.push({ element, name: field.name });
+                } else {
+                    element.classList.remove('error', 'field-error');
+                }
+            }
+            
+            // If there are empty fields, highlight all of them
+            if (emptyFields.length > 0) {
+                showAllFieldErrors(emptyFields);
+                return;
+            }
+
+            const submitBtn = document.getElementById('submitBtn');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = currentLang === 'en' ? 'Submitting...' : 'جاري الإرسال...';
+
+            updateTimeInputs();
+
+            const formData = {
+                action: 'submitCase',
+                vehicleNumber: document.getElementById('vehicleNumber').value,
+                driverName: document.getElementById('driverName').value,
+                staffNumber: document.getElementById('staffNumber').value,
+                departureDate: document.getElementById('departureDate').value,
+                departureTime: document.getElementById('departureTime').value,
+                returnDate: document.getElementById('returnDate').value,
+                returnTime: document.getElementById('returnTime').value,
+                destination: document.getElementById('destination').value,
+                diagnosis: document.getElementById('diagnosis').value,
+                nurseName: document.getElementById('nurseName').value
+            };
+
+            try {
+                let submitSuccess = false;
+                
+                // Try with regular fetch first to get response
+                try {
+                    const response = await fetch(WEB_APP_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain' },
+                        body: JSON.stringify(formData)
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        submitSuccess = result.success;
+                    }
+                } catch (corsError) {
+                    // Fallback to no-cors
+                    await fetch(WEB_APP_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'text/plain' },
+                        body: JSON.stringify(formData)
+                    });
+                    submitSuccess = true; // Assume success with no-cors
+                }
+
+                // Animate the selected trip card sliding out after successful submit
+                if (selectedTripId) {
+                    const tripIndex = currentPendingTrips.findIndex(t => t.tripId === selectedTripId);
+                    if (tripIndex !== -1) {
+                        const card = document.getElementById(`trip-card-${tripIndex}`);
+                        if (card) {
+                            card.style.transform = 'translateX(-100%)';
+                            card.style.opacity = '0';
+                            card.style.maxHeight = card.offsetHeight + 'px';
+                            setTimeout(() => {
+                                card.style.maxHeight = '0';
+                                card.style.padding = '0';
+                                card.style.margin = '0';
+                                card.style.overflow = 'hidden';
+                            }, 300);
+                        }
+                        // Remove from pending list
+                        currentPendingTrips.splice(tripIndex, 1);
+                        localStorage.setItem('pending_trips_for_nurse', JSON.stringify(currentPendingTrips));
+                    }
+                    selectedTripId = null;
+                    selectedTripIndex = null;
+                }
+                
+                document.getElementById('successModal').classList.add('active');
+                resetForm();
+                
+                // Refresh pending trips and records, then scroll appropriately
+                setTimeout(() => {
+                    loadRecords();
+                    loadPendingTrips();
+                    
+                    // Scroll to pending trips if there are more, otherwise to records
+                    setTimeout(() => {
+                        if (currentPendingTrips.length > 0) {
+                            document.getElementById('pendingTripsContainer').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        } else {
+                            document.getElementById('recordsContainer').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    }, 300);
+                }, 1000);
+                setTimeout(() => loadRecords(), 2500);
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert(currentLang === 'en' ? 'Error submitting. Check connection.' : 'خطأ في الإرسال. تحقق من الاتصال.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
+        });
+
+        function resetForm() {
+            document.getElementById('ambulanceForm').reset();
+            document.getElementById('staffNumber').style.background = '#f3f4f6';
+            hideValidation();
+        }
+
+        function closeModal() {
+            document.getElementById('successModal').classList.remove('active');
+        }
+
+        // ============================================
+        // LOAD RECORDS
+        // ============================================
+        async function loadRecords() {
+            const year = document.getElementById('yearFilter').value;
+            const month = document.getElementById('monthFilter').value;
+
+            try {
+                let url = `${WEB_APP_URL}?action=getAllRecords&year=${year}`;
+                if (month !== 'all') url += `&month=${month}`;
+
+                const response = await fetch(url);
+                const result = await response.json();
+
+                if (result.success) {
+                    displayRecords(result.data);
+                } else {
+                    console.error('Error:', result.error);
+                    displayRecords([]);
+                }
+            } catch (error) {
+                console.error('Error fetching records:', error);
+                displayRecords([]);
+            }
+        }
+
+        function displayRecords(records) {
+            document.getElementById('totalCount').textContent = records.length;
+            const container = document.getElementById('recordsContainer');
+
+            if (records.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <p>${currentLang === 'en' ? 'No records found' : 'لا توجد سجلات'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const tableHTML = `
+                <table class="record-table">
+                    <thead>
+                        <tr>
+                            <th>${currentLang === 'en' ? 'Date' : 'التاريخ'}</th>
+                            <th>${currentLang === 'en' ? 'Vehicle' : 'السيارة'}</th>
+                            <th>${currentLang === 'en' ? 'Driver' : 'السائق'}</th>
+                            <th>${currentLang === 'en' ? 'Destination' : 'الوجهة'}</th>
+                            <th>${currentLang === 'en' ? 'Nurse' : 'الممرضة'}</th>
+                            <th>${currentLang === 'en' ? 'Actions' : 'الإجراءات'}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${records.map(record => `
+                            <tr>
+                                <td>${record['Departure Date'] || ''}</td>
+                                <td><strong>${record['Vehicle Number'] || ''}</strong></td>
+                                <td>${record['Driver Name'] || ''}</td>
+                                <td>${record['Destination'] || ''}</td>
+                                <td>${record['Nurse Name'] || ''}</td>
+                                <td>
+                                    <div class="action-btns">
+                                        <button class="action-btn view" onclick='viewRecord(${JSON.stringify(record).replace(/'/g, "&apos;")})'>
+                                            ${currentLang === 'en' ? 'View' : 'عرض'}
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = tableHTML;
+        }
+
+        function viewRecord(record) {
+            alert(`
+${currentLang === 'en' ? 'Vehicle' : 'السيارة'}: ${record['Vehicle Number']}
+${currentLang === 'en' ? 'Driver' : 'السائق'}: ${record['Driver Name']}
+${currentLang === 'en' ? 'Staff #' : 'الرقم الوظيفي'}: ${record['Staff Number']}
+${currentLang === 'en' ? 'Departure' : 'المغادرة'}: ${record['Departure Date']} ${record['Departure Time']}
+${currentLang === 'en' ? 'Return' : 'العودة'}: ${record['Return Date']} ${record['Return Time']}
+${currentLang === 'en' ? 'Destination' : 'الوجهة'}: ${record['Destination']}
+${currentLang === 'en' ? 'Diagnosis' : 'التشخيص'}: ${record['Patient Condition / Diagnosis']}
+${currentLang === 'en' ? 'Nurse' : 'الممرضة'}: ${record['Nurse Name']}
+            `);
+        }
+
+        // ============================================
+        // FILTER LISTENERS
+        // ============================================
+        document.getElementById('yearFilter').addEventListener('change', loadRecords);
+        document.getElementById('monthFilter').addEventListener('change', loadRecords);
+
+        // ============================================
+        // INITIALIZE
+        // ============================================
+        // Set current year and month as default
+        const currentYear = new Date().getFullYear();
+        const currentMonth = new Date().getMonth() + 1;
+        document.getElementById('yearFilter').value = currentYear;
+        document.getElementById('monthFilter').value = currentMonth;
+
+        initializeTimePickers();
+        initializeDropdowns();
+        loadRecords();
+        loadPendingTrips();
+
+        // Smart auto-refresh - only update UI when data changes
+        // تحديث تلقائي ذكي - فقط عند وجود تغييرات في البيانات
+        let lastDataHash = '';
+        
+        async function smartRefreshPendingTrips() {
+            try {
+                const response = await fetch(`${WEB_APP_URL}?action=getPendingTrips`);
+                const result = await response.json();
+                
+                if (result.success && result.trips) {
+                    // Update cache
+                    cachedPendingTrips = result.trips;
+                    
+                    // Create a hash of the data to detect changes
+                    const newHash = JSON.stringify(result.trips.map(t => ({
+                        id: t.tripId,
+                        status: t.status,
+                        returnDate: t.returnDate,
+                        returnTime: t.returnTime
+                    })));
+                    
+                    if (newHash !== lastDataHash) {
+                        const hadPreviousData = lastDataHash !== '';
+                        lastDataHash = newHash;
+                        currentPendingTrips = result.trips;
+                        localStorage.setItem('pending_trips_for_nurse', JSON.stringify(result.trips));
+                        
+                        // Silent update without loading indicator
+                        displayPendingTrips(result.trips);
+                    }
+                }
+            } catch (error) {
+                console.error('Smart refresh error:', error);
+            }
+        }
+        
+        // Check for updates every 15 seconds
+        setInterval(smartRefreshPendingTrips, 15000);
+
+        // Add time select listeners
+        ['departureTimeHour', 'departureTimeMinute', 'departureTimeAmPm', 
+         'returnTimeHour', 'returnTimeMinute', 'returnTimeAmPm'].forEach(id => {
+            document.getElementById(id).addEventListener('change', updateTimeInputs);
+        });
+    </script>
+</body>
+</html>

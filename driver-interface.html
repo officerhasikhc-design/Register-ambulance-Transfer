@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1e40af">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="سجل الإسعاف">
+    
+    <!-- Open Graph Meta Tags for WhatsApp, Email, etc -->
+    <meta name="description" content="نظام تسجيل رحلات الإسعاف للسائقين - المديرية العامة للخدمات الصحية بمحافظة ظفار - مركز حاسك الصحي">
+    <meta property="og:title" content="تسجيل رحلة الإسعاف - مركز حاسك الصحي">
+    <meta property="og:description" content="نظام تسجيل رحلات الإسعاف للسائقين - المديرية العامة للخدمات الصحية بمحافظة ظفار - مركز حاسك الصحي">
+    <meta property="og:image" content="https://superabdoo88-jpg.github.io/Ambulance-Activity-Log/moh-logo.png">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="ar_OM">
+    <meta property="og:site_name" content="نظام سجل الإسعاف">
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="moh-logo.png">
+    <title>تسجيل رحلة الإسعاف - السائق</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #1e40af;
+            --light-blue: #3b82f6;
+            --lighter-blue: #eff6ff;
+            --dark-blue: #1e3a8a;
+            --bg-gradient: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #0ea5e9 100%);
+            --white: #ffffff;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --success: #10b981;
+            --success-light: #d1fae5;
+            --warning: #f59e0b;
+            --warning-light: #fef3c7;
+            --error: #ef4444;
+            --shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            --shadow-lg: 0 25px 50px rgba(0, 0, 0, 0.25);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+        }
+
+        .header {
+            text-align: center;
+            color: var(--white);
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .logo {
+            width: 70px;
+            height: 70px;
+            margin-bottom: 10px;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+        }
+
+        .header h1 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header h2 {
+            font-size: 14px;
+            font-weight: 600;
+            opacity: 0.9;
+        }
+
+        .main-card {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 24px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 20px;
+        }
+
+        .welcome-section {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .welcome-section h3 {
+            color: var(--primary-blue);
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .welcome-section p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .driver-select-section {
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 16px;
+            transition: all 0.3s;
+            background: var(--white);
+        }
+
+        .form-group select:focus,
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.1);
+        }
+
+        .form-group input[readonly] {
+            background: #f3f4f6;
+            cursor: not-allowed;
+        }
+
+        .time-display {
+            background: linear-gradient(135deg, var(--lighter-blue) 0%, #dbeafe 100%);
+            border-radius: 14px;
+            padding: 14px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .current-time {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary-blue);
+            font-family: 'Cairo', monospace;
+            direction: ltr;
+        }
+
+        .current-date {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 18px 24px;
+            border: none;
+            border-radius: 14px;
+            font-family: inherit;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-departure {
+            background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+            color: var(--white);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-departure:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.5);
+        }
+
+        .btn-return {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--light-blue) 100%);
+            color: var(--white);
+            box-shadow: 0 6px 20px rgba(30, 64, 175, 0.4);
+        }
+
+        .btn-return:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(30, 64, 175, 0.5);
+        }
+        
+        /* Enhanced pulse animation for return button when departure is recorded */
+        @keyframes return-pulse {
+            0%, 100% { 
+                transform: scale(1);
+                box-shadow: 0 6px 20px rgba(30, 64, 175, 0.4);
+                border: 3px solid transparent;
+            }
+            50% { 
+                transform: scale(1.03);
+                box-shadow: 0 8px 30px rgba(30, 64, 175, 0.5), 0 0 0 6px rgba(59, 130, 246, 0.15);
+                border: 3px solid rgba(59, 130, 246, 0.5);
+            }
+        }
+        
+        .btn-return.pulse-attention {
+            animation: return-pulse 1.5s ease-in-out infinite;
+            position: relative;
+        }
+        
+        .btn-return.pulse-attention:hover {
+            animation: none;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .btn-icon {
+            font-size: 22px;
+        }
+
+        .status-message {
+            background: #f0f9ff;
+            border: 2px solid #0ea5e9;
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .status-message #statusIcon {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+
+        .status-message h4 {
+            color: #0369a1;
+            font-size: 16px;
+            margin-bottom: 6px;
+        }
+
+        .status-message p {
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .status-message.ready {
+            background: #f0fdf4;
+            border-color: #22c55e;
+        }
+
+        .status-message.ready h4 {
+            color: #15803d;
+        }
+
+        .status-message.pending {
+            background: #fef3c7;
+            border-color: #f59e0b;
+        }
+
+        .status-message.pending h4 {
+            color: #92400e;
+        }
+
+        /* Combined Pending Trip Card */
+        .pending-trip-card {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 2px solid #f59e0b;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.2);
+        }
+        
+        .pending-trip-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .pending-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #92400e;
+        }
+        
+        .pending-reminder {
+            color: #dc2626;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        .pending-separator {
+            color: #92400e;
+            font-weight: 400;
+        }
+        
+        .departure-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #78350f;
+            margin-bottom: 8px;
+        }
+        
+        .pending-trip-details {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            padding: 12px 16px;
+            display: flex;
+            gap: 24px;
+        }
+        
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .detail-icon {
+            font-size: 14px;
+            color: #9ca3af;
+        }
+        
+        .detail-label {
+            font-size: 13px;
+            color: #6b7280;
+            font-weight: 500;
+        }
+        
+        .detail-value {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1f2937;
+            direction: ltr;
+        }
+
+
+        .trip-history {
+            margin-top: 20px;
+            border-top: 2px solid #e5e7eb;
+            padding-top: 20px;
+        }
+
+        .trip-history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .trip-history h4 {
+            color: var(--primary-blue);
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .month-filter {
+            padding: 8px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 13px;
+            background: var(--white);
+        }
+
+        .trip-item {
+            background: var(--lighter-blue);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+
+        .trip-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .trip-item-date {
+            font-weight: 500;
+            color: #6b7280;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+        
+        .trip-id {
+            font-weight: 700;
+            color: var(--primary-blue);
+            font-size: 14px;
+            background: #e0e7ff;
+            padding: 2px 8px;
+            border-radius: 6px;
+        }
+
+        .trip-item-status {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .status-complete {
+            background: var(--success-light);
+            color: var(--success);
+        }
+
+        .status-pending {
+            background: var(--warning-light);
+            color: #92400e;
+        }
+        
+        .status-approved {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .trip-approved {
+            border-right: 4px solid #22c55e;
+        }
+
+        .trip-item-times {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+        
+        .time-row {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .time-label {
+            color: #6b7280;
+        }
+        
+        .time-value {
+            font-weight: 600;
+            color: #1f2937;
+            direction: ltr;
+        }
+
+        .success-message {
+            display: none;
+            background: var(--success-light);
+            border: 2px solid var(--success);
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 16px;
+            animation: slideIn 0.3s ease;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        .success-message .icon {
+            font-size: 40px;
+            margin-bottom: 8px;
+        }
+
+        .success-message h4 {
+            color: var(--success);
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .success-message p {
+            color: #065f46;
+            font-size: 13px;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 40px;
+            opacity: 0.3;
+            margin-bottom: 8px;
+        }
+
+        .blocked-message {
+            background: #fee2e2;
+            border: 2px solid var(--error);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .blocked-message h4 {
+            color: var(--error);
+            font-size: 15px;
+            margin-bottom: 6px;
+        }
+
+        .blocked-message p {
+            color: #991b1b;
+            font-size: 13px;
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .main-card {
+                padding: 18px;
+                border-radius: 16px;
+            }
+
+            .current-time {
+                font-size: 24px;
+            }
+
+            .btn {
+                padding: 16px 20px;
+                font-size: 16px;
+            }
+
+            .btn-icon {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="moh-logo.png" alt="شعار وزارة الصحة" class="logo">
+        <h1>المديرية العامة للخدمات الصحية بمحافظة ظفار</h1>
+        <h2>ولاية سدح - مركز حاسك الصحي</h2>
+    </div>
+
+    <div class="main-card">
+        <div class="welcome-section">
+            <h3>تسجيل رحلة الإسعاف</h3>
+            <p>سجّل وقت الذهاب والعودة بضغطة زر</p>
+        </div>
+
+        <!-- Driver Selection -->
+        <div class="driver-select-section" id="driverSelection">
+            <div class="form-group">
+                <label>اختر اسمك</label>
+                <select id="driverName" onchange="selectDriver()">
+                    <option value="">-- اختر السائق --</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>الرقم الوظيفي / المدني</label>
+                <input type="text" id="staffNumber" readonly placeholder="يظهر تلقائياً">
+            </div>
+        </div>
+
+        <!-- Pending Trip Alert - Combined single card (ABOVE time display) -->
+        <div class="pending-trip-card" id="pendingTrip" style="display: none;">
+            <div class="pending-trip-header">
+                <span class="pending-title">رحلة قيد التنفيذ</span>
+                <span class="pending-separator">-</span>
+                <span class="pending-reminder">يرجى تسجيل العودة</span>
+            </div>
+            <div class="departure-label">بيانات رحلة الذهاب</div>
+            <div class="pending-trip-details">
+                <div class="detail-item">
+                    <span class="detail-label">التاريخ:</span>
+                    <span class="detail-value" id="pendingDate">-</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">الوقت:</span>
+                    <span class="detail-value" id="pendingTime">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Time Display -->
+        <div class="time-display">
+            <div class="current-time" id="currentTime">00:00:00</div>
+            <div class="current-date" id="currentDate"></div>
+        </div>
+
+        <!-- Success Message -->
+        <div class="success-message" id="successMessage">
+            <div class="icon">✅</div>
+            <h4 id="successTitle">تم التسجيل بنجاح</h4>
+            <p id="successText"></p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons" id="actionButtons" style="display: none;">
+            <button class="btn btn-departure" id="btnDeparture" onclick="recordDeparture()">
+                <span>→ تسجيل وقت الذهاب</span>
+            </button>
+            <button class="btn btn-return" id="btnReturn" onclick="recordReturn()" disabled>
+                <span>✓ تسجيل وقت العودة</span>
+            </button>
+        </div>
+
+        <!-- Trip History -->
+        <div class="trip-history">
+            <div class="trip-history-header">
+                <h4>سجل رحلاتي</h4>
+                <select class="month-filter" id="monthFilter" onchange="loadTripHistory()">
+                    <option value="all">كل الشهور</option>
+                    <option value="1">يناير</option>
+                    <option value="2">فبراير</option>
+                    <option value="3">مارس</option>
+                    <option value="4">أبريل</option>
+                    <option value="5">مايو</option>
+                    <option value="6">يونيو</option>
+                    <option value="7">يوليو</option>
+                    <option value="8">أغسطس</option>
+                    <option value="9">سبتمبر</option>
+                    <option value="10">أكتوبر</option>
+                    <option value="11">نوفمبر</option>
+                    <option value="12">ديسمبر</option>
+                </select>
+            </div>
+            <div id="tripHistory">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📭</div>
+                    <p>لا توجد رحلات مسجلة</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURATION
+        // ============================================
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzgjramV6C5fGt3QM1je34oRXAbfje__vrbxJGoBkkOo2oodydEcdUfkB4avqf2-PR8lg/exec';
+        const REMINDER_HOURS = 6;
+
+        // ============================================
+        // DRIVERS DATA
+        // ============================================
+        const DEFAULT_DRIVERS = [
+            { nameAr: 'سعد زايد الجنيبي', nameEn: 'SAAD ZAID AL-JUNAIBI', staffNumber: '39121', type: 'employee' },
+            { nameAr: 'حسان ثابت رجب', nameEn: 'HASSAN THABIT RAJAB', staffNumber: '222975657', type: 'daily-paid' },
+            { nameAr: 'محمد الرضه علي', nameEn: 'MOHAMMED AL-RUDHA ALI', staffNumber: '39634', type: 'employee' },
+            { nameAr: 'عبدالعزيز مسلم النقش', nameEn: 'ABDULAZIZ MUSALLEM AL-NAQSH', staffNumber: '65870', type: 'employee' }
+        ];
+
+        const DRIVERS_DATA = JSON.parse(localStorage.getItem('ambulance_drivers')) || DEFAULT_DRIVERS;
+
+        // ============================================
+        // STATE
+        // ============================================
+        let selectedDriver = null;
+        let pendingTrip = null;
+
+        // ============================================
+        // INITIALIZE
+        // ============================================
+        function init() {
+            initializeDriverDropdown();
+            updateClock();
+            setInterval(updateClock, 1000);
+            
+            // Check for pending trip reminder
+            checkPendingTripReminder();
+            
+            // Request notification permission
+            requestNotificationPermission();
+        }
+
+        function initializeDriverDropdown() {
+            const select = document.getElementById('driverName');
+            select.innerHTML = '<option value="">-- اختر السائق --</option>';
+            
+            DRIVERS_DATA.forEach((driver, index) => {
+                select.innerHTML += `<option value="${index}">${driver.nameAr}</option>`;
+            });
+        }
+
+        function selectDriver() {
+            const select = document.getElementById('driverName');
+            const staffInput = document.getElementById('staffNumber');
+            const index = select.value;
+            const actionButtons = document.getElementById('actionButtons');
+            const pendingDiv = document.getElementById('pendingTrip');
+
+            if (index !== '') {
+                selectedDriver = DRIVERS_DATA[index];
+                staffInput.value = selectedDriver.staffNumber;
+                localStorage.setItem('selected_driver', index);
+                
+                // Style for daily-paid
+                if (selectedDriver.type === 'daily-paid') {
+                    staffInput.style.background = '#fef3c7';
+                } else {
+                    staffInput.style.background = '#f3f4f6';
+                }
+
+                // Show action buttons
+                actionButtons.style.display = 'flex';
+
+                // Load pending trip for this driver
+                loadPendingTrip();
+                loadTripHistory();
+            } else {
+                selectedDriver = null;
+                staffInput.value = '';
+                staffInput.style.background = '#f3f4f6';
+                
+                // Hide action buttons and pending trip
+                actionButtons.style.display = 'none';
+                pendingDiv.style.display = 'none';
+            }
+
+            updateButtons();
+        }
+
+        // ============================================
+        // CLOCK
+        // ============================================
+        function updateClock() {
+            const now = new Date();
+            
+            let hours = now.getHours();
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+            const ampm = hours >= 12 ? 'م' : 'ص';
+            hours = hours % 12 || 12;
+            
+            document.getElementById('currentTime').textContent = 
+                `${hours}:${minutes}:${seconds} ${ampm}`;
+
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('currentDate').textContent = 
+                now.toLocaleDateString('ar-SA', options);
+        }
+
+        // ============================================
+        // TRIP MANAGEMENT
+        // ============================================
+        async function loadPendingTrip() {
+            if (!selectedDriver) return;
+
+            const pendingDiv = document.getElementById('pendingTrip');
+            
+            // First check localStorage
+            const key = `pending_trip_${selectedDriver.staffNumber}`;
+            pendingTrip = JSON.parse(localStorage.getItem(key));
+
+            // Try to check from Google Sheets if trip was submitted by nurse
+            try {
+                const response = await fetch(`${WEB_APP_URL}?action=getPendingTrips`);
+                const result = await response.json();
+                
+                if (result.success && result.trips) {
+                    // Check if there's a pending trip for this driver
+                    const serverTrip = result.trips.find(t => 
+                        t.staffNumber === selectedDriver.staffNumber && 
+                        t.status !== 'submitted'
+                    );
+                    
+                    if (serverTrip && serverTrip.status === 'complete') {
+                        // Trip was completed, allow new trip
+                        localStorage.removeItem(key);
+                        pendingTrip = null;
+                    } else if (serverTrip && serverTrip.status === 'pending') {
+                        // There's a pending trip on server
+                        pendingTrip = serverTrip;
+                        localStorage.setItem(key, JSON.stringify(pendingTrip));
+                    }
+                }
+            } catch (error) {
+                console.log('Using local data:', error);
+            }
+
+            // Update UI based on pending trip status
+            if (pendingTrip && pendingTrip.status !== 'complete') {
+                // Has pending trip - needs to record return
+                pendingDiv.style.display = 'block';
+                document.getElementById('pendingDate').textContent = pendingTrip.departureDate || '-';
+                document.getElementById('pendingTime').textContent = pendingTrip.departureTime || '-';
+            } else {
+                // No pending trip - ready for new trip
+                pendingDiv.style.display = 'none';
+                pendingTrip = null;
+            }
+
+            updateButtons();
+        }
+
+        function updateButtons() {
+            const btnDeparture = document.getElementById('btnDeparture');
+            const btnReturn = document.getElementById('btnReturn');
+
+            if (!selectedDriver) {
+                btnDeparture.disabled = true;
+                btnReturn.disabled = true;
+                btnReturn.classList.remove('pulse-attention');
+                return;
+            }
+
+            if (pendingTrip) {
+                btnDeparture.disabled = true;
+                btnReturn.disabled = false;
+                // Add pulse animation to draw attention to return button
+                btnReturn.classList.add('pulse-attention');
+            } else {
+                btnDeparture.disabled = false;
+                btnReturn.disabled = true;
+                btnReturn.classList.remove('pulse-attention');
+            }
+        }
+
+        async function recordDeparture() {
+            if (!selectedDriver) {
+                alert('الرجاء اختيار اسمك أولاً');
+                return;
+            }
+
+            if (pendingTrip) {
+                alert('يوجد رحلة قيد التنفيذ. يجب تسجيل العودة أولاً.');
+                return;
+            }
+
+            // Disable button during submission
+            document.getElementById('btnDeparture').disabled = true;
+            document.getElementById('btnDeparture').innerHTML = '<span>جاري الإرسال...</span>';
+
+            const now = new Date();
+            const date = now.toISOString().split('T')[0];
+            
+            let hours = now.getHours();
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12 || 12;
+            const time = `${hours}:${minutes} ${ampm}`;
+
+            const tripData = {
+                action: 'driverDeparture',
+                driverName: selectedDriver.nameEn,
+                driverNameAr: selectedDriver.nameAr,
+                staffNumber: selectedDriver.staffNumber,
+                departureDate: date,
+                departureTime: time
+            };
+
+            try {
+                // Send to Google Sheets
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify(tripData)
+                });
+
+                // Save locally as backup
+                pendingTrip = {
+                    ...tripData,
+                    departureTimestamp: now.getTime()
+                };
+
+                const key = `pending_trip_${selectedDriver.staffNumber}`;
+                localStorage.setItem(key, JSON.stringify(pendingTrip));
+
+                // Schedule reminder notification
+                scheduleReminder(pendingTrip);
+
+                showSuccess('تم تسجيل وقت الذهاب', `${date} - ${time}`);
+                loadPendingTrip();
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('حدث خطأ أثناء الإرسال. تم الحفظ محلياً.');
+                
+                // Save locally anyway
+                pendingTrip = {
+                    ...tripData,
+                    departureTimestamp: now.getTime()
+                };
+                const key = `pending_trip_${selectedDriver.staffNumber}`;
+                localStorage.setItem(key, JSON.stringify(pendingTrip));
+                loadPendingTrip();
+            }
+
+            // Reset button
+            document.getElementById('btnDeparture').innerHTML = '<span>تسجيل وقت الذهاب</span>';
+        }
+
+        async function recordReturn() {
+            if (!selectedDriver || !pendingTrip) {
+                alert('لا توجد رحلة قيد التنفيذ');
+                return;
+            }
+
+            // Disable button during submission
+            document.getElementById('btnReturn').disabled = true;
+            document.getElementById('btnReturn').innerHTML = '<span>جاري الإرسال...</span>';
+
+            const now = new Date();
+            const date = now.toISOString().split('T')[0];
+            
+            let hours = now.getHours();
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12 || 12;
+            const time = `${hours}:${minutes} ${ampm}`;
+
+            const returnData = {
+                action: 'driverReturn',
+                staffNumber: selectedDriver.staffNumber,
+                returnDate: date,
+                returnTime: time
+            };
+
+            console.log('🚗 [DRIVER] Sending return data:', JSON.stringify(returnData));
+
+            try {
+                // Send to Google Sheets - Try with cors first, fallback to no-cors
+                let response;
+                let serverSuccess = false;
+                
+                try {
+                    // First attempt with regular fetch to get response
+                    response = await fetch(WEB_APP_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain' },
+                        body: JSON.stringify(returnData)
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        console.log('🚗 [DRIVER] Server response:', result);
+                        serverSuccess = result.success;
+                    }
+                } catch (corsError) {
+                    console.log('🚗 [DRIVER] CORS error, trying no-cors mode:', corsError.message);
+                    // Fallback to no-cors (can't read response but request is sent)
+                    await fetch(WEB_APP_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'text/plain' },
+                        body: JSON.stringify(returnData)
+                    });
+                    console.log('🚗 [DRIVER] Request sent via no-cors (response unknown)');
+                }
+
+                // Complete the trip locally
+                pendingTrip.returnDate = date;
+                pendingTrip.returnTime = time;
+                pendingTrip.returnTimestamp = now.getTime();
+                pendingTrip.status = 'complete';
+
+                // Save to history
+                saveTripToHistory(pendingTrip);
+                
+                // Also update pending_trips_for_nurse in localStorage with return data
+                updatePendingTripForNurseWithReturn(selectedDriver.staffNumber, date, time);
+
+                // Clear reminder
+                clearReminder();
+
+                // Clear pending
+                const key = `pending_trip_${selectedDriver.staffNumber}`;
+                localStorage.removeItem(key);
+                pendingTrip = null;
+
+                // Show success and reload page
+                showSuccessAndReload('✅ تم إرسال البيانات بنجاح!', 'الرحلة مكتملة - جاهز لتسجيل رحلة جديدة');
+
+            } catch (error) {
+                console.error('🚗 [DRIVER] Error:', error);
+                // Still complete locally
+                pendingTrip.returnDate = date;
+                pendingTrip.returnTime = time;
+                pendingTrip.status = 'complete';
+                saveTripToHistory(pendingTrip);
+                
+                // Also update pending_trips_for_nurse
+                updatePendingTripForNurseWithReturn(selectedDriver.staffNumber, date, time);
+                
+                const key = `pending_trip_${selectedDriver.staffNumber}`;
+                localStorage.removeItem(key);
+                pendingTrip = null;
+                
+                showSuccessAndReload('✅ تم الحفظ محلياً', 'سيتم المزامنة لاحقاً');
+            }
+        }
+        
+        // Update the pending trip for nurse with return data
+        function updatePendingTripForNurseWithReturn(staffNumber, returnDate, returnTime) {
+            let pendingTrips = JSON.parse(localStorage.getItem('pending_trips_for_nurse')) || [];
+            
+            // Find and update the trip for this driver
+            pendingTrips = pendingTrips.map(trip => {
+                if (trip.staffNumber === staffNumber && trip.status === 'pending') {
+                    console.log('🚗 [DRIVER] Updating local trip for nurse:', trip.driverName);
+                    return {
+                        ...trip,
+                        returnDate: returnDate,
+                        returnTime: returnTime,
+                        status: 'complete'
+                    };
+                }
+                return trip;
+            });
+            
+            localStorage.setItem('pending_trips_for_nurse', JSON.stringify(pendingTrips));
+            console.log('🚗 [DRIVER] Updated pending_trips_for_nurse in localStorage');
+        }
+
+        function savePendingTripForNurse(trip) {
+            let pendingTrips = JSON.parse(localStorage.getItem('pending_trips_for_nurse')) || [];
+            
+            // Remove old entry for same driver if exists
+            pendingTrips = pendingTrips.filter(t => t.staffNumber !== trip.staffNumber);
+            
+            // Add new entry
+            pendingTrips.push(trip);
+            
+            localStorage.setItem('pending_trips_for_nurse', JSON.stringify(pendingTrips));
+        }
+
+        function saveTripToHistory(trip) {
+            const key = `trip_history_${selectedDriver.staffNumber}`;
+            let history = JSON.parse(localStorage.getItem(key)) || [];
+            history.unshift(trip);
+            
+            // Keep only last 100 trips
+            if (history.length > 100) {
+                history = history.slice(0, 100);
+            }
+            
+            localStorage.setItem(key, JSON.stringify(history));
+        }
+
+        // Cache for server data
+        let cachedServerTrips = null;
+        let isLoadingHistory = false;
+        
+        async function loadTripHistory(showLoading = true) {
+            const container = document.getElementById('tripHistory');
+            const monthFilter = document.getElementById('monthFilter').value;
+            
+            if (!selectedDriver) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">👤</div>
+                        <p>اختر اسمك لعرض سجل رحلاتك</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Show loading only on first load
+            if (showLoading && !cachedServerTrips) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">...</div>
+                        <p>جاري تحميل السجل...</p>
+                    </div>
+                `;
+            }
+            
+            // Prevent multiple simultaneous loads
+            if (isLoadingHistory) return;
+            isLoadingHistory = true;
+
+            let history = [];
+            
+            // Try to fetch from server
+            try {
+                const response = await fetch(`${WEB_APP_URL}?action=getPendingTrips`);
+                const result = await response.json();
+                
+                if (result.success && result.trips) {
+                    cachedServerTrips = result.trips;
+                    // Filter trips for this driver
+                    history = result.trips.filter(t => 
+                        t.staffNumber === selectedDriver.staffNumber
+                    ).map(trip => ({
+                        ...trip,
+                        approved: trip.status === 'submitted'
+                    }));
+                }
+            } catch (error) {
+                // Use cached data if available
+                if (cachedServerTrips) {
+                    history = cachedServerTrips.filter(t => 
+                        t.staffNumber === selectedDriver.staffNumber
+                    ).map(trip => ({
+                        ...trip,
+                        approved: trip.status === 'submitted'
+                    }));
+                }
+            }
+            
+            isLoadingHistory = false;
+            
+            // Also get local history and merge
+            const key = `trip_history_${selectedDriver.staffNumber}`;
+            const localHistory = JSON.parse(localStorage.getItem(key)) || [];
+            
+            // Merge: add local trips that aren't in server data
+            localHistory.forEach(localTrip => {
+                const exists = history.some(t => 
+                    t.departureDate === localTrip.departureDate && 
+                    t.departureTime === localTrip.departureTime
+                );
+                if (!exists) {
+                    history.push(localTrip);
+                }
+            });
+            
+            // Sort by date (newest first)
+            history.sort((a, b) => new Date(b.departureDate) - new Date(a.departureDate));
+
+            // Filter by month if selected
+            if (monthFilter !== 'all') {
+                history = history.filter(trip => {
+                    const tripMonth = new Date(trip.departureDate).getMonth() + 1;
+                    return tripMonth === parseInt(monthFilter);
+                });
+            }
+
+            if (history.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <p>${monthFilter === 'all' ? 'لا توجد رحلات مسجلة' : 'لا توجد رحلات في هذا الشهر'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = history.slice(0, 20).map(trip => {
+                const isComplete = trip.status === 'complete' || trip.status === 'submitted';
+                const isApproved = trip.status === 'submitted';
+                
+                let statusText = 'قيد التنفيذ';
+                let statusClass = 'status-pending';
+                
+                if (isApproved) {
+                    statusText = '✅ تم الاعتماد';
+                    statusClass = 'status-approved';
+                } else if (isComplete) {
+                    statusText = 'مكتملة - بانتظار الاعتماد';
+                    statusClass = 'status-complete';
+                }
+                
+                const tripId = trip.tripId || '-';
+                
+                return `
+                    <div class="trip-item ${isApproved ? 'trip-approved' : ''}">
+                        <div class="trip-item-header">
+                            <span class="trip-id">${tripId}</span>
+                            <span class="trip-item-status ${statusClass}">${statusText}</span>
+                        </div>
+                        <div class="trip-item-date">${trip.departureDate}</div>
+                        <div class="trip-item-times">
+                            <div class="time-row">
+                                <span class="time-label">الذهاب:</span>
+                                <span class="time-value">${trip.departureTime || '-'}</span>
+                            </div>
+                            <div class="time-row">
+                                <span class="time-label">العودة:</span>
+                                <span class="time-value">${trip.returnTime || '-'}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showSuccess(title, text) {
+            const msg = document.getElementById('successMessage');
+            document.getElementById('successTitle').textContent = title;
+            document.getElementById('successText').textContent = text;
+            msg.classList.add('show');
+
+            setTimeout(() => {
+                msg.classList.remove('show');
+            }, 3000);
+        }
+
+        function showSuccessAndReload(title, text) {
+            const msg = document.getElementById('successMessage');
+            document.getElementById('successTitle').textContent = title;
+            document.getElementById('successText').textContent = text;
+            msg.classList.add('show');
+
+            // Vibrate if supported
+            if (navigator.vibrate) {
+                navigator.vibrate([100, 50, 100]);
+            }
+
+            // Hide success message after 3 seconds
+            setTimeout(() => {
+                msg.classList.remove('show');
+            }, 3000);
+            
+            // Update UI immediately without full reload
+            loadPendingTrip();
+            loadTripHistory();
+            
+            // Reset buttons
+            document.getElementById('btnDeparture').disabled = false;
+            document.getElementById('btnDeparture').innerHTML = '<span>→ تسجيل وقت الذهاب</span>';
+            document.getElementById('btnReturn').disabled = true;
+            document.getElementById('btnReturn').innerHTML = '<span>✓ تسجيل وقت العودة</span>';
+            document.getElementById('btnReturn').classList.remove('pulse-attention');
+            
+            // Reload page after 2 minutes to reset to default state
+            setTimeout(() => {
+                location.reload();
+            }, 120000);
+        }
+
+        // ============================================
+        // NOTIFICATIONS
+        // ============================================
+        function requestNotificationPermission() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+        }
+
+        function scheduleReminder(trip) {
+            // Store reminder time
+            const reminderTime = trip.departureTimestamp + (REMINDER_HOURS * 60 * 60 * 1000);
+            localStorage.setItem(`reminder_${selectedDriver.staffNumber}`, reminderTime);
+        }
+
+        function clearReminder() {
+            if (selectedDriver) {
+                localStorage.removeItem(`reminder_${selectedDriver.staffNumber}`);
+            }
+        }
+
+        function checkPendingTripReminder() {
+            // Check every minute for reminders
+            setInterval(() => {
+                if (!selectedDriver) return;
+                
+                const reminderTime = localStorage.getItem(`reminder_${selectedDriver.staffNumber}`);
+                if (reminderTime && Date.now() >= parseInt(reminderTime)) {
+                    showReminderNotification();
+                    // Update reminder to next 6 hours
+                    const newReminderTime = Date.now() + (REMINDER_HOURS * 60 * 60 * 1000);
+                    localStorage.setItem(`reminder_${selectedDriver.staffNumber}`, newReminderTime);
+                }
+            }, 60000);
+        }
+
+        function showReminderNotification() {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification('تذكير - سجل الإسعاف', {
+                    body: 'لديك رحلة معلقة! يرجى تسجيل وقت العودة.',
+                    icon: 'moh-logo.png',
+                    tag: 'trip-reminder',
+                    requireInteraction: true
+                });
+            }
+        }
+
+        // ============================================
+        // AUTO-REFRESH FOR REAL-TIME UPDATES
+        // ============================================
+        let lastHistoryHash = '';
+        
+        async function autoRefreshHistory() {
+            if (!selectedDriver) return;
+            
+            try {
+                const response = await fetch(`${WEB_APP_URL}?action=getPendingTrips`);
+                const result = await response.json();
+                
+                if (result.success && result.trips) {
+                    // Update cache
+                    cachedServerTrips = result.trips;
+                    
+                    // Filter trips for this driver
+                    const driverTrips = result.trips.filter(t => 
+                        t.staffNumber === selectedDriver.staffNumber
+                    );
+                    
+                    // Create hash to detect changes
+                    const newHash = JSON.stringify(driverTrips.map(t => ({
+                        id: t.tripId,
+                        status: t.status
+                    })));
+                    
+                    if (newHash !== lastHistoryHash) {
+                        lastHistoryHash = newHash;
+                        // Silent update without loading indicator
+                        loadTripHistory(false);
+                        loadPendingTrip();
+                    }
+                }
+            } catch (error) {
+                // Silent fail
+            }
+        }
+        
+        // Check for updates every 10 seconds
+        setInterval(autoRefreshHistory, 10000);
+
+        // ============================================
+        // PWA
+        // ============================================
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('Service Worker registered'))
+                .catch(err => console.log('Service Worker registration failed:', err));
+        }
+
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            showInstallButton();
+        });
+
+        function showInstallButton() {
+            const installBanner = document.createElement('div');
+            installBanner.id = 'installBanner';
+            installBanner.innerHTML = `
+                <div style="position: fixed; bottom: 15px; left: 15px; right: 15px; background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: white; padding: 14px 18px; border-radius: 14px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); display: flex; justify-content: space-between; align-items: center; z-index: 1000; flex-wrap: wrap; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 24px;">📲</span>
+                        <div>
+                            <strong style="display: block; font-size: 14px;">تثبيت التطبيق</strong>
+                            <span style="font-size: 12px; opacity: 0.9;">أضف للشاشة الرئيسية</span>
+                        </div>
+                    </div>
+                    <button onclick="installApp()" style="background: white; color: #1e40af; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 700; cursor: pointer; font-family: inherit; font-size: 14px;">تثبيت</button>
+                </div>
+            `;
+            document.body.appendChild(installBanner);
+        }
+
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted install');
+                    }
+                    deferredPrompt = null;
+                    document.getElementById('installBanner')?.remove();
+                });
+            }
+        }
+
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>
