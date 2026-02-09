@@ -207,6 +207,54 @@
             text-decoration: underline;
         }
 
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .remember-me input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary-blue);
+            cursor: pointer;
+        }
+
+        .remember-me label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .install-btn {
+            display: none;
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+            color: var(--white);
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+            margin-top: 16px;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .install-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .install-btn.show {
+            display: flex;
+        }
+
         .input-icon {
             position: relative;
         }
@@ -293,10 +341,19 @@
                 </div>
             </div>
 
+            <div class="remember-me">
+                <input type="checkbox" id="rememberMe" checked>
+                <label for="rememberMe" data-ar="تذكرني" data-en="Remember me">تذكرني</label>
+            </div>
+
             <button type="submit" class="login-btn" id="loginBtn">
                 <span data-ar="تسجيل الدخول" data-en="Login">تسجيل الدخول</span>
             </button>
         </form>
+
+        <button class="install-btn" id="installBtn" onclick="installApp()">
+            📲 <span data-ar="تثبيت التطبيق" data-en="Install App">تثبيت التطبيق</span>
+        </button>
 
         <p class="footer-text" data-ar="© 2026 مركز حاسك الصحي - جميع الحقوق محفوظة" data-en="© 2026 Hasik Health Center - All Rights Reserved">© 2026 مركز حاسك الصحي - جميع الحقوق محفوظة</p>
     </div>
@@ -309,12 +366,14 @@
 
         // Users Database (will be loaded from Google Sheets)
         const USERS = {
-            // Admin
+            // Admin - has access to all pages
             '65886': { 
                 type: 'admin', 
                 nameAr: 'عبدالباقي عبدالهادي مرزوق بيت مروس', 
                 nameEn: 'Abdulbaqi Abdulhadi Marzouq Bait Marous',
-                redirect: 'admin-interface.html'
+                redirect: 'admin-interface.html',
+                canAccessDriver: true,
+                canAccessNurse: true
             },
             // Nurses
             '79470': { 
@@ -347,6 +406,31 @@
                 nameEn: 'Aisha Said Bakhit Al-Sulaimi',
                 redirect: 'nurse-interface.html'
             },
+            // Drivers
+            '39121': { 
+                type: 'driver', 
+                nameAr: 'سعد زايد الجنيبي', 
+                nameEn: 'SAAD ZAID AL-JUNAIBI',
+                redirect: 'driver-interface.html'
+            },
+            '222975657': { 
+                type: 'driver', 
+                nameAr: 'حسان ثابت رجب', 
+                nameEn: 'HASSAN THABIT RAJAB',
+                redirect: 'driver-interface.html'
+            },
+            '39634': { 
+                type: 'driver', 
+                nameAr: 'محمد الرضه علي', 
+                nameEn: 'MOHAMMED AL-RUDHA ALI',
+                redirect: 'driver-interface.html'
+            },
+            '65870': { 
+                type: 'driver', 
+                nameAr: 'عبدالعزيز مسلم النقش', 
+                nameEn: 'ABDULAZIZ MUSALLEM AL-NAQSH',
+                redirect: 'driver-interface.html'
+            },
             '41299': { 
                 type: 'nurse', 
                 nameAr: 'بخيت محمد الغفيلي المهري', 
@@ -355,52 +439,54 @@
             }
         };
 
-        // Drivers will be loaded from settings
-        let DRIVERS = {};
+        // PWA Install prompt
+        let deferredPrompt;
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             setLanguage(currentLang);
-            loadDrivers();
+            loadSavedCredentials();
+            checkInstallPrompt();
         });
 
-        // Load drivers from localStorage or API
-        async function loadDrivers() {
-            try {
-                // Try to load from API
-                const response = await fetch(`${WEB_APP_URL}?action=getDrivers`);
-                const result = await response.json();
-                if (result.success && result.drivers) {
-                    result.drivers.forEach(driver => {
-                        DRIVERS[driver.staffNumber] = {
-                            type: 'driver',
-                            nameAr: driver.nameAr,
-                            nameEn: driver.nameEn,
-                            vehicleNumber: driver.vehicleNumber || '',
-                            redirect: 'driver-interface.html'
-                        };
-                        // Also add civil ID if exists
-                        if (driver.civilId) {
-                            DRIVERS[driver.civilId] = DRIVERS[driver.staffNumber];
-                        }
-                    });
-                }
-            } catch (error) {
-                console.log('Using default drivers');
-                // Default drivers from settings
-                const defaultDrivers = [
-                    { staffNumber: '57609', nameAr: 'سالم محمد', nameEn: 'Salem Mohammed' },
-                    { staffNumber: '12345', nameAr: 'أحمد علي', nameEn: 'Ahmed Ali' }
-                ];
-                defaultDrivers.forEach(driver => {
-                    DRIVERS[driver.staffNumber] = {
-                        type: 'driver',
-                        nameAr: driver.nameAr,
-                        nameEn: driver.nameEn,
-                        redirect: 'driver-interface.html'
-                    };
-                });
+        // Load saved credentials (Remember Me)
+        function loadSavedCredentials() {
+            const savedStaffNumber = localStorage.getItem('savedStaffNumber');
+            if (savedStaffNumber) {
+                document.getElementById('staffNumber').value = savedStaffNumber;
+                document.getElementById('rememberMe').checked = true;
             }
+        }
+
+        // Check if app can be installed
+        function checkInstallPrompt() {
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                document.getElementById('installBtn').classList.add('show');
+            });
+
+            // Hide install button if already installed
+            window.addEventListener('appinstalled', () => {
+                document.getElementById('installBtn').classList.remove('show');
+                deferredPrompt = null;
+            });
+        }
+
+        // Install app
+        async function installApp() {
+            if (!deferredPrompt) {
+                alert(currentLang === 'ar' ? 'التطبيق مثبت بالفعل أو غير متاح للتثبيت' : 'App is already installed or not available for installation');
+                return;
+            }
+            
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            
+            if (outcome === 'accepted') {
+                document.getElementById('installBtn').classList.remove('show');
+            }
+            deferredPrompt = null;
         }
 
         // Set language
@@ -450,7 +536,7 @@
             errorMessage.classList.remove('show');
             
             // Check in local users first
-            let user = USERS[staffNumber] || DRIVERS[staffNumber];
+            let user = USERS[staffNumber];
             
             if (!user) {
                 // Try to fetch from API
@@ -466,6 +552,14 @@
             }
             
             if (user) {
+                // Save credentials if Remember Me is checked
+                const rememberMe = document.getElementById('rememberMe').checked;
+                if (rememberMe) {
+                    localStorage.setItem('savedStaffNumber', staffNumber);
+                } else {
+                    localStorage.removeItem('savedStaffNumber');
+                }
+
                 // Store user session
                 const sessionData = {
                     staffNumber: staffNumber,
@@ -473,6 +567,8 @@
                     nameAr: user.nameAr,
                     nameEn: user.nameEn,
                     vehicleNumber: user.vehicleNumber || '',
+                    canAccessDriver: user.canAccessDriver || false,
+                    canAccessNurse: user.canAccessNurse || false,
                     loginTime: new Date().toISOString(),
                     language: currentLang
                 };
