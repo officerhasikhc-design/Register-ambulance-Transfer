@@ -942,12 +942,9 @@
             if (!selectedDriver) return;
 
             const pendingDiv = document.getElementById('pendingTrip');
-            
-            // First check localStorage
             const key = `pending_trip_${selectedDriver.staffNumber}`;
-            pendingTrip = JSON.parse(localStorage.getItem(key));
-
-            // Try to check from Google Sheets if trip was submitted by nurse
+            
+            // First try to get from server (most reliable source)
             try {
                 const response = await fetch(`${WEB_APP_URL}?action=getPendingTrips`);
                 const result = await response.json();
@@ -955,26 +952,54 @@
                 if (result.success && result.trips) {
                     // Check if there's a pending trip for this driver
                     const serverTrip = result.trips.find(t => 
-                        t.staffNumber === selectedDriver.staffNumber && 
-                        t.status !== 'submitted'
+                        t.staffNumber && t.staffNumber.toString() === selectedDriver.staffNumber.toString() && 
+                        t.status === 'pending'
                     );
                     
-                    if (serverTrip && serverTrip.status === 'complete') {
-                        // Trip was completed, allow new trip
-                        localStorage.removeItem(key);
-                        pendingTrip = null;
-                    } else if (serverTrip && serverTrip.status === 'pending') {
-                        // There's a pending trip on server
-                        pendingTrip = serverTrip;
+                    if (serverTrip) {
+                        // There's a pending trip on server - use it
+                        pendingTrip = {
+                            ...serverTrip,
+                            departureDate: serverTrip.departureDate,
+                            departureTime: serverTrip.departureTime
+                        };
                         localStorage.setItem(key, JSON.stringify(pendingTrip));
+                        console.log('Loaded pending trip from server:', pendingTrip);
+                    } else {
+                        // Check if trip was completed (status = 'complete' or 'submitted')
+                        const completedTrip = result.trips.find(t => 
+                            t.staffNumber && t.staffNumber.toString() === selectedDriver.staffNumber.toString() && 
+                            (t.status === 'complete' || t.status === 'submitted')
+                        );
+                        
+                        if (completedTrip) {
+                            // Trip was completed, clear local storage
+                            localStorage.removeItem(key);
+                            pendingTrip = null;
+                        } else {
+                            // No trip on server, check localStorage
+                            const localTrip = JSON.parse(localStorage.getItem(key));
+                            if (localTrip && localTrip.status !== 'complete') {
+                                pendingTrip = localTrip;
+                            } else {
+                                pendingTrip = null;
+                            }
+                        }
                     }
                 }
             } catch (error) {
-                console.log('Using local data:', error);
+                console.log('Server unavailable, using local data:', error);
+                // Fallback to localStorage
+                const localTrip = JSON.parse(localStorage.getItem(key));
+                if (localTrip && localTrip.status !== 'complete') {
+                    pendingTrip = localTrip;
+                } else {
+                    pendingTrip = null;
+                }
             }
 
             // Update UI based on pending trip status
-            if (pendingTrip && pendingTrip.status !== 'complete') {
+            if (pendingTrip && pendingTrip.status !== 'complete' && pendingTrip.status !== 'submitted') {
                 // Has pending trip - needs to record return
                 pendingDiv.style.display = 'block';
                 document.getElementById('pendingDate').textContent = pendingTrip.departureDate || '-';
@@ -983,6 +1008,7 @@
                 // No pending trip - ready for new trip
                 pendingDiv.style.display = 'none';
                 pendingTrip = null;
+                localStorage.removeItem(key);
             }
 
             updateButtons();
