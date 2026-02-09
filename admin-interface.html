@@ -510,6 +510,196 @@
             margin-top: 4px;
         }
 
+        /* Notification Bell Styles */
+        .notification-bell {
+            position: relative;
+            cursor: pointer;
+            padding: 8px 12px;
+            background: var(--lighter-blue);
+            border-radius: 8px;
+            border: none;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+
+        .notification-bell:hover {
+            background: var(--primary-blue);
+            color: var(--white);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: var(--error);
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .notification-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            width: 350px;
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 100;
+            margin-top: 8px;
+        }
+
+        .notification-dropdown.active {
+            display: block;
+        }
+
+        .notification-dropdown-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+            color: var(--primary-blue);
+        }
+
+        .notification-dropdown-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .notification-dropdown-item:hover {
+            background: var(--lighter-blue);
+        }
+
+        .notification-dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Pagination Styles */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .pagination-btn {
+            padding: 8px 14px;
+            border: 1px solid var(--border-color);
+            background: var(--white);
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: var(--lighter-blue);
+            border-color: var(--primary-blue);
+        }
+
+        .pagination-btn.active {
+            background: var(--primary-blue);
+            color: var(--white);
+            border-color: var(--primary-blue);
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination-info {
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        /* Export Modal Styles */
+        .export-options {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .export-option-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .export-option-group label {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .export-option-group select,
+        .export-option-group input {
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        /* View Mode Tabs */
+        .view-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .view-tab {
+            padding: 10px 20px;
+            border: 1px solid var(--border-color);
+            background: var(--white);
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .view-tab:hover {
+            background: var(--lighter-blue);
+        }
+
+        .view-tab.active {
+            background: var(--primary-blue);
+            color: var(--white);
+            border-color: var(--primary-blue);
+        }
+
+        /* Compact Table */
+        .records-table.compact th,
+        .records-table.compact td {
+            padding: 10px 12px;
+            font-size: 13px;
+        }
+
+        /* Status badges improvements */
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-partial {
+            background: #dbeafe;
+            color: var(--primary-blue);
+        }
+
         @media (max-width: 768px) {
             .stats-grid {
                 grid-template-columns: 1fr;
@@ -526,6 +716,16 @@
 
             .filter-controls {
                 flex-direction: column;
+            }
+
+            .notification-dropdown {
+                width: 280px;
+                left: auto;
+                right: 0;
+            }
+
+            .view-tabs {
+                flex-wrap: wrap;
             }
         }
     </style>
@@ -544,9 +744,22 @@
                     </div>
                 </div>
                 <div class="nav-links">
-                    <a href="settings-interface.html" class="nav-link settings">⚙️ الإعدادات</a>
-                    <a href="nurse-interface.html" class="nav-link">🏥 صفحة التمريض</a>
-                    <a href="driver-interface.html" class="nav-link">🚗 صفحة السائق</a>
+                    <!-- Notification Bell -->
+                    <div style="position: relative;">
+                        <button class="notification-bell" onclick="toggleNotifications()" id="notificationBell">
+                            <span>🔔</span>
+                            <span class="notification-badge" id="notificationCount" style="display: none;">0</span>
+                        </button>
+                        <div class="notification-dropdown" id="notificationDropdown">
+                            <div class="notification-dropdown-header">الإشعارات الأخيرة</div>
+                            <div id="notificationDropdownContent">
+                                <div class="notification-dropdown-item" style="text-align: center; color: var(--text-secondary);">جاري التحميل...</div>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="settings-interface.html" class="nav-link settings">الإعدادات</a>
+                    <a href="nurse-interface.html" class="nav-link">صفحة التمريض</a>
+                    <a href="driver-interface.html" class="nav-link">صفحة السائق</a>
                     <span class="badge badge-admin">مسؤول النظام</span>
                 </div>
             </div>
@@ -575,46 +788,50 @@
             </div>
         </div>
 
-        <!-- Recent Notifications -->
-        <div class="notifications">
-            <h2 style="color: var(--primary-blue); font-size: 18px; margin-bottom: 16px;">الإشعارات الأخيرة</h2>
-            <div id="notificationsContainer"></div>
-        </div>
-
         <!-- Main Content -->
         <div class="main-content">
+            <!-- View Mode Tabs -->
+            <div class="view-tabs">
+                <button class="view-tab active" id="currentMonthTab" onclick="switchViewMode('current')">رحلات الشهر الحالي</button>
+                <button class="view-tab" id="archiveTab" onclick="switchViewMode('archive')">الأرشيف</button>
+                <button class="view-tab" id="allRecordsTab" onclick="switchViewMode('all')">جميع الرحلات</button>
+            </div>
+
             <div class="controls">
-                <h2>جميع السجلات</h2>
+                <h2 id="recordsTitle">رحلات الشهر الحالي</h2>
                 <div class="filter-controls">
-                    <select id="yearFilter">
-                        <option value="all">كل السنوات</option>
-                        <option value="2026" selected>2026</option>
-                        <option value="2025">2025</option>
-                        <option value="2024">2024</option>
-                    </select>
-                    <select id="monthFilter">
-                        <option value="all">كل الشهور</option>
-                        <option value="1">يناير</option>
-                        <option value="2">فبراير</option>
-                        <option value="3">مارس</option>
-                        <option value="4">أبريل</option>
-                        <option value="5">مايو</option>
-                        <option value="6">يونيو</option>
-                        <option value="7">يوليو</option>
-                        <option value="8">أغسطس</option>
-                        <option value="9">سبتمبر</option>
-                        <option value="10">أكتوبر</option>
-                        <option value="11">نوفمبر</option>
-                        <option value="12">ديسمبر</option>
-                    </select>
+                    <div id="archiveFilters" style="display: none; gap: 12px;">
+                        <select id="yearFilter">
+                            <option value="2026">2026</option>
+                            <option value="2025">2025</option>
+                            <option value="2024">2024</option>
+                        </select>
+                        <select id="monthFilter">
+                            <option value="1">يناير</option>
+                            <option value="2">فبراير</option>
+                            <option value="3">مارس</option>
+                            <option value="4">أبريل</option>
+                            <option value="5">مايو</option>
+                            <option value="6">يونيو</option>
+                            <option value="7">يوليو</option>
+                            <option value="8">أغسطس</option>
+                            <option value="9">سبتمبر</option>
+                            <option value="10">أكتوبر</option>
+                            <option value="11">نوفمبر</option>
+                            <option value="12">ديسمبر</option>
+                        </select>
+                    </div>
                     <input type="text" id="searchInput" placeholder="البحث في السجلات...">
-                    <button class="btn btn-export" onclick="exportToExcel()">تصدير Excel</button>
+                    <button class="btn btn-export" onclick="openExportModal()">تصدير</button>
                 </div>
             </div>
 
             <div class="table-container">
                 <div id="recordsContainer"></div>
             </div>
+
+            <!-- Pagination -->
+            <div class="pagination" id="paginationContainer"></div>
         </div>
     </div>
 
@@ -629,6 +846,47 @@
             <div style="margin-top: 24px; display: flex; gap: 12px;">
                 <button class="btn btn-primary" onclick="printRecord()">طباعة</button>
                 <button class="btn" style="background: var(--lighter-blue); color: var(--primary-blue);" onclick="closeModal()">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div id="exportModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>تصدير البيانات</h3>
+                <button class="close-btn" onclick="closeExportModal()">×</button>
+            </div>
+            <div class="export-options">
+                <div class="export-option-group">
+                    <label>نوع التصدير:</label>
+                    <select id="exportType">
+                        <option value="current">رحلات الشهر الحالي</option>
+                        <option value="range">فترة محددة</option>
+                        <option value="all">جميع الرحلات</option>
+                    </select>
+                </div>
+                <div id="exportRangeOptions" style="display: none;">
+                    <div class="export-option-group">
+                        <label>من تاريخ:</label>
+                        <input type="date" id="exportFromDate">
+                    </div>
+                    <div class="export-option-group">
+                        <label>إلى تاريخ:</label>
+                        <input type="date" id="exportToDate">
+                    </div>
+                </div>
+                <div class="export-option-group">
+                    <label>صيغة الملف:</label>
+                    <select id="exportFormat">
+                        <option value="csv">CSV (Excel)</option>
+                        <option value="json">JSON</option>
+                    </select>
+                </div>
+            </div>
+            <div style="margin-top: 24px; display: flex; gap: 12px;">
+                <button class="btn btn-primary" onclick="executeExport()">تصدير</button>
+                <button class="btn" style="background: var(--lighter-blue); color: var(--primary-blue);" onclick="closeExportModal()">إلغاء</button>
             </div>
         </div>
     </div>
@@ -656,11 +914,63 @@
         // ============================================
         // CONFIGURATION - UPDATE THIS URL
         // ============================================
-        // After deploying Google Apps Script, paste your Web App URL here:
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzgjramV6C5fGt3QM1je34oRXAbfje__vrbxJGoBkkOo2oodydEcdUfkB4avqf2-PR8lg/exec';
-        // Example: 'https://script.google.com/macros/s/AKfycbx.../exec'
         
         let currentRecord = null;
+        let allRecords = [];
+        let currentPage = 1;
+        const recordsPerPage = 5;
+        let viewMode = 'current'; // 'current', 'archive', 'all'
+        let notificationData = [];
+
+        // Toggle notifications dropdown
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notificationDropdown');
+            dropdown.classList.toggle('active');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const bell = document.getElementById('notificationBell');
+            const dropdown = document.getElementById('notificationDropdown');
+            if (bell && dropdown && !bell.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.classList.remove('active');
+            }
+        });
+
+        // Switch view mode
+        function switchViewMode(mode) {
+            viewMode = mode;
+            currentPage = 1;
+            
+            // Update tabs
+            document.querySelectorAll('.view-tab').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(mode === 'current' ? 'currentMonthTab' : mode === 'archive' ? 'archiveTab' : 'allRecordsTab').classList.add('active');
+            
+            // Update title
+            const titles = {
+                'current': 'رحلات الشهر الحالي',
+                'archive': 'الأرشيف',
+                'all': 'جميع الرحلات'
+            };
+            document.getElementById('recordsTitle').textContent = titles[mode];
+            
+            // Show/hide archive filters
+            const archiveFilters = document.getElementById('archiveFilters');
+            archiveFilters.style.display = mode === 'archive' ? 'flex' : 'none';
+            
+            loadRecords();
+        }
+
+        // Export modal functions
+        function openExportModal() {
+            document.getElementById('exportModal').classList.add('active');
+        }
+
+        function closeExportModal() {
+            document.getElementById('exportModal').classList.remove('active');
+        }
+
 
         async function loadStats() {
             try {
@@ -685,19 +995,28 @@
                 const result = await response.json();
                 
                 if (result.success && result.data.length > 0) {
-                    const recentRecords = result.data.slice(0, 3);
-                    displayNotifications(recentRecords);
+                    notificationData = result.data.slice(0, 5);
+                    displayNotificationsDropdown(notificationData);
+                    
+                    // Update badge count
+                    const badge = document.getElementById('notificationCount');
+                    if (notificationData.length > 0) {
+                        badge.textContent = notificationData.length;
+                        badge.style.display = 'flex';
+                    } else {
+                        badge.style.display = 'none';
+                    }
                 }
             } catch (error) {
                 console.error('Error loading notifications:', error);
             }
         }
 
-        function displayNotifications(records) {
-            const container = document.getElementById('notificationsContainer');
+        function displayNotificationsDropdown(records) {
+            const container = document.getElementById('notificationDropdownContent');
             
             if (records.length === 0) {
-                container.innerHTML = '<p style="color: var(--text-secondary); text-align: center;">لا توجد إشعارات حديثة</p>';
+                container.innerHTML = '<div class="notification-dropdown-item" style="text-align: center; color: var(--text-secondary);">لا توجد إشعارات</div>';
                 return;
             }
 
@@ -706,13 +1025,14 @@
                 const timeAgo = getTimeAgo(date);
                 
                 return `
-                    <div class="notification-item">
-                        <div class="notification-icon">🚑</div>
-                        <div class="notification-content">
-                            <h4>طلب جديد - السيارة ${record['Vehicle Number']}</h4>
-                            <p>السائق: ${record['Driver Name']} | الوجهة: ${record['Destination']}</p>
-                            <div class="notification-time">${timeAgo}</div>
+                    <div class="notification-dropdown-item">
+                        <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">
+                            طلب جديد - السيارة ${record['Vehicle Number']}
                         </div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">
+                            السائق: ${record['Driver Name']} | ${record['Destination']}
+                        </div>
+                        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">${timeAgo}</div>
                     </div>
                 `;
             }).join('');
@@ -729,29 +1049,85 @@
         }
 
         async function loadRecords() {
-            const year = document.getElementById('yearFilter').value;
-            const month = document.getElementById('monthFilter').value;
             const search = document.getElementById('searchInput').value;
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth() + 1;
 
             try {
                 let url = `${WEB_APP_URL}?action=getAllRecords`;
-                if (year !== 'all') url += `&year=${year}`;
-                if (month !== 'all') url += `&month=${month}`;
+                
+                if (viewMode === 'current') {
+                    url += `&year=${currentYear}&month=${currentMonth}`;
+                } else if (viewMode === 'archive') {
+                    const year = document.getElementById('yearFilter').value;
+                    const month = document.getElementById('monthFilter').value;
+                    url += `&year=${year}&month=${month}`;
+                }
+                
                 if (search) url += `&search=${encodeURIComponent(search)}`;
 
                 const response = await fetch(url);
                 const result = await response.json();
 
                 if (result.success) {
-                    displayRecords(result.data);
+                    allRecords = result.data;
+                    displayRecordsWithPagination();
                 } else {
                     console.error('Error:', result.error);
-                    displayRecords([]);
+                    allRecords = [];
+                    displayRecordsWithPagination();
                 }
             } catch (error) {
                 console.error('Error loading records:', error);
-                displayRecords([]);
+                allRecords = [];
+                displayRecordsWithPagination();
             }
+        }
+
+        function displayRecordsWithPagination() {
+            const totalPages = Math.ceil(allRecords.length / recordsPerPage);
+            const startIndex = (currentPage - 1) * recordsPerPage;
+            const endIndex = startIndex + recordsPerPage;
+            const pageRecords = allRecords.slice(startIndex, endIndex);
+            
+            displayRecords(pageRecords);
+            displayPagination(totalPages);
+        }
+
+        function displayPagination(totalPages) {
+            const container = document.getElementById('paginationContainer');
+            
+            if (totalPages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+
+            let html = `
+                <button class="pagination-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>السابق</button>
+            `;
+
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    html += `<button class="pagination-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                    html += `<span class="pagination-info">...</span>`;
+                }
+            }
+
+            html += `
+                <button class="pagination-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>التالي</button>
+                <span class="pagination-info">صفحة ${currentPage} من ${totalPages} (${allRecords.length} سجل)</span>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function goToPage(page) {
+            const totalPages = Math.ceil(allRecords.length / recordsPerPage);
+            if (page < 1 || page > totalPages) return;
+            currentPage = page;
+            displayRecordsWithPagination();
         }
 
         function displayRecords(records) {
@@ -769,39 +1145,39 @@
             }
 
             const tableHTML = `
-                <table class="records-table">
+                <table class="records-table compact">
                     <thead>
                         <tr>
                             <th>التاريخ</th>
                             <th>رقم السيارة</th>
                             <th>السائق</th>
-                            <th>الرقم الوظيفي</th>
                             <th>الوجهة</th>
-                            <th>الممرضة</th>
                             <th>الحالة</th>
                             <th>الإجراءات</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${records.map((record, index) => `
+                        ${records.map((record) => {
+                            const hasReturn = record['Return Date'] && record['Return Time'];
+                            const statusClass = hasReturn ? 'status-completed' : 'status-partial';
+                            const statusText = hasReturn ? 'مكتملة (ذهاب وعودة)' : 'مسجل الذهاب فقط';
+                            
+                            return `
                             <tr>
                                 <td>${record['Departure Date']}</td>
                                 <td><strong>${record['Vehicle Number']}</strong></td>
                                 <td>${record['Driver Name']}</td>
-                                <td>${record['Staff Number']}</td>
                                 <td>${record['Destination']}</td>
-                                <td>${record['Nurse Name']}</td>
-                                <td><span class="status-badge ${index < 3 ? 'status-new' : 'status-completed'}">${index < 3 ? 'جديد' : 'مكتمل'}</span></td>
+                                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
                                 <td>
                                     <div class="action-btns">
                                         <button class="action-btn view" onclick='viewRecord(${JSON.stringify(record).replace(/'/g, "&apos;")})'>عرض</button>
                                         <button class="action-btn print" onclick='viewRecord(${JSON.stringify(record).replace(/'/g, "&apos;")}); setTimeout(printRecord, 100)'>طباعة</button>
-                                        <button class="action-btn archive" onclick='archiveRecord("${record.ID}", "${record['Vehicle Number']}")'>أرشفة</button>
                                         <button class="action-btn delete" onclick='deleteRecordDirectly("${record.ID}", "${record['Vehicle Number']}")'>حذف</button>
                                     </div>
                                 </td>
                             </tr>
-                        `).join('')}
+                        `}).join('')}
                     </tbody>
                 </table>
             `;
@@ -916,14 +1292,30 @@
             printWindow.document.close();
         }
 
-        async function exportToExcel() {
-            const year = document.getElementById('yearFilter').value;
-            const month = document.getElementById('monthFilter').value;
+        async function executeExport() {
+            const exportType = document.getElementById('exportType').value;
+            const exportFormat = document.getElementById('exportFormat').value;
+            const now = new Date();
             
             try {
                 let url = `${WEB_APP_URL}?action=getAllRecords`;
-                if (year !== 'all') url += `&year=${year}`;
-                if (month !== 'all') url += `&month=${month}`;
+                let filename = 'ambulance_records';
+                
+                if (exportType === 'current') {
+                    url += `&year=${now.getFullYear()}&month=${now.getMonth() + 1}`;
+                    filename += `_${now.getFullYear()}_${now.getMonth() + 1}`;
+                } else if (exportType === 'range') {
+                    const fromDate = document.getElementById('exportFromDate').value;
+                    const toDate = document.getElementById('exportToDate').value;
+                    if (!fromDate || !toDate) {
+                        alert('يرجى تحديد الفترة الزمنية');
+                        return;
+                    }
+                    url += `&fromDate=${fromDate}&toDate=${toDate}`;
+                    filename += `_${fromDate}_to_${toDate}`;
+                } else {
+                    filename += '_all';
+                }
 
                 const response = await fetch(url);
                 const result = await response.json();
@@ -933,17 +1325,40 @@
                     return;
                 }
 
-                let csv = 'التاريخ,رقم السيارة,السائق,الرقم الوظيفي,ساعة المغادرة,تاريخ العودة,ساعة العودة,الوجهة,التشخيص,الممرضة\n';
+                let data = result.data;
                 
-                result.data.forEach(record => {
-                    csv += `${record['Departure Date']},${record['Vehicle Number']},${record['Driver Name']},${record['Staff Number']},${record['Departure Time']},${record['Return Date']},${record['Return Time']},${record['Destination']},"${record['Patient Condition / Diagnosis']}",${record['Nurse Name']}\n`;
-                });
+                // Filter by date range if needed
+                if (exportType === 'range') {
+                    const fromDate = new Date(document.getElementById('exportFromDate').value);
+                    const toDate = new Date(document.getElementById('exportToDate').value);
+                    data = data.filter(record => {
+                        const recordDate = new Date(record['Departure Date'].split('/').reverse().join('-'));
+                        return recordDate >= fromDate && recordDate <= toDate;
+                    });
+                }
 
-                const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = `ambulance_records_${year}_${month}.csv`;
-                link.click();
+                if (exportFormat === 'csv') {
+                    let csv = 'التاريخ,رقم السيارة,السائق,الرقم الوظيفي,ساعة المغادرة,تاريخ العودة,ساعة العودة,الوجهة,التشخيص,الممرضة\n';
+                    
+                    data.forEach(record => {
+                        csv += `${record['Departure Date']},${record['Vehicle Number']},${record['Driver Name']},${record['Staff Number']},${record['Departure Time']},${record['Return Date']},${record['Return Time']},${record['Destination']},"${record['Patient Condition / Diagnosis']}",${record['Nurse Name']}\n`;
+                    });
+
+                    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `${filename}.csv`;
+                    link.click();
+                } else {
+                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `${filename}.json`;
+                    link.click();
+                }
+                
+                closeExportModal();
+                alert('تم تصدير البيانات بنجاح');
             } catch (error) {
                 console.error('Error exporting:', error);
                 alert('خطأ في تصدير البيانات');
@@ -951,9 +1366,24 @@
         }
 
         // Event listeners
-        document.getElementById('yearFilter').addEventListener('change', loadRecords);
-        document.getElementById('monthFilter').addEventListener('change', loadRecords);
-        document.getElementById('searchInput').addEventListener('input', loadRecords);
+        document.getElementById('yearFilter').addEventListener('change', function() {
+            currentPage = 1;
+            loadRecords();
+        });
+        document.getElementById('monthFilter').addEventListener('change', function() {
+            currentPage = 1;
+            loadRecords();
+        });
+        document.getElementById('searchInput').addEventListener('input', function() {
+            currentPage = 1;
+            loadRecords();
+        });
+        
+        // Export type change listener
+        document.getElementById('exportType').addEventListener('change', function() {
+            const rangeOptions = document.getElementById('exportRangeOptions');
+            rangeOptions.style.display = this.value === 'range' ? 'block' : 'none';
+        });
 
         // Initialize
         loadStats();
@@ -984,8 +1414,8 @@
                                     <p>العودة: ${hasReturn ? `${trip.returnDate} ${trip.returnTime}` : '<span style="color: var(--warning);">لم تُسجل بعد</span>'}</p>
                                     <p>الحالة: <span style="color: ${hasReturn ? 'var(--success)' : 'var(--warning)'}; font-weight: 600;">${hasReturn ? 'مكتملة' : 'معلقة'}</span></p>
                                 </div>
-                                <button onclick="deletePendingTrip('${trip.tripId}')" style="background: #fee2e2; color: #dc2626; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; align-self: center;">
-                                    🗑️ حذف
+                                <button onclick="deletePendingTrip('${trip.tripId}')" style="background: #fee2e2; color: #dc2626; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: 13px; align-self: center;">
+                                    حذف
                                 </button>
                             </div>
                         `;
