@@ -716,21 +716,12 @@
         <div class="trip-history">
             <div class="trip-history-header">
                 <h4>سجل رحلاتي</h4>
-                <select class="month-filter" id="monthFilter" onchange="loadTripHistory()">
-                    <option value="all">كل الشهور</option>
-                    <option value="1">يناير</option>
-                    <option value="2">فبراير</option>
-                    <option value="3">مارس</option>
-                    <option value="4">أبريل</option>
-                    <option value="5">مايو</option>
-                    <option value="6">يونيو</option>
-                    <option value="7">يوليو</option>
-                    <option value="8">أغسطس</option>
-                    <option value="9">سبتمبر</option>
-                    <option value="10">أكتوبر</option>
-                    <option value="11">نوفمبر</option>
-                    <option value="12">ديسمبر</option>
-                </select>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span id="currentMonthBadge" style="background: #dbeafe; color: #1e40af; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;"></span>
+                    <select class="month-filter" id="monthFilter" onchange="loadTripHistory()">
+                        <!-- Options will be populated dynamically -->
+                    </select>
+                </div>
             </div>
             <div id="tripHistory">
                 <div class="empty-state">
@@ -771,6 +762,7 @@
         // ============================================
         function init() {
             initializeDriverDropdown();
+            initializeMonthFilter();
             updateClock();
             setInterval(updateClock, 1000);
             
@@ -782,6 +774,37 @@
             
             // Request notification permission
             requestNotificationPermission();
+        }
+
+        // Initialize month filter with current month selected
+        function initializeMonthFilter() {
+            const monthNames = [
+                'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+                'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+            ];
+            
+            const now = new Date();
+            const currentMonth = now.getMonth() + 1; // 1-12
+            const currentYear = now.getFullYear();
+            
+            const select = document.getElementById('monthFilter');
+            const badge = document.getElementById('currentMonthBadge');
+            
+            // Set current month badge
+            badge.textContent = `${monthNames[currentMonth - 1]} ${currentYear}`;
+            
+            // Build options
+            let options = `<option value="${currentMonth}">الشهر الحالي (${monthNames[currentMonth - 1]})</option>`;
+            options += '<option value="all">جميع الشهور</option>';
+            
+            // Add all months
+            for (let i = 1; i <= 12; i++) {
+                if (i !== currentMonth) {
+                    options += `<option value="${i}">${monthNames[i - 1]}</option>`;
+                }
+            }
+            
+            select.innerHTML = options;
         }
 
         // Load user session from login
@@ -1056,7 +1079,16 @@
                 showSuccess('تم الحفظ محلياً', `${date} - ${time}\n⚠️ سيتم الإرسال عند توفر الإنترنت`);
             }
 
-            loadPendingTrip();
+            // Update UI immediately
+            updateButtons();
+            
+            // Show pending trip info
+            const pendingDiv = document.getElementById('pendingTrip');
+            pendingDiv.style.display = 'block';
+            document.getElementById('pendingDate').textContent = date;
+            document.getElementById('pendingTime').textContent = time;
+            
+            // Reset button text
             btn.innerHTML = '<span>→ تسجيل وقت الذهاب</span>';
         }
 
