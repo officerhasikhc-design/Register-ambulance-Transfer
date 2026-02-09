@@ -6,11 +6,17 @@
     <title>تسجيل الدخول - نظام سجل الإسعاف</title>
     
     <meta name="description" content="تسجيل الدخول لنظام سجل رحلات الإسعاف - مركز حاسك الصحي">
+    <meta name="theme-color" content="#1e40af">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="سجل الإسعاف">
     <meta property="og:title" content="تسجيل الدخول - نظام سجل الإسعاف">
     <meta property="og:description" content="تسجيل الدخول لنظام سجل رحلات الإسعاف - مركز حاسك الصحي">
     <meta property="og:image" content="moh-logo.png">
     <meta property="og:type" content="website">
+    <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" href="moh-logo.png">
+    <link rel="apple-touch-icon" href="moh-logo.png">
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Cairo:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -634,6 +640,13 @@
             const errorMessage = document.getElementById('errorMessage');
             errorMessage.textContent = message;
             errorMessage.classList.add('show');
+        }
+
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('Service Worker registered'))
+                .catch(err => console.log('Service Worker registration failed:', err));
         }
     </script>
 </body>
