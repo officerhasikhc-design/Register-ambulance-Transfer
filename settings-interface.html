@@ -423,16 +423,28 @@
                 </div>
             </div>
             <div class="nav-links">
-                <a href="nurse-interface.html" class="nav-link">🏥 صفحة التمريض</a>
-                <a href="admin-interface.html" class="nav-link">📊 لوحة الإدارة</a>
-                <a href="driver-interface.html" class="nav-link">🚗 صفحة السائق</a>
+                <a href="login.html" class="nav-link">تسجيل الخروج</a>
+                <a href="nurse-interface.html" class="nav-link">صفحة التمريض</a>
+                <a href="admin-interface.html" class="nav-link">لوحة الإدارة</a>
+                <a href="driver-interface.html" class="nav-link">صفحة السائق</a>
             </div>
         </div>
 
         <!-- Info Box -->
         <div class="info-box">
             <span class="info-box-icon">ℹ️</span>
-            <p>التغييرات التي تجريها هنا ستُحفظ في المتصفح المحلي. لمشاركة البيانات بين أجهزة متعددة، يُفضل استخدام Google Sheets كمصدر للبيانات.</p>
+            <p>التغييرات التي تجريها هنا ستُحفظ في النظام. يمكنك إضافة أو تعديل أو حذف المستخدمين وسيارات الإسعاف.</p>
+        </div>
+
+        <!-- Nurses Section -->
+        <div class="section">
+            <div class="section-header">
+                <h2>إدارة الممرضين والممرضات</h2>
+                <button class="btn btn-primary" onclick="openNurseModal()">
+                    <span>+</span> إضافة ممرض/ة
+                </button>
+            </div>
+            <div id="nursesTable"></div>
         </div>
 
         <!-- Drivers Section -->
@@ -520,6 +532,11 @@
                     <label>رقم السيارة</label>
                     <input type="text" id="vehicleNumberInput" required placeholder="مثال: 612-23" style="direction: ltr; text-align: left;">
                 </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="vehicleIsDefault"> تعيين كسيارة افتراضية
+                    </label>
+                </div>
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary">حفظ</button>
                     <button type="button" class="btn btn-secondary" onclick="closeVehicleModal()">إلغاء</button>
@@ -528,8 +545,46 @@
         </div>
     </div>
 
+    <!-- Nurse Modal -->
+    <div id="nurseModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="nurseModalTitle">إضافة ممرض/ة جديد</h3>
+                <button class="close-btn" onclick="closeNurseModal()">×</button>
+            </div>
+            <form id="nurseForm" onsubmit="saveNurse(event)">
+                <input type="hidden" id="nurseIndex" value="-1">
+                <div class="form-group">
+                    <label>الاسم بالعربي</label>
+                    <input type="text" id="nurseNameAr" required placeholder="مثال: عائشة سعيد السليمي">
+                </div>
+                <div class="form-group">
+                    <label>الاسم بالإنجليزي</label>
+                    <input type="text" id="nurseNameEn" required placeholder="e.g., AISHA SAID AL-SULAIMI" style="direction: ltr; text-align: left;">
+                </div>
+                <div class="form-group">
+                    <label>الرقم الوظيفي</label>
+                    <input type="text" id="nurseStaffNumber" required placeholder="مثال: 57609" style="direction: ltr; text-align: left;">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">حفظ</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeNurseModal()">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         // Default data
+        const DEFAULT_NURSES = [
+            { nameAr: 'ميتي ماثيو', nameEn: 'METTY MATHEW', staffNumber: '79470' },
+            { nameAr: 'شيرين كوريان', nameEn: 'SHERINE KURIAN', staffNumber: '62971' },
+            { nameAr: 'ساميني ثانكاموني', nameEn: 'SAMINI THANKAMONY', staffNumber: '85181' },
+            { nameAr: 'آنو ماموتيل', nameEn: 'ANNU MAMOOTEL', staffNumber: '88973' },
+            { nameAr: 'عائشة سعيد بخيت السليمي', nameEn: 'AISHA SAID BAKHIT AL-SULAIMI', staffNumber: '57609' },
+            { nameAr: 'بخيت محمد الغفيلي المهري', nameEn: 'BAKHIT MOHAMED AL-GHUFAILI AL-MAHRI', staffNumber: '41299' }
+        ];
+
         const DEFAULT_DRIVERS = [
             {
                 nameAr: 'سعد زايد الجنيبي',
@@ -558,17 +613,116 @@
         ];
 
         const DEFAULT_VEHICLES = [
-            { number: '612-23' }
+            { number: '612-23', isDefault: true }
         ];
 
         // Load data from localStorage or use defaults
+        let nurses = JSON.parse(localStorage.getItem('ambulance_nurses')) || [...DEFAULT_NURSES];
         let drivers = JSON.parse(localStorage.getItem('ambulance_drivers')) || [...DEFAULT_DRIVERS];
         let vehicles = JSON.parse(localStorage.getItem('ambulance_vehicles')) || [...DEFAULT_VEHICLES];
 
         // Save data to localStorage
         function saveToStorage() {
+            localStorage.setItem('ambulance_nurses', JSON.stringify(nurses));
             localStorage.setItem('ambulance_drivers', JSON.stringify(drivers));
             localStorage.setItem('ambulance_vehicles', JSON.stringify(vehicles));
+        }
+
+        // Render nurses table
+        function renderNursesTable() {
+            const container = document.getElementById('nursesTable');
+            
+            if (nurses.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">👩‍⚕️</div>
+                        <p>لا يوجد ممرضين مسجلين</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>الاسم بالعربي</th>
+                            <th>الاسم بالإنجليزي</th>
+                            <th>الرقم الوظيفي</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${nurses.map((nurse, index) => `
+                            <tr>
+                                <td><strong>${nurse.nameAr}</strong></td>
+                                <td style="direction: ltr; text-align: right;">${nurse.nameEn}</td>
+                                <td style="direction: ltr;">${nurse.staffNumber}</td>
+                                <td>
+                                    <div class="action-btns">
+                                        <button class="action-btn edit" onclick="editNurse(${index})">تعديل</button>
+                                        <button class="action-btn delete" onclick="deleteNurse(${index})">حذف</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // Nurse Modal functions
+        function openNurseModal(index = -1) {
+            document.getElementById('nurseIndex').value = index;
+            
+            if (index >= 0) {
+                document.getElementById('nurseModalTitle').textContent = 'تعديل بيانات الممرض/ة';
+                document.getElementById('nurseNameAr').value = nurses[index].nameAr;
+                document.getElementById('nurseNameEn').value = nurses[index].nameEn;
+                document.getElementById('nurseStaffNumber').value = nurses[index].staffNumber;
+            } else {
+                document.getElementById('nurseModalTitle').textContent = 'إضافة ممرض/ة جديد';
+                document.getElementById('nurseForm').reset();
+            }
+            
+            document.getElementById('nurseModal').classList.add('active');
+        }
+
+        function closeNurseModal() {
+            document.getElementById('nurseModal').classList.remove('active');
+        }
+
+        function saveNurse(event) {
+            event.preventDefault();
+            
+            const index = parseInt(document.getElementById('nurseIndex').value);
+            const nurse = {
+                nameAr: document.getElementById('nurseNameAr').value.trim(),
+                nameEn: document.getElementById('nurseNameEn').value.trim().toUpperCase(),
+                staffNumber: document.getElementById('nurseStaffNumber').value.trim()
+            };
+
+            if (index >= 0) {
+                nurses[index] = nurse;
+            } else {
+                nurses.push(nurse);
+            }
+
+            saveToStorage();
+            renderNursesTable();
+            closeNurseModal();
+        }
+
+        function editNurse(index) {
+            openNurseModal(index);
+        }
+
+        function deleteNurse(index) {
+            if (confirm(`هل تريد حذف "${nurses[index].nameAr}"؟`)) {
+                nurses.splice(index, 1);
+                saveToStorage();
+                renderNursesTable();
+            }
         }
 
         // Render drivers table
@@ -825,9 +979,11 @@
 
         function resetToDefaults() {
             if (confirm('هل تريد إعادة البيانات للقيم الافتراضية؟ سيتم حذف جميع التغييرات.')) {
+                nurses = [...DEFAULT_NURSES];
                 drivers = [...DEFAULT_DRIVERS];
                 vehicles = [...DEFAULT_VEHICLES];
                 saveToStorage();
+                renderNursesTable();
                 renderDriversTable();
                 renderVehiclesTable();
                 alert('تم إعادة البيانات للقيم الافتراضية.');
@@ -835,6 +991,7 @@
         }
 
         // Initialize
+        renderNursesTable();
         renderDriversTable();
         renderVehiclesTable();
     </script>

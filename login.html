@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول - نظام سجل الإسعاف</title>
+    
+    <meta name="description" content="تسجيل الدخول لنظام سجل رحلات الإسعاف - مركز حاسك الصحي">
+    <meta property="og:title" content="تسجيل الدخول - نظام سجل الإسعاف">
+    <meta property="og:description" content="تسجيل الدخول لنظام سجل رحلات الإسعاف - مركز حاسك الصحي">
+    <meta property="og:image" content="moh-logo.png">
+    <meta property="og:type" content="website">
+    <link rel="icon" type="image/png" href="moh-logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Cairo:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #1e40af;
+            --light-blue: #3b82f6;
+            --lighter-blue: #eff6ff;
+            --dark-blue: #1e3a8a;
+            --bg-blue: #dbeafe;
+            --white: #ffffff;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --border-color: #d1d5db;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cairo', 'IBM Plex Sans Arabic', sans-serif;
+            background: linear-gradient(135deg, var(--dark-blue) 0%, var(--primary-blue) 50%, var(--light-blue) 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: var(--text-primary);
+        }
+
+        [dir="ltr"] body {
+            font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .login-container {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: var(--shadow-xl);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .login-logo {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            margin-bottom: 16px;
+        }
+
+        .login-title {
+            color: var(--primary-blue);
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .login-subtitle {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .lang-switch {
+            display: flex;
+            justify-content: center;
+            gap: 4px;
+            background: var(--lighter-blue);
+            padding: 4px;
+            border-radius: 10px;
+            margin-bottom: 24px;
+        }
+
+        .lang-btn {
+            padding: 8px 20px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .lang-btn.active {
+            background: var(--primary-blue);
+            color: var(--white);
+            box-shadow: 0 2px 8px rgba(30, 64, 175, 0.3);
+        }
+
+        .lang-btn:hover:not(.active) {
+            background: rgba(30, 64, 175, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: all 0.2s;
+            background: var(--white);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--light-blue) 100%);
+            color: var(--white);
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error-message {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .footer-text {
+            text-align: center;
+            margin-top: 24px;
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .footer-text a {
+            color: var(--primary-blue);
+            text-decoration: none;
+        }
+
+        .footer-text a:hover {
+            text-decoration: underline;
+        }
+
+        .input-icon {
+            position: relative;
+        }
+
+        .input-icon .form-input {
+            padding-right: 44px;
+        }
+
+        [dir="ltr"] .input-icon .form-input {
+            padding-right: 16px;
+            padding-left: 44px;
+        }
+
+        .input-icon-symbol {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            font-size: 18px;
+        }
+
+        [dir="ltr"] .input-icon-symbol {
+            right: auto;
+            left: 14px;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+            margin-left: 8px;
+        }
+
+        [dir="ltr"] .loading-spinner {
+            margin-left: 0;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 24px;
+            }
+
+            .login-title {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <img src="moh-logo.png" alt="Logo" class="login-logo">
+            <h1 class="login-title" data-ar="نظام سجل نشاط الإسعاف" data-en="Ambulance Activity Log System">نظام سجل نشاط الإسعاف</h1>
+            <p class="login-subtitle" data-ar="المديرية العامة للخدمات الصحية بمحافظة ظفار<br>مركز حاسك الصحي" data-en="Directorate General of Health Services - Dhofar<br>Hasik Health Center">المديرية العامة للخدمات الصحية بمحافظة ظفار<br>مركز حاسك الصحي</p>
+        </div>
+
+        <div class="lang-switch">
+            <button class="lang-btn active" onclick="setLanguage('ar')">العربية</button>
+            <button class="lang-btn" onclick="setLanguage('en')">English</button>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label class="form-label" data-ar="الرقم الوظيفي أو المدني" data-en="Staff Number or Civil ID">الرقم الوظيفي أو المدني</label>
+                <div class="input-icon">
+                    <input type="text" class="form-input" id="staffNumber" 
+                           placeholder="أدخل الرقم الوظيفي أو المدني" 
+                           data-placeholder-ar="أدخل الرقم الوظيفي أو المدني"
+                           data-placeholder-en="Enter Staff Number or Civil ID"
+                           required autocomplete="off">
+                    <span class="input-icon-symbol">👤</span>
+                </div>
+            </div>
+
+            <button type="submit" class="login-btn" id="loginBtn">
+                <span data-ar="تسجيل الدخول" data-en="Login">تسجيل الدخول</span>
+            </button>
+        </form>
+
+        <p class="footer-text" data-ar="© 2026 مركز حاسك الصحي - جميع الحقوق محفوظة" data-en="© 2026 Hasik Health Center - All Rights Reserved">© 2026 مركز حاسك الصحي - جميع الحقوق محفوظة</p>
+    </div>
+
+    <script>
+        // Configuration
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzgjramV6C5fGt3QM1je34oRXAbfje__vrbxJGoBkkOo2oodydEcdUfkB4avqf2-PR8lg/exec';
+        
+        let currentLang = localStorage.getItem('appLanguage') || 'ar';
+
+        // Users Database (will be loaded from Google Sheets)
+        const USERS = {
+            // Admin
+            '65886': { 
+                type: 'admin', 
+                nameAr: 'عبدالباقي عبدالهادي مرزوق بيت مروس', 
+                nameEn: 'Abdulbaqi Abdulhadi Marzouq Bait Marous',
+                redirect: 'admin-interface.html'
+            },
+            // Nurses
+            '79470': { 
+                type: 'nurse', 
+                nameAr: 'ميتي ماثيو', 
+                nameEn: 'Metty Mathew',
+                redirect: 'nurse-interface.html'
+            },
+            '62971': { 
+                type: 'nurse', 
+                nameAr: 'شيرين كوريان', 
+                nameEn: 'Sherine Kurian',
+                redirect: 'nurse-interface.html'
+            },
+            '85181': { 
+                type: 'nurse', 
+                nameAr: 'ساميني ثانكاموني', 
+                nameEn: 'Samini Thankamony',
+                redirect: 'nurse-interface.html'
+            },
+            '88973': { 
+                type: 'nurse', 
+                nameAr: 'آنو ماموتيل', 
+                nameEn: 'Annu Mamootel',
+                redirect: 'nurse-interface.html'
+            },
+            '57609': { 
+                type: 'nurse', 
+                nameAr: 'عائشة سعيد بخيت السليمي', 
+                nameEn: 'Aisha Said Bakhit Al-Sulaimi',
+                redirect: 'nurse-interface.html'
+            },
+            '41299': { 
+                type: 'nurse', 
+                nameAr: 'بخيت محمد الغفيلي المهري', 
+                nameEn: 'Bakhit Mohamed Al-Ghufaili Al-Mahri',
+                redirect: 'nurse-interface.html'
+            }
+        };
+
+        // Drivers will be loaded from settings
+        let DRIVERS = {};
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            setLanguage(currentLang);
+            loadDrivers();
+        });
+
+        // Load drivers from localStorage or API
+        async function loadDrivers() {
+            try {
+                // Try to load from API
+                const response = await fetch(`${WEB_APP_URL}?action=getDrivers`);
+                const result = await response.json();
+                if (result.success && result.drivers) {
+                    result.drivers.forEach(driver => {
+                        DRIVERS[driver.staffNumber] = {
+                            type: 'driver',
+                            nameAr: driver.nameAr,
+                            nameEn: driver.nameEn,
+                            vehicleNumber: driver.vehicleNumber || '',
+                            redirect: 'driver-interface.html'
+                        };
+                        // Also add civil ID if exists
+                        if (driver.civilId) {
+                            DRIVERS[driver.civilId] = DRIVERS[driver.staffNumber];
+                        }
+                    });
+                }
+            } catch (error) {
+                console.log('Using default drivers');
+                // Default drivers from settings
+                const defaultDrivers = [
+                    { staffNumber: '57609', nameAr: 'سالم محمد', nameEn: 'Salem Mohammed' },
+                    { staffNumber: '12345', nameAr: 'أحمد علي', nameEn: 'Ahmed Ali' }
+                ];
+                defaultDrivers.forEach(driver => {
+                    DRIVERS[driver.staffNumber] = {
+                        type: 'driver',
+                        nameAr: driver.nameAr,
+                        nameEn: driver.nameEn,
+                        redirect: 'driver-interface.html'
+                    };
+                });
+            }
+        }
+
+        // Set language
+        function setLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('appLanguage', lang);
+            
+            document.documentElement.lang = lang;
+            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+            
+            // Update language buttons
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if ((lang === 'ar' && btn.textContent === 'العربية') || 
+                    (lang === 'en' && btn.textContent === 'English')) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Update text content
+            document.querySelectorAll('[data-ar][data-en]').forEach(el => {
+                el.innerHTML = el.getAttribute(`data-${lang}`);
+            });
+            
+            // Update placeholders
+            document.querySelectorAll('[data-placeholder-ar][data-placeholder-en]').forEach(el => {
+                el.placeholder = el.getAttribute(`data-placeholder-${lang}`);
+            });
+        }
+
+        // Handle login
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const staffNumber = document.getElementById('staffNumber').value.trim();
+            const loginBtn = document.getElementById('loginBtn');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            if (!staffNumber) {
+                showError(currentLang === 'ar' ? 'يرجى إدخال الرقم الوظيفي أو المدني' : 'Please enter Staff Number or Civil ID');
+                return;
+            }
+            
+            // Show loading
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = `<span>${currentLang === 'ar' ? 'جاري التحقق...' : 'Verifying...'}</span><span class="loading-spinner"></span>`;
+            errorMessage.classList.remove('show');
+            
+            // Check in local users first
+            let user = USERS[staffNumber] || DRIVERS[staffNumber];
+            
+            if (!user) {
+                // Try to fetch from API
+                try {
+                    const response = await fetch(`${WEB_APP_URL}?action=validateUser&staffNumber=${encodeURIComponent(staffNumber)}`);
+                    const result = await response.json();
+                    if (result.success && result.user) {
+                        user = result.user;
+                    }
+                } catch (error) {
+                    console.error('API error:', error);
+                }
+            }
+            
+            if (user) {
+                // Store user session
+                const sessionData = {
+                    staffNumber: staffNumber,
+                    type: user.type,
+                    nameAr: user.nameAr,
+                    nameEn: user.nameEn,
+                    vehicleNumber: user.vehicleNumber || '',
+                    loginTime: new Date().toISOString(),
+                    language: currentLang
+                };
+                
+                localStorage.setItem('userSession', JSON.stringify(sessionData));
+                localStorage.setItem('appLanguage', currentLang);
+                
+                // Redirect based on user type
+                window.location.href = user.redirect;
+            } else {
+                // User not found
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = `<span data-ar="تسجيل الدخول" data-en="Login">${currentLang === 'ar' ? 'تسجيل الدخول' : 'Login'}</span>`;
+                showError(currentLang === 'ar' ? 'الرقم الوظيفي غير مسجل في النظام' : 'Staff number not registered in the system');
+            }
+        }
+
+        // Show error message
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = message;
+            errorMessage.classList.add('show');
+        }
+    </script>
+</body>
+</html>

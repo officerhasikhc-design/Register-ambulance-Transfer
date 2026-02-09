@@ -742,6 +742,7 @@
                     <button class="lang-btn active" data-lang="en">EN</button>
                     <button class="lang-btn" data-lang="ar">عربي</button>
                 </div>
+                <a href="login.html" class="nav-link" onclick="localStorage.removeItem('userSession');" style="background: #fee2e2; color: #dc2626;" data-en="Logout" data-ar="تسجيل الخروج">Logout</a>
             </div>
         </div>
 
@@ -1254,7 +1255,7 @@
         // ============================================
         // CONFIGURATION
         // ============================================
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzgjramV6C5fGt3QM1je34oRXAbfje__vrbxJGoBkkOo2oodydEcdUfkB4avqf2-PR8lg/exec';
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwDUAGlnGBKZMhq8UbzEYBUaP3UNi49Be5PdwqQfnyIiB1HomgXVLrmUTrgeLKhyb-j/exec';
 
         // ============================================
         // LANGUAGE
@@ -1979,6 +1980,29 @@ ${currentLang === 'en' ? 'Nurse' : 'الممرضة'}: ${record['Nurse Name']}
         // ============================================
         // INITIALIZE
         // ============================================
+        // Load user session and set nurse name automatically
+        function loadUserSession() {
+            const session = localStorage.getItem('userSession');
+            if (session) {
+                try {
+                    const userData = JSON.parse(session);
+                    const nurseNameField = document.getElementById('nurseName');
+                    
+                    // Set nurse name based on current language
+                    if (currentLang === 'ar' && userData.nameAr) {
+                        nurseNameField.value = userData.nameAr;
+                    } else if (userData.nameEn) {
+                        nurseNameField.value = userData.nameEn;
+                    }
+                    
+                    // Store for later use
+                    window.loggedInUser = userData;
+                } catch (e) {
+                    console.log('No valid session found');
+                }
+            }
+        }
+
         // Set current year and month as default
         const currentYear = new Date().getFullYear();
         const currentMonth = new Date().getMonth() + 1;
@@ -1987,6 +2011,7 @@ ${currentLang === 'en' ? 'Nurse' : 'الممرضة'}: ${record['Nurse Name']}
 
         initializeTimePickers();
         initializeDropdowns();
+        loadUserSession();
         loadRecords();
         loadPendingTrips();
 

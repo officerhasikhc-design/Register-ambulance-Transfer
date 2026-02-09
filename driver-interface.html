@@ -672,7 +672,7 @@
         // ============================================
         // CONFIGURATION
         // ============================================
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzgjramV6C5fGt3QM1je34oRXAbfje__vrbxJGoBkkOo2oodydEcdUfkB4avqf2-PR8lg/exec';
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwDUAGlnGBKZMhq8UbzEYBUaP3UNi49Be5PdwqQfnyIiB1HomgXVLrmUTrgeLKhyb-j/exec';
         const REMINDER_HOURS = 6;
 
         // ============================================
@@ -701,11 +701,51 @@
             updateClock();
             setInterval(updateClock, 1000);
             
+            // Load user session and auto-select driver
+            loadUserSession();
+            
             // Check for pending trip reminder
             checkPendingTripReminder();
             
             // Request notification permission
             requestNotificationPermission();
+        }
+
+        // Load user session from login
+        function loadUserSession() {
+            const session = localStorage.getItem('userSession');
+            if (session) {
+                try {
+                    const userData = JSON.parse(session);
+                    if (userData.type === 'driver') {
+                        // Find driver in list and auto-select
+                        const driverIndex = DRIVERS_DATA.findIndex(d => 
+                            d.staffNumber === userData.staffNumber
+                        );
+                        
+                        if (driverIndex >= 0) {
+                            document.getElementById('driverName').value = driverIndex;
+                            selectDriver();
+                        } else {
+                            // Driver logged in but not in list - add temporarily
+                            DRIVERS_DATA.push({
+                                nameAr: userData.nameAr,
+                                nameEn: userData.nameEn,
+                                staffNumber: userData.staffNumber,
+                                type: 'employee'
+                            });
+                            initializeDriverDropdown();
+                            document.getElementById('driverName').value = DRIVERS_DATA.length - 1;
+                            selectDriver();
+                        }
+                        
+                        // Store logged in user
+                        window.loggedInUser = userData;
+                    }
+                } catch (e) {
+                    console.log('No valid session found');
+                }
+            }
         }
 
         function initializeDriverDropdown() {
