@@ -676,6 +676,182 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* Print Report Modal */
+        .report-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .report-modal.show {
+            display: flex;
+        }
+
+        .report-container {
+            background: white;
+            width: 210mm;
+            max-height: 90vh;
+            overflow-y: auto;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .report-actions button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-left: 8px;
+        }
+
+        .report-actions .btn-print {
+            background: #1e40af;
+            color: white;
+        }
+
+        .report-actions .btn-close {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .report-content {
+            padding: 20mm;
+            font-family: 'Times New Roman', serif;
+            font-size: 11pt;
+            line-height: 1.4;
+        }
+
+        .report-title {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .report-title h1 {
+            font-size: 16pt;
+            font-weight: bold;
+            margin: 0 0 5px 0;
+            color: #1e3a5f;
+        }
+
+        .report-title p {
+            font-size: 11pt;
+            color: #4b5563;
+            margin: 0;
+        }
+
+        .report-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 9pt;
+        }
+
+        .report-table th {
+            background: #1e3a5f;
+            color: white;
+            padding: 8px 6px;
+            text-align: left;
+            font-weight: 600;
+            border: 1px solid #1e3a5f;
+        }
+
+        .report-table td {
+            padding: 6px;
+            border: 1px solid #d1d5db;
+            vertical-align: top;
+        }
+
+        .report-table tr:nth-child(even) {
+            background: #f9fafb;
+        }
+
+        .report-footer {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 9pt;
+            color: #6b7280;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 10px;
+        }
+
+        .report-pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #f8fafc;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .report-pagination button {
+            padding: 6px 12px;
+            border: 1px solid #d1d5db;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .report-pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .report-pagination span {
+            font-size: 12px;
+            color: #4b5563;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .report-modal, .report-modal * {
+                visibility: visible;
+            }
+            .report-modal {
+                position: absolute;
+                left: 0;
+                top: 0;
+                background: white;
+            }
+            .report-header, .report-pagination {
+                display: none !important;
+            }
+            .report-container {
+                box-shadow: none;
+                max-height: none;
+                overflow: visible;
+            }
+            .report-content {
+                padding: 10mm;
+            }
+            @page {
+                size: A4;
+                margin: 10mm;
+            }
+        }
+
         /* RTL Support */
         [dir="rtl"] .header,
         [dir="rtl"] .form-card,
@@ -881,6 +1057,9 @@
                         <strong id="totalCount">0</strong>
                         <span data-en="cases" data-ar="حالة">cases</span>
                     </div>
+                    <button onclick="viewAllRecords()" style="padding: 8px 16px; background: #1e40af; color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer;">
+                        Print Report
+                    </button>
                 </div>
             </div>
             <div id="recordsContainer"></div>
@@ -894,6 +1073,27 @@
             <h3 data-en="Record Submitted Successfully" data-ar="تم إرسال السجل بنجاح">Record Submitted Successfully</h3>
             <p data-en="The ambulance case has been registered and notification sent." data-ar="تم تسجيل حالة الإسعاف وإرسال الإشعار.">The ambulance case has been registered and notification sent.</p>
             <button class="btn btn-primary" onclick="closeModal()" data-en="Close" data-ar="إغلاق">Close</button>
+        </div>
+    </div>
+
+    <!-- Print Report Modal -->
+    <div id="reportModal" class="report-modal" onclick="closeReportModal(event)">
+        <div class="report-container" onclick="event.stopPropagation()">
+            <div class="report-header">
+                <span style="font-weight: 600; color: #374151;">Ambulance Activity Report</span>
+                <div class="report-actions">
+                    <button class="btn-print" onclick="printReport()">Print</button>
+                    <button class="btn-close" onclick="closeReportModal()">Close</button>
+                </div>
+            </div>
+            <div class="report-content" id="reportContent">
+                <!-- Report content will be generated here -->
+            </div>
+            <div class="report-pagination" id="reportPagination">
+                <button id="prevPageBtn" onclick="prevReportPage()">Previous</button>
+                <span id="pageInfo">Page 1 of 1</span>
+                <button id="nextPageBtn" onclick="nextReportPage()">Next</button>
+            </div>
         </div>
     </div>
 
@@ -1958,17 +2158,165 @@
             container.innerHTML = tableHTML;
         }
 
+        // ============================================
+        // PRINT REPORT FUNCTIONS
+        // ============================================
+        let reportRecords = [];
+        let currentReportPage = 1;
+        const RECORDS_PER_PAGE = 15;
+
         function viewRecord(record) {
-            alert(`
-${currentLang === 'en' ? 'Vehicle' : 'السيارة'}: ${record['Vehicle Number']}
-${currentLang === 'en' ? 'Driver' : 'السائق'}: ${record['Driver Name']}
-${currentLang === 'en' ? 'Staff #' : 'الرقم الوظيفي'}: ${record['Staff Number']}
-${currentLang === 'en' ? 'Departure' : 'المغادرة'}: ${record['Departure Date']} ${record['Departure Time']}
-${currentLang === 'en' ? 'Return' : 'العودة'}: ${record['Return Date']} ${record['Return Time']}
-${currentLang === 'en' ? 'Destination' : 'الوجهة'}: ${record['Destination']}
-${currentLang === 'en' ? 'Diagnosis' : 'التشخيص'}: ${record['Patient Condition / Diagnosis']}
-${currentLang === 'en' ? 'Nurse' : 'الممرضة'}: ${record['Nurse Name']}
-            `);
+            // Show single record in printable format
+            reportRecords = [record];
+            currentReportPage = 1;
+            generateReportContent();
+            document.getElementById('reportModal').classList.add('show');
+            document.getElementById('reportPagination').style.display = 'none';
+        }
+
+        function viewAllRecords() {
+            // Get all filtered records for report
+            const yearFilter = document.getElementById('yearFilter').value;
+            const monthFilter = document.getElementById('monthFilter').value;
+            
+            let filtered = [...allRecords];
+            
+            if (yearFilter !== 'all') {
+                filtered = filtered.filter(r => {
+                    const date = r['Departure Date'];
+                    if (!date) return false;
+                    return date.includes(yearFilter);
+                });
+            }
+            
+            if (monthFilter !== 'all') {
+                filtered = filtered.filter(r => {
+                    const date = r['Departure Date'];
+                    if (!date) return false;
+                    const month = parseInt(date.split('-')[1] || date.split('/')[1]);
+                    return month === parseInt(monthFilter);
+                });
+            }
+            
+            reportRecords = filtered;
+            currentReportPage = 1;
+            generateReportContent();
+            document.getElementById('reportModal').classList.add('show');
+            
+            // Show/hide pagination
+            const totalPages = Math.ceil(reportRecords.length / RECORDS_PER_PAGE);
+            document.getElementById('reportPagination').style.display = totalPages > 1 ? 'flex' : 'none';
+            updatePaginationButtons();
+        }
+
+        function generateReportContent() {
+            const container = document.getElementById('reportContent');
+            const totalPages = Math.ceil(reportRecords.length / RECORDS_PER_PAGE);
+            const startIdx = (currentReportPage - 1) * RECORDS_PER_PAGE;
+            const endIdx = Math.min(startIdx + RECORDS_PER_PAGE, reportRecords.length);
+            const pageRecords = reportRecords.slice(startIdx, endIdx);
+            
+            const now = new Date();
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                               'July', 'August', 'September', 'October', 'November', 'December'];
+            
+            const yearFilter = document.getElementById('yearFilter').value;
+            const monthFilter = document.getElementById('monthFilter').value;
+            
+            let periodText = 'All Records';
+            if (monthFilter !== 'all' && yearFilter !== 'all') {
+                periodText = `${monthNames[parseInt(monthFilter) - 1]} ${yearFilter}`;
+            } else if (yearFilter !== 'all') {
+                periodText = `Year ${yearFilter}`;
+            } else if (monthFilter !== 'all') {
+                periodText = monthNames[parseInt(monthFilter) - 1];
+            }
+            
+            let html = `
+                <div class="report-title">
+                    <h1>Hasik Health Center</h1>
+                    <p>Ambulance Activity Log Report</p>
+                    <p style="margin-top: 5px; font-size: 10pt;">${periodText} - Total: ${reportRecords.length} records</p>
+                </div>
+                
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 8%;">No.</th>
+                            <th style="width: 10%;">Date</th>
+                            <th style="width: 8%;">Vehicle</th>
+                            <th style="width: 14%;">Driver</th>
+                            <th style="width: 10%;">Departure</th>
+                            <th style="width: 10%;">Return</th>
+                            <th style="width: 18%;">Destination</th>
+                            <th style="width: 12%;">Diagnosis</th>
+                            <th style="width: 10%;">Nurse</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            pageRecords.forEach((record, idx) => {
+                html += `
+                    <tr>
+                        <td>${startIdx + idx + 1}</td>
+                        <td>${record['Departure Date'] || '-'}</td>
+                        <td>${record['Vehicle Number'] || '-'}</td>
+                        <td>${record['Driver Name'] || '-'}</td>
+                        <td>${record['Departure Time'] || '-'}</td>
+                        <td>${record['Return Time'] || '-'}</td>
+                        <td>${record['Destination'] || '-'}</td>
+                        <td>${record['Patient Condition / Diagnosis'] || '-'}</td>
+                        <td>${record['Nurse Name'] || '-'}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                    </tbody>
+                </table>
+                
+                <div class="report-footer">
+                    <p>Generated on ${now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} at ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
+                    ${totalPages > 1 ? `<p>Page ${currentReportPage} of ${totalPages}</p>` : ''}
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        function updatePaginationButtons() {
+            const totalPages = Math.ceil(reportRecords.length / RECORDS_PER_PAGE);
+            document.getElementById('prevPageBtn').disabled = currentReportPage <= 1;
+            document.getElementById('nextPageBtn').disabled = currentReportPage >= totalPages;
+            document.getElementById('pageInfo').textContent = `Page ${currentReportPage} of ${totalPages}`;
+        }
+
+        function prevReportPage() {
+            if (currentReportPage > 1) {
+                currentReportPage--;
+                generateReportContent();
+                updatePaginationButtons();
+            }
+        }
+
+        function nextReportPage() {
+            const totalPages = Math.ceil(reportRecords.length / RECORDS_PER_PAGE);
+            if (currentReportPage < totalPages) {
+                currentReportPage++;
+                generateReportContent();
+                updatePaginationButtons();
+            }
+        }
+
+        function closeReportModal(event) {
+            if (!event || event.target === document.getElementById('reportModal')) {
+                document.getElementById('reportModal').classList.remove('show');
+            }
+        }
+
+        function printReport() {
+            window.print();
         }
 
         // ============================================
@@ -1988,11 +2336,23 @@ ${currentLang === 'en' ? 'Nurse' : 'الممرضة'}: ${record['Nurse Name']}
                     const userData = JSON.parse(session);
                     const nurseNameField = document.getElementById('nurseName');
                     
-                    // Set nurse name based on current language
-                    if (currentLang === 'ar' && userData.nameAr) {
-                        nurseNameField.value = userData.nameAr;
-                    } else if (userData.nameEn) {
-                        nurseNameField.value = userData.nameEn;
+                    // Check if admin with nurse access - can edit name
+                    if (userData.type === 'admin' && userData.canAccessNurse) {
+                        // Admin can enter any name - leave field editable
+                        nurseNameField.placeholder = currentLang === 'ar' ? 'أدخل اسم الممرض/ة' : 'Enter nurse name';
+                        // Optionally pre-fill with admin name
+                        if (currentLang === 'ar' && userData.nameAr) {
+                            nurseNameField.value = userData.nameAr;
+                        } else if (userData.nameEn) {
+                            nurseNameField.value = userData.nameEn;
+                        }
+                    } else {
+                        // Regular nurse - set name based on current language
+                        if (currentLang === 'ar' && userData.nameAr) {
+                            nurseNameField.value = userData.nameAr;
+                        } else if (userData.nameEn) {
+                            nurseNameField.value = userData.nameEn;
+                        }
                     }
                     
                     // Store for later use
