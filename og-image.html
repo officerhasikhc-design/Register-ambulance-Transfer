@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>OG Image Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .og-container {
+            width: 1200px;
+            height: 630px;
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #1e3a8a 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .og-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 50%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+        
+        .ambulance-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+        }
+        
+        .title-en {
+            font-size: 48px;
+            font-weight: 700;
+            color: white;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+        
+        .title-ar {
+            font-size: 42px;
+            font-weight: 700;
+            color: white;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            margin-bottom: 30px;
+            direction: rtl;
+        }
+        
+        .subtitle {
+            font-size: 24px;
+            color: rgba(255,255,255,0.9);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .subtitle-ar {
+            font-size: 22px;
+            color: rgba(255,255,255,0.9);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            direction: rtl;
+            margin-top: 8px;
+        }
+        
+        .footer {
+            position: absolute;
+            bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255,255,255,0.15);
+            padding: 12px 30px;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .footer-text {
+            font-size: 18px;
+            color: white;
+            font-weight: 500;
+        }
+        
+        .decorative-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 8px;
+            background: linear-gradient(90deg, #fbbf24, #f59e0b, #fbbf24);
+        }
+        
+        .decorative-line-bottom {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 8px;
+            background: linear-gradient(90deg, #fbbf24, #f59e0b, #fbbf24);
+        }
+    </style>
+</head>
+<body>
+    <div class="og-container">
+        <div class="decorative-line"></div>
+        
+        <div class="ambulance-icon">🚑</div>
+        
+        <div class="title-en">Ambulance Activity Log</div>
+        <div class="title-ar">نظام سجل رحلات الإسعاف</div>
+        
+        <div class="subtitle">Hasik Health Center</div>
+        <div class="subtitle-ar">مركز حاسك الصحي</div>
+        
+        <div class="footer">
+            <span class="footer-text">Login | تسجيل الدخول</span>
+        </div>
+        
+        <div class="decorative-line-bottom"></div>
+    </div>
+    
+    <div style="margin-top: 20px; padding: 20px; background: #f3f4f6; border-radius: 8px; max-width: 800px;">
+        <h3>Instructions to create og-image.png:</h3>
+        <ol style="margin-left: 20px; line-height: 2;">
+            <li>Open this file in Chrome browser</li>
+            <li>Right-click on the image above</li>
+            <li>Select "Inspect" to open Developer Tools</li>
+            <li>Right-click on the <code>.og-container</code> element</li>
+            <li>Select "Capture node screenshot"</li>
+            <li>Save as <strong>og-image.png</strong></li>
+            <li>Upload to your GitHub repository</li>
+        </ol>
+        <p style="margin-top: 15px; color: #6b7280;">
+            Or use a screenshot tool to capture the 1200x630 image above.
+        </p>
+    </div>
+</body>
+</html>

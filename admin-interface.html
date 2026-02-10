@@ -9,7 +9,7 @@
     <meta name="description" content="لوحة إدارة نظام تسجيل رحلات الإسعاف - المديرية العامة للخدمات الصحية بمحافظة ظفار - مركز حاسك الصحي">
     <meta property="og:title" content="لوحة الإدارة - نظام سجل الإسعاف">
     <meta property="og:description" content="لوحة إدارة نظام تسجيل رحلات الإسعاف - المديرية العامة للخدمات الصحية بمحافظة ظفار - مركز حاسك الصحي">
-    <meta property="og:image" content="https://superabdoo88-jpg.github.io/Ambulance-Activity-Log/moh-logo.png">
+    <meta property="og:image" content="https://officerhasikhc-design.github.io/Register-ambulance-Transfer/moh-photo_Page_1.png">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="ar_OM">
     <meta property="og:site_name" content="نظام سجل الإسعاف">
@@ -791,37 +791,32 @@
 
         <!-- Main Content -->
         <div class="main-content">
-            <!-- View Mode Tabs -->
-            <div class="view-tabs">
-                <button class="view-tab active" id="currentMonthTab" onclick="switchViewMode('current')">رحلات الشهر الحالي</button>
-                <button class="view-tab" id="archiveTab" onclick="switchViewMode('archive')">الأرشيف</button>
-                <button class="view-tab" id="allRecordsTab" onclick="switchViewMode('all')">جميع الرحلات</button>
-            </div>
+            <!-- Records Header -->
 
             <div class="controls">
-                <h2 id="recordsTitle">رحلات الشهر الحالي</h2>
+                <h2 id="recordsTitle">جميع الرحلات</h2>
                 <div class="filter-controls">
-                    <div id="archiveFilters" style="display: none; gap: 12px;">
-                        <select id="yearFilter">
-                            <option value="2026">2026</option>
-                            <option value="2025">2025</option>
-                            <option value="2024">2024</option>
-                        </select>
-                        <select id="monthFilter">
-                            <option value="1">يناير</option>
-                            <option value="2">فبراير</option>
-                            <option value="3">مارس</option>
-                            <option value="4">أبريل</option>
-                            <option value="5">مايو</option>
-                            <option value="6">يونيو</option>
-                            <option value="7">يوليو</option>
-                            <option value="8">أغسطس</option>
-                            <option value="9">سبتمبر</option>
-                            <option value="10">أكتوبر</option>
-                            <option value="11">نوفمبر</option>
-                            <option value="12">ديسمبر</option>
-                        </select>
-                    </div>
+                    <select id="yearFilter">
+                        <option value="all">كل السنوات</option>
+                        <option value="2026">2026</option>
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                    </select>
+                    <select id="monthFilter">
+                        <option value="all">كل الشهور</option>
+                        <option value="1">يناير</option>
+                        <option value="2">فبراير</option>
+                        <option value="3">مارس</option>
+                        <option value="4">أبريل</option>
+                        <option value="5">مايو</option>
+                        <option value="6">يونيو</option>
+                        <option value="7">يوليو</option>
+                        <option value="8">أغسطس</option>
+                        <option value="9">سبتمبر</option>
+                        <option value="10">أكتوبر</option>
+                        <option value="11">نوفمبر</option>
+                        <option value="12">ديسمبر</option>
+                    </select>
                     <input type="text" id="searchInput" placeholder="البحث في السجلات...">
                     <button class="btn btn-export" onclick="openExportModal()">تصدير</button>
                 </div>
@@ -939,27 +934,9 @@
             }
         });
 
-        // Switch view mode
-        function switchViewMode(mode) {
-            viewMode = mode;
+        // Filter records by year/month
+        function applyFilters() {
             currentPage = 1;
-            
-            // Update tabs
-            document.querySelectorAll('.view-tab').forEach(tab => tab.classList.remove('active'));
-            document.getElementById(mode === 'current' ? 'currentMonthTab' : mode === 'archive' ? 'archiveTab' : 'allRecordsTab').classList.add('active');
-            
-            // Update title
-            const titles = {
-                'current': 'رحلات الشهر الحالي',
-                'archive': 'الأرشيف',
-                'all': 'جميع الرحلات'
-            };
-            document.getElementById('recordsTitle').textContent = titles[mode];
-            
-            // Show/hide archive filters
-            const archiveFilters = document.getElementById('archiveFilters');
-            archiveFilters.style.display = mode === 'archive' ? 'flex' : 'none';
-            
             loadRecords();
         }
 
@@ -991,49 +968,58 @@
 
         async function loadNotifications() {
             try {
-                const url = `${WEB_APP_URL}?action=getAllRecords`;
+                // Load pending trips for notifications
+                const url = `${WEB_APP_URL}?action=getPendingTrips`;
                 const response = await fetch(url);
                 const result = await response.json();
                 
-                if (result.success && result.data.length > 0) {
-                    notificationData = result.data.slice(0, 5);
+                if (result.success && result.trips) {
+                    // Filter only pending trips (not yet returned)
+                    const pendingOnly = result.trips.filter(t => t.status === 'pending');
+                    notificationData = pendingOnly.slice(0, 5);
                     displayNotificationsDropdown(notificationData);
                     
-                    // Update badge count
+                    // Update badge count - show pending trips count
                     const badge = document.getElementById('notificationCount');
-                    if (notificationData.length > 0) {
-                        badge.textContent = notificationData.length;
+                    if (pendingOnly.length > 0) {
+                        badge.textContent = pendingOnly.length;
                         badge.style.display = 'flex';
                     } else {
                         badge.style.display = 'none';
                     }
+                } else {
+                    document.getElementById('notificationCount').style.display = 'none';
                 }
             } catch (error) {
                 console.error('Error loading notifications:', error);
+                document.getElementById('notificationCount').style.display = 'none';
             }
         }
 
-        function displayNotificationsDropdown(records) {
+        function displayNotificationsDropdown(trips) {
             const container = document.getElementById('notificationDropdownContent');
             
-            if (records.length === 0) {
-                container.innerHTML = '<div class="notification-dropdown-item" style="text-align: center; color: var(--text-secondary);">لا توجد إشعارات</div>';
+            if (trips.length === 0) {
+                container.innerHTML = '<div class="notification-dropdown-item" style="text-align: center; color: var(--text-secondary);">لا توجد رحلات معلقة</div>';
                 return;
             }
 
-            container.innerHTML = records.map(record => {
-                const date = new Date(record.Timestamp);
-                const timeAgo = getTimeAgo(date);
+            container.innerHTML = trips.map(trip => {
+                const depDate = trip.departureDate || '';
+                const depTime = trip.departureTime || '';
+                const driverName = trip.driverNameAr || trip.driverName || '';
                 
                 return `
-                    <div class="notification-dropdown-item">
-                        <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">
-                            طلب جديد - السيارة ${record['Vehicle Number']}
+                    <div class="notification-dropdown-item" style="border-right: 3px solid #f59e0b;">
+                        <div style="font-weight: 600; color: #92400e; margin-bottom: 4px;">
+                            ⏳ رحلة معلقة - ${trip.tripId}
                         </div>
                         <div style="font-size: 12px; color: var(--text-secondary);">
-                            السائق: ${record['Driver Name']} | ${record['Destination']}
+                            السائق: ${driverName}
                         </div>
-                        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">${timeAgo}</div>
+                        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">
+                            المغادرة: ${depDate} ${depTime}
+                        </div>
                     </div>
                 `;
             }).join('');
@@ -1051,19 +1037,20 @@
 
         async function loadRecords() {
             const search = document.getElementById('searchInput').value;
-            const now = new Date();
-            const currentYear = now.getFullYear();
-            const currentMonth = now.getMonth() + 1;
+            const year = document.getElementById('yearFilter').value;
+            const month = document.getElementById('monthFilter').value;
 
             try {
                 let url = `${WEB_APP_URL}?action=getAllRecords`;
                 
-                if (viewMode === 'current') {
-                    url += `&year=${currentYear}&month=${currentMonth}`;
-                } else if (viewMode === 'archive') {
-                    const year = document.getElementById('yearFilter').value;
-                    const month = document.getElementById('monthFilter').value;
-                    url += `&year=${year}&month=${month}`;
+                // Apply year filter if not "all"
+                if (year !== 'all') {
+                    url += `&year=${year}`;
+                }
+                
+                // Apply month filter if not "all"
+                if (month !== 'all') {
+                    url += `&month=${month}`;
                 }
                 
                 if (search) url += `&search=${encodeURIComponent(search)}`;
@@ -1579,6 +1566,10 @@
                 btn.disabled = false;
             }
         }
+
+        // Add filter change listeners
+        document.getElementById('yearFilter').addEventListener('change', applyFilters);
+        document.getElementById('monthFilter').addEventListener('change', applyFilters);
 
         // Refresh data every 30 seconds
         setInterval(() => {
