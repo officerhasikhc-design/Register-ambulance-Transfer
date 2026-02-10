@@ -757,6 +757,9 @@
         // ============================================
         let selectedDriver = null;
         let pendingTrip = null;
+        let driverHistoryPage = 1;
+        const DRIVER_TRIPS_PER_PAGE = 5;
+        let allDriverHistory = [];
 
         // ============================================
         // INITIALIZE
@@ -1086,19 +1089,31 @@
 
             if (isOnline) {
                 try {
-                    // Send to Google Sheets
-                    await fetch(WEB_APP_URL, {
+                    // Send to Google Sheets - use regular fetch for faster processing
+                    const response = await fetch(WEB_APP_URL, {
                         method: 'POST',
-                        mode: 'no-cors',
                         headers: { 'Content-Type': 'text/plain' },
                         body: JSON.stringify(tripData)
                     });
+                    if (response.ok) {
+                        const result = await response.json();
+                        console.log('Departure recorded:', result);
+                    }
                     showSuccess('تم تسجيل وقت الذهاب', `${date} - ${time}`);
                 } catch (error) {
-                    console.error('Error:', error);
-                    // Queue for later sync
-                    queueOfflineData(tripData);
-                    showSuccess('تم الحفظ محلياً', `${date} - ${time}\nسيتم الإرسال عند توفر الإنترنت`);
+                    console.error('Error with regular fetch, trying no-cors:', error);
+                    try {
+                        await fetch(WEB_APP_URL, {
+                            method: 'POST',
+                            mode: 'no-cors',
+                            headers: { 'Content-Type': 'text/plain' },
+                            body: JSON.stringify(tripData)
+                        });
+                        showSuccess('تم تسجيل وقت الذهاب', `${date} - ${time}`);
+                    } catch (error2) {
+                        queueOfflineData(tripData);
+                        showSuccess('تم الحفظ محلياً', `${date} - ${time}\nسيتم الإرسال عند توفر الإنترنت`);
+                    }
                 }
             } else {
                 // Offline - queue for later
@@ -1168,18 +1183,32 @@
 
             if (isOnline) {
                 try {
-                    // Send to Google Sheets
-                    await fetch(WEB_APP_URL, {
+                    // Send to Google Sheets - use regular fetch to ensure email is sent immediately
+                    const response = await fetch(WEB_APP_URL, {
                         method: 'POST',
-                        mode: 'no-cors',
                         headers: { 'Content-Type': 'text/plain' },
                         body: JSON.stringify(returnData)
                     });
+                    if (response.ok) {
+                        const result = await response.json();
+                        console.log('Return recorded:', result);
+                    }
                     showSuccessAndReload('✅ تم تسجيل وقت العودة بنجاح!', 'الرحلة مكتملة - جاهز لتسجيل رحلة جديدة');
                 } catch (error) {
-                    console.error('Error:', error);
-                    queueOfflineData(returnData);
-                    showSuccessAndReload('✅ تم الحفظ محلياً', 'سيتم الإرسال عند توفر الإنترنت');
+                    console.error('Error with regular fetch, trying no-cors:', error);
+                    try {
+                        await fetch(WEB_APP_URL, {
+                            method: 'POST',
+                            mode: 'no-cors',
+                            headers: { 'Content-Type': 'text/plain' },
+                            body: JSON.stringify(returnData)
+                        });
+                        showSuccessAndReload('✅ تم تسجيل وقت العودة بنجاح!', 'الرحلة مكتملة - جاهز لتسجيل رحلة جديدة');
+                    } catch (error2) {
+                        console.error('Both fetch methods failed:', error2);
+                        queueOfflineData(returnData);
+                        showSuccessAndReload('✅ تم الحفظ محلياً', 'سيتم الإرسال عند توفر الإنترنت');
+                    }
                 }
             } else {
                 // Offline - queue for later
@@ -1334,7 +1363,18 @@
                 return;
             }
 
-            container.innerHTML = history.slice(0, 20).map(trip => {
+            allDriverHistory = history;
+            driverHistoryPage = 1;
+            renderDriverHistoryPage();
+        }
+
+        function renderDriverHistoryPage() {
+            const container = document.getElementById('tripHistory');
+            const totalPages = Math.ceil(allDriverHistory.length / DRIVER_TRIPS_PER_PAGE);
+            const startIndex = (driverHistoryPage - 1) * DRIVER_TRIPS_PER_PAGE;
+            const pageTrips = allDriverHistory.slice(startIndex, startIndex + DRIVER_TRIPS_PER_PAGE);
+
+            let html = pageTrips.map(trip => {
                 const isComplete = trip.status === 'complete' || trip.status === 'submitted';
                 const isApproved = trip.status === 'submitted';
                 
@@ -1371,6 +1411,28 @@
                     </div>
                 `;
             }).join('');
+
+            // Pagination controls
+            if (totalPages > 1) {
+                html += `
+                    <div style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:12px;padding:8px;">
+                        <button onclick="changeDriverHistoryPage(-1)" ${driverHistoryPage <= 1 ? 'disabled' : ''} style="padding:6px 14px;border:1px solid #d1d5db;border-radius:8px;background:${driverHistoryPage <= 1 ? '#f3f4f6' : '#fff'};color:${driverHistoryPage <= 1 ? '#9ca3af' : '#1e40af'};cursor:${driverHistoryPage <= 1 ? 'default' : 'pointer'};font-size:13px;font-weight:600;">السابق</button>
+                        <span style="font-size:13px;color:#6b7280;">صفحة ${driverHistoryPage} من ${totalPages}</span>
+                        <button onclick="changeDriverHistoryPage(1)" ${driverHistoryPage >= totalPages ? 'disabled' : ''} style="padding:6px 14px;border:1px solid #d1d5db;border-radius:8px;background:${driverHistoryPage >= totalPages ? '#f3f4f6' : '#fff'};color:${driverHistoryPage >= totalPages ? '#9ca3af' : '#1e40af'};cursor:${driverHistoryPage >= totalPages ? 'default' : 'pointer'};font-size:13px;font-weight:600;">التالي</button>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function changeDriverHistoryPage(delta) {
+            const totalPages = Math.ceil(allDriverHistory.length / DRIVER_TRIPS_PER_PAGE);
+            const newPage = driverHistoryPage + delta;
+            if (newPage >= 1 && newPage <= totalPages) {
+                driverHistoryPage = newPage;
+                renderDriverHistoryPage();
+            }
         }
 
         function showSuccess(title, text) {

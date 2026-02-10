@@ -1381,6 +1381,10 @@
         loadPendingTrips();
 
         // Load pending trips from drivers
+        let allPendingTrips = [];
+        let adminPendingPage = 1;
+        const ADMIN_PENDING_PER_PAGE = 5;
+
         async function loadPendingTrips() {
             const container = document.getElementById('pendingTripsContainer');
             
@@ -1389,32 +1393,70 @@
                 const result = await response.json();
                 
                 if (result.success && result.trips && result.trips.length > 0) {
-                    container.innerHTML = result.trips.map(trip => {
-                        const hasReturn = trip.status === 'complete' || (trip.returnDate && trip.returnTime);
-                        return `
-                            <div class="notification-item" style="border-right-color: ${hasReturn ? 'var(--success)' : 'var(--warning)'};">
-                                <div class="notification-icon" style="background: ${hasReturn ? 'var(--success)' : 'var(--warning)'};">
-                                    ${hasReturn ? '✓' : '⏳'}
-                                </div>
-                                <div class="notification-content" style="flex: 1;">
-                                    <h4>${trip.driverNameAr || trip.driverName}</h4>
-                                    <p>الرقم الوظيفي: ${trip.staffNumber}</p>
-                                    <p>الذهاب: ${trip.departureDate} ${trip.departureTime}</p>
-                                    <p>العودة: ${hasReturn ? `${trip.returnDate} ${trip.returnTime}` : '<span style="color: var(--warning);">لم تُسجل بعد</span>'}</p>
-                                    <p>الحالة: <span style="color: ${hasReturn ? 'var(--success)' : 'var(--warning)'}; font-weight: 600;">${hasReturn ? 'مكتملة' : 'معلقة'}</span></p>
-                                </div>
-                                <button onclick="deletePendingTrip('${trip.tripId}')" style="background: #fee2e2; color: #dc2626; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: 13px; align-self: center;">
-                                    حذف
-                                </button>
-                            </div>
-                        `;
-                    }).join('');
+                    allPendingTrips = result.trips;
+                    adminPendingPage = 1;
+                    renderAdminPendingPage();
                 } else {
+                    allPendingTrips = [];
                     container.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 20px;">لا توجد رحلات معلقة</p>';
                 }
             } catch (error) {
                 console.error('Error loading pending trips:', error);
                 container.innerHTML = '<p style="color: var(--error); text-align: center; padding: 20px;">خطأ في تحميل الرحلات</p>';
+            }
+        }
+
+        function renderAdminPendingPage() {
+            const container = document.getElementById('pendingTripsContainer');
+            const totalPages = Math.ceil(allPendingTrips.length / ADMIN_PENDING_PER_PAGE);
+            const startIndex = (adminPendingPage - 1) * ADMIN_PENDING_PER_PAGE;
+            const pageTrips = allPendingTrips.slice(startIndex, startIndex + ADMIN_PENDING_PER_PAGE);
+
+            let html = pageTrips.map(trip => {
+                const hasReturn = trip.status === 'complete' || (trip.returnDate && trip.returnTime);
+                const tripIdDisplay = trip.tripId || '-';
+                return `
+                    <div class="notification-item" style="border-right-color: ${hasReturn ? 'var(--success)' : 'var(--warning)'};">
+                        <div class="notification-icon" style="background: ${hasReturn ? 'var(--success)' : 'var(--warning)'};">
+                            ${hasReturn ? '✓' : '⏳'}
+                        </div>
+                        <div class="notification-content" style="flex: 1;">
+                            <h4 style="display:flex;justify-content:space-between;align-items:center;">
+                                ${trip.driverNameAr || trip.driverName}
+                                <span style="background:#e0e7ff;color:#1e40af;padding:2px 8px;border-radius:6px;font-size:12px;font-weight:700;">${tripIdDisplay}</span>
+                            </h4>
+                            <p>الرقم الوظيفي: ${trip.staffNumber}</p>
+                            <p>الذهاب: ${trip.departureDate} ${trip.departureTime}</p>
+                            <p>العودة: ${hasReturn ? `${trip.returnDate} ${trip.returnTime}` : '<span style="color: var(--warning);">لم تُسجل بعد</span>'}</p>
+                            <p>الحالة: <span style="color: ${hasReturn ? 'var(--success)' : 'var(--warning)'}; font-weight: 600;">${hasReturn ? 'مكتملة' : 'معلقة'}</span></p>
+                        </div>
+                        <button onclick="deletePendingTrip('${trip.tripId}')" style="background: #fee2e2; color: #dc2626; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: 13px; align-self: center;">
+                            حذف
+                        </button>
+                    </div>
+                `;
+            }).join('');
+
+            // Pagination controls
+            if (totalPages > 1) {
+                html += `
+                    <div style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:12px;padding:8px;">
+                        <button onclick="changeAdminPendingPage(-1)" ${adminPendingPage <= 1 ? 'disabled' : ''} style="padding:6px 14px;border:1px solid #d1d5db;border-radius:8px;background:${adminPendingPage <= 1 ? '#f3f4f6' : '#fff'};color:${adminPendingPage <= 1 ? '#9ca3af' : '#1e40af'};cursor:${adminPendingPage <= 1 ? 'default' : 'pointer'};font-size:13px;font-weight:600;">السابق</button>
+                        <span style="font-size:13px;color:#6b7280;">صفحة ${adminPendingPage} من ${totalPages} (${allPendingTrips.length} رحلة)</span>
+                        <button onclick="changeAdminPendingPage(1)" ${adminPendingPage >= totalPages ? 'disabled' : ''} style="padding:6px 14px;border:1px solid #d1d5db;border-radius:8px;background:${adminPendingPage >= totalPages ? '#f3f4f6' : '#fff'};color:${adminPendingPage >= totalPages ? '#9ca3af' : '#1e40af'};cursor:${adminPendingPage >= totalPages ? 'default' : 'pointer'};font-size:13px;font-weight:600;">التالي</button>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function changeAdminPendingPage(delta) {
+            const totalPages = Math.ceil(allPendingTrips.length / ADMIN_PENDING_PER_PAGE);
+            const newPage = adminPendingPage + delta;
+            if (newPage >= 1 && newPage <= totalPages) {
+                adminPendingPage = newPage;
+                renderAdminPendingPage();
             }
         }
 

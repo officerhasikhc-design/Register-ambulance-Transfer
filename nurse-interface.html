@@ -1714,15 +1714,16 @@
 
         // Store trips globally for usePendingTrip function
         let currentPendingTrips = [];
+        let nursePendingPage = 1;
+        const NURSE_PENDING_PER_PAGE = 5;
 
         function displayPendingTrips(pendingTrips) {
-            const container = document.getElementById('pendingTripsContainer');
-            
             // Store trips for later use
             currentPendingTrips = pendingTrips || [];
             localStorage.setItem('pending_trips_for_nurse', JSON.stringify(currentPendingTrips));
 
             if (!pendingTrips || pendingTrips.length === 0) {
+                const container = document.getElementById('pendingTripsContainer');
                 container.innerHTML = `
                     <div style="background: white; padding: 16px; border-radius: 10px; text-align: center; color: #6b7280;">
                         <span>${currentLang === 'en' ? 'No pending trips from drivers' : 'لا توجد رحلات قيد الانتظار من السائقين'}</span>
@@ -1731,8 +1732,18 @@
                 return;
             }
 
-            container.innerHTML = pendingTrips.map((trip, index) => {
-                // Check if return is recorded (status is complete OR return date/time exists and not empty/null)
+            nursePendingPage = 1;
+            renderNursePendingPage();
+        }
+
+        function renderNursePendingPage() {
+            const container = document.getElementById('pendingTripsContainer');
+            const totalPages = Math.ceil(currentPendingTrips.length / NURSE_PENDING_PER_PAGE);
+            const startIndex = (nursePendingPage - 1) * NURSE_PENDING_PER_PAGE;
+            const pageTrips = currentPendingTrips.slice(startIndex, startIndex + NURSE_PENDING_PER_PAGE);
+
+            let html = pageTrips.map((trip, pageIdx) => {
+                const index = startIndex + pageIdx;
                 const returnDateExists = trip.returnDate && trip.returnDate.toString().trim() !== '' && trip.returnDate !== 'null' && trip.returnDate !== 'undefined';
                 const returnTimeExists = trip.returnTime && trip.returnTime.toString().trim() !== '' && trip.returnTime !== 'null' && trip.returnTime !== 'undefined';
                 const hasReturn = trip.status === 'complete' || (returnDateExists && returnTimeExists);
@@ -1776,6 +1787,28 @@
                     </button>
                 </div>`;
             }).join('');
+
+            // Pagination controls
+            if (totalPages > 1) {
+                html += `
+                    <div style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:12px;padding:8px;">
+                        <button onclick="changeNursePendingPage(-1)" ${nursePendingPage <= 1 ? 'disabled' : ''} style="padding:6px 14px;border:1px solid #d1d5db;border-radius:8px;background:${nursePendingPage <= 1 ? '#f3f4f6' : '#fff'};color:${nursePendingPage <= 1 ? '#9ca3af' : '#1e40af'};cursor:${nursePendingPage <= 1 ? 'default' : 'pointer'};font-size:13px;font-weight:600;">${currentLang === 'en' ? 'Previous' : 'السابق'}</button>
+                        <span style="font-size:13px;color:#6b7280;">${currentLang === 'en' ? `Page ${nursePendingPage} of ${totalPages}` : `صفحة ${nursePendingPage} من ${totalPages}`}</span>
+                        <button onclick="changeNursePendingPage(1)" ${nursePendingPage >= totalPages ? 'disabled' : ''} style="padding:6px 14px;border:1px solid #d1d5db;border-radius:8px;background:${nursePendingPage >= totalPages ? '#f3f4f6' : '#fff'};color:${nursePendingPage >= totalPages ? '#9ca3af' : '#1e40af'};cursor:${nursePendingPage >= totalPages ? 'default' : 'pointer'};font-size:13px;font-weight:600;">${currentLang === 'en' ? 'Next' : 'التالي'}</button>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function changeNursePendingPage(delta) {
+            const totalPages = Math.ceil(currentPendingTrips.length / NURSE_PENDING_PER_PAGE);
+            const newPage = nursePendingPage + delta;
+            if (newPage >= 1 && newPage <= totalPages) {
+                nursePendingPage = newPage;
+                renderNursePendingPage();
+            }
         }
         
         // Store the selected trip for animation after submit
@@ -2122,6 +2155,10 @@
         // ============================================
         // LOAD RECORDS
         // ============================================
+        let allRecords = [];
+        let nurseRecordsPage = 1;
+        const NURSE_RECORDS_PER_PAGE = 5;
+
         async function loadRecords() {
             const year = document.getElementById('yearFilter').value;
             const month = document.getElementById('monthFilter').value;
@@ -2134,13 +2171,17 @@
                 const result = await response.json();
 
                 if (result.success) {
+                    allRecords = result.data;
+                    nurseRecordsPage = 1;
                     displayRecords(result.data);
                 } else {
                     console.error('Error:', result.error);
+                    allRecords = [];
                     displayRecords([]);
                 }
             } catch (error) {
                 console.error('Error fetching records:', error);
+                allRecords = [];
                 displayRecords([]);
             }
         }
@@ -2159,7 +2200,11 @@
                 return;
             }
 
-            const tableHTML = `
+            const totalPages = Math.ceil(records.length / NURSE_RECORDS_PER_PAGE);
+            const startIndex = (nurseRecordsPage - 1) * NURSE_RECORDS_PER_PAGE;
+            const pageRecords = records.slice(startIndex, startIndex + NURSE_RECORDS_PER_PAGE);
+
+            let tableHTML = `
                 <table class="record-table">
                     <thead>
                         <tr>
@@ -2172,7 +2217,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        ${records.map(record => `
+                        ${pageRecords.map(record => `
                             <tr>
                                 <td>${record['Departure Date'] || ''}</td>
                                 <td><strong>${record['Vehicle Number'] || ''}</strong></td>
@@ -2192,7 +2237,27 @@
                 </table>
             `;
 
+            // Pagination controls
+            if (totalPages > 1) {
+                tableHTML += `
+                    <div style="display:flex;justify-content:center;align-items:center;gap:10px;margin-top:12px;padding:8px;">
+                        <button onclick="changeNurseRecordsPage(-1)" ${nurseRecordsPage <= 1 ? 'disabled' : ''} style="padding:6px 14px;border:1px solid #d1d5db;border-radius:8px;background:${nurseRecordsPage <= 1 ? '#f3f4f6' : '#fff'};color:${nurseRecordsPage <= 1 ? '#9ca3af' : '#1e40af'};cursor:${nurseRecordsPage <= 1 ? 'default' : 'pointer'};font-size:13px;font-weight:600;">${currentLang === 'en' ? 'Previous' : 'السابق'}</button>
+                        <span style="font-size:13px;color:#6b7280;">${currentLang === 'en' ? `Page ${nurseRecordsPage} of ${totalPages} (${records.length} records)` : `صفحة ${nurseRecordsPage} من ${totalPages} (${records.length} سجل)`}</span>
+                        <button onclick="changeNurseRecordsPage(1)" ${nurseRecordsPage >= totalPages ? 'disabled' : ''} style="padding:6px 14px;border:1px solid #d1d5db;border-radius:8px;background:${nurseRecordsPage >= totalPages ? '#f3f4f6' : '#fff'};color:${nurseRecordsPage >= totalPages ? '#9ca3af' : '#1e40af'};cursor:${nurseRecordsPage >= totalPages ? 'default' : 'pointer'};font-size:13px;font-weight:600;">${currentLang === 'en' ? 'Next' : 'التالي'}</button>
+                    </div>
+                `;
+            }
+
             container.innerHTML = tableHTML;
+        }
+
+        function changeNurseRecordsPage(delta) {
+            const totalPages = Math.ceil(allRecords.length / NURSE_RECORDS_PER_PAGE);
+            const newPage = nurseRecordsPage + delta;
+            if (newPage >= 1 && newPage <= totalPages) {
+                nurseRecordsPage = newPage;
+                displayRecords(allRecords);
+            }
         }
 
         // ============================================
