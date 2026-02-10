@@ -2,7 +2,8 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>OG Image Generator</title>
+    <title>OG Image Generator - Ambulance Reg System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800&family=IBM+Plex+Sans:wght@600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -11,95 +12,132 @@
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'IBM Plex Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
         .og-container {
             width: 1200px;
             height: 630px;
-            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #1e3a8a 100%);
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 40%, #3b82f6 100%);
             display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
             position: relative;
             overflow: hidden;
         }
         
-        .og-container::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 50%);
-            animation: pulse 4s ease-in-out infinite;
+        /* Left side - Logo */
+        .left-section {
+            width: 40%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            z-index: 2;
         }
         
-        .ambulance-icon {
-            font-size: 80px;
-            margin-bottom: 20px;
-            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+        .logo-container {
+            width: 280px;
+            height: 280px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .logo-container img {
+            width: 220px;
+            height: auto;
+            object-fit: contain;
+        }
+        
+        /* Right side - Content */
+        .right-section {
+            width: 60%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 50px 60px 50px 40px;
+            position: relative;
+            z-index: 2;
         }
         
         .title-en {
-            font-size: 48px;
+            font-size: 52px;
             font-weight: 700;
             color: white;
-            text-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            margin-bottom: 10px;
-            letter-spacing: 2px;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+            line-height: 1.1;
         }
         
         .title-ar {
-            font-size: 42px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 44px;
             font-weight: 700;
             color: white;
-            text-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            margin-bottom: 30px;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            margin-bottom: 25px;
             direction: rtl;
+            text-align: left;
+        }
+        
+        .divider {
+            width: 120px;
+            height: 4px;
+            background: linear-gradient(90deg, #fbbf24, #f59e0b);
+            border-radius: 2px;
+            margin-bottom: 25px;
         }
         
         .subtitle {
-            font-size: 24px;
-            color: rgba(255,255,255,0.9);
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            font-size: 26px;
+            color: rgba(255,255,255,0.95);
+            text-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            margin-bottom: 6px;
+            font-weight: 600;
         }
         
         .subtitle-ar {
-            font-size: 22px;
-            color: rgba(255,255,255,0.9);
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            font-family: 'Cairo', sans-serif;
+            font-size: 24px;
+            color: rgba(255,255,255,0.95);
+            text-shadow: 0 2px 6px rgba(0,0,0,0.2);
             direction: rtl;
-            margin-top: 8px;
+            text-align: left;
+            font-weight: 600;
         }
         
-        .footer {
-            position: absolute;
-            bottom: 30px;
-            display: flex;
+        /* CTA Button */
+        .cta-button {
+            display: inline-flex;
             align-items: center;
-            gap: 15px;
-            background: rgba(255,255,255,0.15);
-            padding: 12px 30px;
+            gap: 12px;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: #1e3a8a;
+            padding: 16px 36px;
             border-radius: 50px;
-            backdrop-filter: blur(10px);
+            font-size: 22px;
+            font-weight: 700;
+            margin-top: 30px;
+            box-shadow: 0 8px 30px rgba(251, 191, 36, 0.4);
+            width: fit-content;
         }
         
-        .footer-text {
-            font-size: 18px;
-            color: white;
-            font-weight: 500;
+        .cta-button .arrow {
+            font-size: 24px;
         }
         
-        .decorative-line {
+        /* Decorative elements */
+        .decorative-line-top {
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             height: 8px;
             background: linear-gradient(90deg, #fbbf24, #f59e0b, #fbbf24);
+            z-index: 3;
         }
         
         .decorative-line-bottom {
@@ -109,41 +147,76 @@
             right: 0;
             height: 8px;
             background: linear-gradient(90deg, #fbbf24, #f59e0b, #fbbf24);
+            z-index: 3;
+        }
+        
+        /* Background pattern */
+        .bg-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(255,255,255,0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255,255,255,0.08) 0%, transparent 40%);
+            z-index: 1;
+        }
+        
+        /* Ambulance icon decoration */
+        .ambulance-decoration {
+            position: absolute;
+            bottom: 40px;
+            right: 50px;
+            font-size: 60px;
+            opacity: 0.15;
+            z-index: 1;
         }
     </style>
 </head>
 <body>
     <div class="og-container">
-        <div class="decorative-line"></div>
+        <div class="decorative-line-top"></div>
+        <div class="bg-pattern"></div>
         
-        <div class="ambulance-icon">🚑</div>
-        
-        <div class="title-en">Ambulance Activity Log</div>
-        <div class="title-ar">نظام سجل رحلات الإسعاف</div>
-        
-        <div class="subtitle">Hasik Health Center</div>
-        <div class="subtitle-ar">مركز حاسك الصحي</div>
-        
-        <div class="footer">
-            <span class="footer-text">Login | تسجيل الدخول</span>
+        <div class="left-section">
+            <div class="logo-container">
+                <img src="moh-logo.png" alt="Ministry of Health Oman">
+            </div>
         </div>
         
+        <div class="right-section">
+            <div class="title-en">Ambulance Reg System</div>
+            <div class="title-ar">نظام سجل الإسعاف</div>
+            
+            <div class="divider"></div>
+            
+            <div class="subtitle">Ministry of Health - Hasik Health Center</div>
+            <div class="subtitle-ar">وزارة الصحة - مركز حاسك الصحي</div>
+            
+            <div class="cta-button">
+                <span>Login Now | سجّل الآن</span>
+                <span class="arrow">→</span>
+            </div>
+        </div>
+        
+        <div class="ambulance-decoration">🚑</div>
         <div class="decorative-line-bottom"></div>
     </div>
     
-    <div style="margin-top: 20px; padding: 20px; background: #f3f4f6; border-radius: 8px; max-width: 800px;">
-        <h3>Instructions to create og-image.png:</h3>
-        <ol style="margin-left: 20px; line-height: 2;">
-            <li>Open this file in Chrome browser</li>
-            <li>Right-click on the image above</li>
-            <li>Select "Inspect" to open Developer Tools</li>
-            <li>Right-click on the <code>.og-container</code> element</li>
-            <li>Select "Capture node screenshot"</li>
-            <li>Save as <strong>og-image.png</strong></li>
-            <li>Upload to your GitHub repository</li>
+    <div style="margin-top: 30px; padding: 25px; background: #f3f4f6; border-radius: 12px; max-width: 900px; font-family: system-ui;">
+        <h3 style="color: #1e40af; margin-bottom: 15px;">📸 Instructions to create og-image.png:</h3>
+        <ol style="margin-left: 20px; line-height: 2.2; color: #374151;">
+            <li>Open this file in <strong>Chrome browser</strong></li>
+            <li>Press <kbd style="background: #e5e7eb; padding: 2px 8px; border-radius: 4px;">F12</kbd> to open Developer Tools</li>
+            <li>Click on the <strong>Elements</strong> tab</li>
+            <li>Find and right-click on the <code style="background: #dbeafe; padding: 2px 6px; border-radius: 4px;">&lt;div class="og-container"&gt;</code> element</li>
+            <li>Select <strong>"Capture node screenshot"</strong></li>
+            <li>Save as <strong style="color: #1e40af;">og-image.png</strong> in this folder</li>
+            <li>Commit and push to GitHub</li>
         </ol>
-        <p style="margin-top: 15px; color: #6b7280;">
-            Or use a screenshot tool to capture the 1200x630 image above.
+        <p style="margin-top: 20px; padding: 15px; background: #dbeafe; border-radius: 8px; color: #1e40af;">
+            <strong>💡 Tip:</strong> The image dimensions are exactly 1200×630 pixels - optimal for social media sharing!
         </p>
     </div>
 </body>
