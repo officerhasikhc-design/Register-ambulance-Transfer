@@ -1439,7 +1439,10 @@
         }
 
         function checkPendingTripReminder() {
-            // Check every minute for reminders
+            // Trigger server reminder check on page load (backup for hourly trigger)
+            triggerServerReminderCheck();
+            
+            // Check every minute for local browser reminders
             setInterval(() => {
                 if (!selectedDriver) return;
                 
@@ -1454,13 +1457,34 @@
         }
 
         function showReminderNotification() {
+            const loginUrl = 'https://officerhasikhc-design.github.io/Register-ambulance-Transfer/login.html';
+            
             if ('Notification' in window && Notification.permission === 'granted') {
-                new Notification('تذكير - سجل الإسعاف', {
-                    body: 'لديك رحلة معلقة! يرجى تسجيل وقت العودة.',
+                const notification = new Notification('تذكير - سجل الإسعاف', {
+                    body: 'لديك رحلة معلقة! يرجى تسجيل وقت العودة.\nانقر هنا لفتح النظام',
                     icon: 'moh-logo.png',
                     tag: 'trip-reminder',
                     requireInteraction: true
                 });
+                
+                // Open login page when notification is clicked
+                notification.onclick = function() {
+                    window.open(loginUrl, '_blank');
+                    notification.close();
+                };
+            }
+            
+            // Also trigger server-side reminder check (sends emails to nurses/admin)
+            triggerServerReminderCheck();
+        }
+        
+        async function triggerServerReminderCheck() {
+            try {
+                const response = await fetch(`${WEB_APP_URL}?action=checkReminders`);
+                const result = await response.json();
+                console.log('Server reminder check:', result);
+            } catch (error) {
+                console.error('Failed to trigger server reminder check:', error);
             }
         }
 

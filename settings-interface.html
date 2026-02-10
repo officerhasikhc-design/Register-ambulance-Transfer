@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إعدادات النظام - سجل نشاط الإسعاف</title>
+    <script src="session-manager.js"></script>
     
     <!-- Open Graph Meta Tags for WhatsApp, Email, etc -->
     <meta name="description" content="إعدادات نظام تسجيل رحلات الإسعاف - المديرية العامة للخدمات الصحية بمحافظة ظفار - مركز حاسك الصحي">
@@ -575,7 +576,10 @@
     </div>
 
     <script>
-        // Default data
+        // API URL
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwDUAGlnGBKZMhq8UbzEYBUaP3UNi49Be5PdwqQfnyIiB1HomgXVLrmUTrgeLKhyb-j/exec';
+
+        // Default data (fallback)
         const DEFAULT_NURSES = [
             { nameAr: 'ميتي ماثيو', nameEn: 'METTY MATHEW', staffNumber: '79470' },
             { nameAr: 'شيرين كوريان', nameEn: 'SHERINE KURIAN', staffNumber: '62971' },
@@ -616,16 +620,123 @@
             { number: '612-23', isDefault: true }
         ];
 
-        // Load data from localStorage or use defaults
+        // Data arrays
         let nurses = JSON.parse(localStorage.getItem('ambulance_nurses')) || [...DEFAULT_NURSES];
         let drivers = JSON.parse(localStorage.getItem('ambulance_drivers')) || [...DEFAULT_DRIVERS];
         let vehicles = JSON.parse(localStorage.getItem('ambulance_vehicles')) || [...DEFAULT_VEHICLES];
 
-        // Save data to localStorage
+        // Loading state
+        let isLoading = false;
+
+        // Save data to localStorage (cache) and sync to server
         function saveToStorage() {
             localStorage.setItem('ambulance_nurses', JSON.stringify(nurses));
             localStorage.setItem('ambulance_drivers', JSON.stringify(drivers));
             localStorage.setItem('ambulance_vehicles', JSON.stringify(vehicles));
+        }
+
+        // ============================================
+        // SERVER SYNC FUNCTIONS
+        // ============================================
+        function showStatus(message, type = 'info') {
+            // Remove existing status
+            const existing = document.getElementById('syncStatus');
+            if (existing) existing.remove();
+
+            const div = document.createElement('div');
+            div.id = 'syncStatus';
+            const colors = {
+                info: { bg: '#dbeafe', text: '#1e40af', icon: '🔄' },
+                success: { bg: '#d1fae5', text: '#065f46', icon: '✅' },
+                error: { bg: '#fee2e2', text: '#991b1b', icon: '❌' }
+            };
+            const c = colors[type] || colors.info;
+            div.style.cssText = `position:fixed;top:16px;left:50%;transform:translateX(-50%);background:${c.bg};color:${c.text};padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;z-index:9999;box-shadow:0 4px 15px rgba(0,0,0,0.15);transition:opacity 0.3s;direction:rtl;`;
+            div.textContent = c.icon + ' ' + message;
+            document.body.appendChild(div);
+            if (type !== 'info') setTimeout(() => { div.style.opacity = '0'; setTimeout(() => div.remove(), 300); }, 3000);
+        }
+
+        // Load vehicles from server
+        async function loadVehiclesFromServer() {
+            try {
+                const response = await fetch(`${WEB_APP_URL}?action=getVehicles`);
+                const result = await response.json();
+                if (result.success && result.vehicles && result.vehicles.length > 0) {
+                    vehicles = result.vehicles.map(v => ({
+                        id: v.id,
+                        number: v.vehicleNumber,
+                        isDefault: v.isDefault || false
+                    }));
+                    saveToStorage();
+                    renderVehiclesTable();
+                }
+            } catch (error) {
+                console.error('Failed to load vehicles from server:', error);
+            }
+        }
+
+        // Add vehicle to server
+        async function addVehicleToServer(vehicleData) {
+            try {
+                showStatus('جاري حفظ السيارة في السيرفر...');
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({
+                        action: 'addVehicle',
+                        vehicleNumber: vehicleData.number,
+                        description: '',
+                        isDefault: vehicleData.isDefault || false
+                    })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showStatus('تم حفظ السيارة بنجاح', 'success');
+                    await loadVehiclesFromServer();
+                } else {
+                    showStatus('خطأ في حفظ السيارة: ' + (result.error || ''), 'error');
+                }
+                return result;
+            } catch (error) {
+                showStatus('خطأ في الاتصال بالسيرفر', 'error');
+                console.error('Server error:', error);
+                return { success: false };
+            }
+        }
+
+        // Delete vehicle from server
+        async function deleteVehicleFromServer(vehicleId) {
+            try {
+                showStatus('جاري حذف السيارة...');
+                const response = await fetch(`${WEB_APP_URL}?action=deleteVehicle&vehicleId=${encodeURIComponent(vehicleId)}`);
+                const result = await response.json();
+                if (result.success) {
+                    showStatus('تم حذف السيارة بنجاح', 'success');
+                    await loadVehiclesFromServer();
+                } else {
+                    showStatus('خطأ في حذف السيارة', 'error');
+                }
+            } catch (error) {
+                showStatus('خطأ في الاتصال بالسيرفر', 'error');
+            }
+        }
+
+        // Set default vehicle on server
+        async function setDefaultVehicleOnServer(vehicleId) {
+            try {
+                showStatus('جاري تعيين السيارة كافتراضية...');
+                const response = await fetch(`${WEB_APP_URL}?action=setDefaultVehicle&vehicleId=${encodeURIComponent(vehicleId)}`);
+                const result = await response.json();
+                if (result.success) {
+                    showStatus('تم تعيين السيارة كافتراضية بنجاح', 'success');
+                    await loadVehiclesFromServer();
+                } else {
+                    showStatus('خطأ في تعيين السيارة', 'error');
+                }
+            } catch (error) {
+                showStatus('خطأ في الاتصال بالسيرفر', 'error');
+            }
         }
 
         // Render nurses table
@@ -793,15 +904,25 @@
                     <thead>
                         <tr>
                             <th>رقم السيارة</th>
+                            <th>الحالة</th>
                             <th>الإجراءات</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${vehicles.map((vehicle, index) => `
-                            <tr>
-                                <td style="direction: ltr; text-align: right;"><strong>${vehicle.number}</strong></td>
+                            <tr style="${vehicle.isDefault ? 'background: #dbeafe;' : ''}">
+                                <td style="direction: ltr; text-align: right;">
+                                    <strong>${vehicle.number}</strong>
+                                </td>
                                 <td>
-                                    <div class="action-btns">
+                                    ${vehicle.isDefault 
+                                        ? '<span style="background:#10b981;color:white;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;">✓ افتراضية</span>' 
+                                        : '<span style="color:#9ca3af;font-size:12px;">—</span>'
+                                    }
+                                </td>
+                                <td>
+                                    <div class="action-btns" style="gap:6px;">
+                                        ${!vehicle.isDefault ? `<button class="action-btn" onclick="setAsDefault(${index})" style="background:#dbeafe;color:#1e40af;font-size:11px;padding:4px 8px;">⭐ تعيين كافتراضي</button>` : ''}
                                         <button class="action-btn edit" onclick="editVehicle(${index})">تعديل</button>
                                         <button class="action-btn delete" onclick="deleteVehicle(${index})">حذف</button>
                                     </div>
@@ -811,6 +932,20 @@
                     </tbody>
                 </table>
             `;
+        }
+
+        // Set vehicle as default
+        async function setAsDefault(index) {
+            const vehicle = vehicles[index];
+            if (vehicle.id) {
+                await setDefaultVehicleOnServer(vehicle.id);
+            } else {
+                // Local only - update locally and sync
+                vehicles.forEach(v => v.isDefault = false);
+                vehicles[index].isDefault = true;
+                saveToStorage();
+                renderVehiclesTable();
+            }
         }
 
         // Driver Modal functions
@@ -891,6 +1026,7 @@
             if (index >= 0) {
                 document.getElementById('vehicleModalTitle').textContent = 'تعديل بيانات السيارة';
                 document.getElementById('vehicleNumberInput').value = vehicles[index].number;
+                document.getElementById('vehicleIsDefault').checked = vehicles[index].isDefault || false;
             } else {
                 document.getElementById('vehicleModalTitle').textContent = 'إضافة سيارة جديدة';
                 document.getElementById('vehicleForm').reset();
@@ -903,22 +1039,53 @@
             document.getElementById('vehicleModal').classList.remove('active');
         }
 
-        function saveVehicle(event) {
+        async function saveVehicle(event) {
             event.preventDefault();
             
             const index = parseInt(document.getElementById('vehicleIndex').value);
-            const vehicle = {
-                number: document.getElementById('vehicleNumberInput').value.trim()
-            };
+            const vehicleNumber = document.getElementById('vehicleNumberInput').value.trim();
+            const isDefault = document.getElementById('vehicleIsDefault').checked;
 
             if (index >= 0) {
-                vehicles[index] = vehicle;
+                // Update existing vehicle
+                const vehicle = vehicles[index];
+                if (vehicle.id) {
+                    // Update on server
+                    try {
+                        showStatus('جاري تحديث السيارة...');
+                        const response = await fetch(WEB_APP_URL, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                            body: JSON.stringify({
+                                action: 'updateVehicle',
+                                vehicleId: vehicle.id,
+                                vehicleNumber: vehicleNumber,
+                                isDefault: isDefault
+                            })
+                        });
+                        const result = await response.json();
+                        if (result.success) {
+                            showStatus('تم تحديث السيارة بنجاح', 'success');
+                            await loadVehiclesFromServer();
+                        } else {
+                            showStatus('خطأ في التحديث', 'error');
+                        }
+                    } catch (error) {
+                        showStatus('خطأ في الاتصال', 'error');
+                    }
+                } else {
+                    // Local update
+                    vehicles[index].number = vehicleNumber;
+                    vehicles[index].isDefault = isDefault;
+                    if (isDefault) vehicles.forEach((v, i) => { if (i !== index) v.isDefault = false; });
+                    saveToStorage();
+                    renderVehiclesTable();
+                }
             } else {
-                vehicles.push(vehicle);
+                // Add new vehicle to server
+                await addVehicleToServer({ number: vehicleNumber, isDefault: isDefault });
             }
 
-            saveToStorage();
-            renderVehiclesTable();
             closeVehicleModal();
         }
 
@@ -926,11 +1093,16 @@
             openVehicleModal(index);
         }
 
-        function deleteVehicle(index) {
+        async function deleteVehicle(index) {
             if (confirm(`هل تريد حذف السيارة "${vehicles[index].number}"؟`)) {
-                vehicles.splice(index, 1);
-                saveToStorage();
-                renderVehiclesTable();
+                const vehicle = vehicles[index];
+                if (vehicle.id) {
+                    await deleteVehicleFromServer(vehicle.id);
+                } else {
+                    vehicles.splice(index, 1);
+                    saveToStorage();
+                    renderVehiclesTable();
+                }
             }
         }
 
@@ -990,10 +1162,17 @@
             }
         }
 
-        // Initialize
-        renderNursesTable();
-        renderDriversTable();
-        renderVehiclesTable();
+        // Initialize - Load from server then render
+        async function initializeSettings() {
+            renderNursesTable();
+            renderDriversTable();
+            renderVehiclesTable();
+
+            // Load vehicles from server (source of truth)
+            await loadVehiclesFromServer();
+        }
+
+        initializeSettings();
     </script>
 </body>
 </html>

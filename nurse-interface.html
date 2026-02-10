@@ -1882,7 +1882,7 @@
         const DEFAULT_VEHICLES = [{ number: '612-23' }];
 
         const DRIVERS_DATA = JSON.parse(localStorage.getItem('ambulance_drivers')) || DEFAULT_DRIVERS;
-        const VEHICLES_DATA = JSON.parse(localStorage.getItem('ambulance_vehicles')) || DEFAULT_VEHICLES;
+        let VEHICLES_DATA = JSON.parse(localStorage.getItem('ambulance_vehicles')) || DEFAULT_VEHICLES;
 
         if (!localStorage.getItem('ambulance_drivers')) {
             localStorage.setItem('ambulance_drivers', JSON.stringify(DEFAULT_DRIVERS));
@@ -1891,12 +1891,45 @@
             localStorage.setItem('ambulance_vehicles', JSON.stringify(DEFAULT_VEHICLES));
         }
 
-        function initializeDropdowns() {
+        // Load vehicles from server (source of truth)
+        async function loadVehiclesFromServer() {
+            try {
+                const response = await fetch(`${WEB_APP_URL}?action=getVehicles`);
+                const result = await response.json();
+                if (result.success && result.vehicles && result.vehicles.length > 0) {
+                    VEHICLES_DATA = result.vehicles.map(v => ({
+                        id: v.id,
+                        number: v.vehicleNumber,
+                        isDefault: v.isDefault || false
+                    }));
+                    localStorage.setItem('ambulance_vehicles', JSON.stringify(VEHICLES_DATA));
+                    populateVehicleDropdown();
+                }
+            } catch (error) {
+                console.error('Failed to load vehicles from server, using local data:', error);
+            }
+        }
+
+        function populateVehicleDropdown() {
             const vehicleSelect = document.getElementById('vehicleNumber');
+            const currentValue = vehicleSelect.value;
             vehicleSelect.innerHTML = `<option value="">${currentLang === 'en' ? 'Select Vehicle' : 'اختر السيارة'}</option>`;
-            VEHICLES_DATA.forEach(vehicle => {
-                vehicleSelect.innerHTML += `<option value="${vehicle.number}">${vehicle.number}</option>`;
+            
+            // Sort: default vehicle first
+            const sorted = [...VEHICLES_DATA].sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0));
+            sorted.forEach(vehicle => {
+                const defaultLabel = vehicle.isDefault ? ' ⭐' : '';
+                vehicleSelect.innerHTML += `<option value="${vehicle.number}" ${vehicle.isDefault ? 'selected' : ''}>${vehicle.number}${defaultLabel}</option>`;
             });
+
+            // Restore previous selection if it existed
+            if (currentValue && !sorted.find(v => v.isDefault)) {
+                vehicleSelect.value = currentValue;
+            }
+        }
+
+        function initializeDropdowns() {
+            populateVehicleDropdown();
 
             const driverSelect = document.getElementById('driverName');
             driverSelect.innerHTML = `<option value="">${currentLang === 'en' ? 'Select Driver' : 'اختر السائق'}</option>`;
@@ -1905,6 +1938,9 @@
                 const typeLabel = driver.type === 'daily-paid' ? (currentLang === 'en' ? ' (Daily-paid)' : ' (أجر يومي)') : '';
                 driverSelect.innerHTML += `<option value="${driver.nameEn}" data-staff="${driver.staffNumber}" data-type="${driver.type}">${displayName}${typeLabel}</option>`;
             });
+
+            // Load vehicles from server in background
+            loadVehiclesFromServer();
         }
 
         function updateStaffNumber() {
