@@ -156,15 +156,16 @@
         }
 
         .time-display {
-            background: linear-gradient(135deg, var(--lighter-blue) 0%, #dbeafe 100%);
-            border-radius: 14px;
-            padding: 14px;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 10px;
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
         .current-time {
-            font-size: 28px;
+            font-size: 22px;
             font-weight: 700;
             color: var(--primary-blue);
             font-family: 'Cairo', monospace;
@@ -172,71 +173,102 @@
         }
 
         .current-date {
-            font-size: 14px;
+            font-size: 13px;
             color: var(--text-secondary);
-            margin-top: 4px;
+            margin-top: 2px;
         }
 
         .action-buttons {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
+        }
+
+        .btn-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-hint {
+            font-size: 12px;
+            color: #6b7280;
+            font-weight: 500;
+            transition: opacity 0.3s;
         }
 
         .btn {
-            padding: 18px 24px;
-            border: none;
-            border-radius: 14px;
+            width: 100%;
+            padding: 14px 20px;
+            border: 2px solid transparent;
+            border-radius: 12px;
             font-family: inherit;
-            font-size: 18px;
-            font-weight: 700;
+            font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 8px;
         }
 
         .btn-departure {
-            background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
-            color: var(--white);
-            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+            background: #f0fdf4;
+            color: #166534;
+            border: 2px solid #86efac;
         }
 
         .btn-departure:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.5);
+            background: #dcfce7;
+            border-color: #4ade80;
         }
 
         .btn-return {
-            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--light-blue) 100%);
-            color: var(--white);
-            box-shadow: 0 6px 20px rgba(30, 64, 175, 0.4);
+            background: #eff6ff;
+            color: #1e40af;
+            border: 2px solid #93c5fd;
         }
 
         .btn-return:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(30, 64, 175, 0.5);
+            background: #dbeafe;
+            border-color: #60a5fa;
         }
-        
-        /* Enhanced pulse animation for return button when departure is recorded */
-        @keyframes return-pulse {
+
+        /* Subtle border glow for the currently active button */
+        @keyframes active-glow {
             0%, 100% { 
-                transform: scale(1);
-                box-shadow: 0 6px 20px rgba(30, 64, 175, 0.4);
-                border: 3px solid transparent;
+                border-color: #86efac;
+                box-shadow: 0 0 0 0 rgba(134, 239, 172, 0);
             }
             50% { 
-                transform: scale(1.03);
-                box-shadow: 0 8px 30px rgba(30, 64, 175, 0.5), 0 0 0 6px rgba(59, 130, 246, 0.15);
-                border: 3px solid rgba(59, 130, 246, 0.5);
+                border-color: #4ade80;
+                box-shadow: 0 0 0 3px rgba(134, 239, 172, 0.2);
             }
+        }
+
+        @keyframes active-glow-blue {
+            0%, 100% { 
+                border-color: #93c5fd;
+                box-shadow: 0 0 0 0 rgba(147, 197, 253, 0);
+            }
+            50% { 
+                border-color: #60a5fa;
+                box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.25);
+            }
+        }
+
+        .btn-departure.active-btn {
+            animation: active-glow 2.5s ease-in-out infinite;
+        }
+
+        .btn-departure.active-btn:hover {
+            animation: none;
         }
         
         .btn-return.pulse-attention {
-            animation: return-pulse 1.5s ease-in-out infinite;
-            position: relative;
+            animation: active-glow-blue 2.5s ease-in-out infinite;
         }
         
         .btn-return.pulse-attention:hover {
@@ -244,9 +276,10 @@
         }
 
         .btn:disabled {
-            opacity: 0.5;
+            opacity: 0.4;
             cursor: not-allowed;
             transform: none !important;
+            animation: none !important;
         }
 
         .btn-icon {
@@ -649,13 +682,15 @@
 
         <!-- Driver Info (when logged in) -->
         <div class="driver-info-section" id="driverInfoSection" style="display: none;">
-            <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 12px; padding: 16px; margin-bottom: 16px; text-align: center; position: relative;">
-                <button onclick="logout()" style="position: absolute; top: 10px; left: 10px; background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit;">
+            <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; position: relative;">
+                <div style="text-align: right;">
+                    <div style="font-size: 12px; color: #9ca3af; margin-bottom: 2px;">مرحباً</div>
+                    <div style="font-size: 15px; font-weight: 600; color: #374151;" id="loggedInDriverName"></div>
+                    <div style="font-size: 12px; color: #9ca3af; margin-top: 2px;">الرقم الوظيفي: <span id="loggedInStaffNumber" style="direction: ltr;"></span></div>
+                </div>
+                <button onclick="logout()" style="background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap;">
                     خروج
                 </button>
-                <div style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">مرحباً</div>
-                <div style="font-size: 20px; font-weight: 700; color: #1e40af;" id="loggedInDriverName"></div>
-                <div style="font-size: 13px; color: #6b7280; margin-top: 4px;">الرقم الوظيفي: <span id="loggedInStaffNumber" style="direction: ltr;"></span></div>
             </div>
         </div>
 
@@ -708,12 +743,18 @@
 
         <!-- Action Buttons -->
         <div class="action-buttons" id="actionButtons" style="display: none;">
-            <button class="btn btn-departure" id="btnDeparture" onclick="recordDeparture()">
-                <span>→ تسجيل وقت الذهاب</span>
-            </button>
-            <button class="btn btn-return" id="btnReturn" onclick="recordReturn()" disabled>
-                <span>✓ تسجيل وقت العودة</span>
-            </button>
+            <div class="btn-wrapper" id="departureWrapper">
+                <div class="btn-hint" id="departureHint">يرجى تسجيل الذهاب</div>
+                <button class="btn btn-departure active-btn" id="btnDeparture" onclick="recordDeparture()">
+                    <span>→ تسجيل وقت الذهاب</span>
+                </button>
+            </div>
+            <div class="btn-wrapper" id="returnWrapper">
+                <div class="btn-hint" id="returnHint" style="display: none;">يرجى تسجيل العودة في حالة الوصول</div>
+                <button class="btn btn-return" id="btnReturn" onclick="recordReturn()" disabled>
+                    <span>← تسجيل وقت العودة</span>
+                </button>
+            </div>
         </div>
 
         <!-- Trip History -->
@@ -1078,23 +1119,33 @@
         function updateButtons() {
             const btnDeparture = document.getElementById('btnDeparture');
             const btnReturn = document.getElementById('btnReturn');
+            const departureHint = document.getElementById('departureHint');
+            const returnHint = document.getElementById('returnHint');
 
             if (!selectedDriver) {
                 btnDeparture.disabled = true;
                 btnReturn.disabled = true;
+                btnDeparture.classList.remove('active-btn');
                 btnReturn.classList.remove('pulse-attention');
+                departureHint.style.display = 'none';
+                returnHint.style.display = 'none';
                 return;
             }
 
             if (pendingTrip) {
                 btnDeparture.disabled = true;
+                btnDeparture.classList.remove('active-btn');
                 btnReturn.disabled = false;
-                // Add pulse animation to draw attention to return button
                 btnReturn.classList.add('pulse-attention');
+                departureHint.style.display = 'none';
+                returnHint.style.display = 'block';
             } else {
                 btnDeparture.disabled = false;
+                btnDeparture.classList.add('active-btn');
                 btnReturn.disabled = true;
                 btnReturn.classList.remove('pulse-attention');
+                departureHint.style.display = 'block';
+                returnHint.style.display = 'none';
             }
         }
 
@@ -1527,8 +1578,9 @@
             document.getElementById('btnDeparture').disabled = false;
             document.getElementById('btnDeparture').innerHTML = '<span>→ تسجيل وقت الذهاب</span>';
             document.getElementById('btnReturn').disabled = true;
-            document.getElementById('btnReturn').innerHTML = '<span>✓ تسجيل وقت العودة</span>';
+            document.getElementById('btnReturn').innerHTML = '<span>← تسجيل وقت العودة</span>';
             document.getElementById('btnReturn').classList.remove('pulse-attention');
+            updateButtons();
             
             // Reload page after 2 minutes to reset to default state
             setTimeout(() => {
