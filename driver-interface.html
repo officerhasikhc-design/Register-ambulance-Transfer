@@ -783,6 +783,7 @@
         </div>
     </div>
 
+    <script src="data-cache.js"></script>
     <script>
         // ============================================
         // CONFIGURATION
@@ -1050,58 +1051,43 @@
         // ============================================
         // TRIP MANAGEMENT
         // ============================================
-        async function loadPendingTrip() {
+        function processPendingTripsData(trips) {
             if (!selectedDriver) return;
-
-            const pendingDiv = document.getElementById('pendingTrip');
             const key = `pending_trip_${selectedDriver.staffNumber}`;
-            
-            // First try to get from server (most reliable source)
-            try {
-                const response = await fetch(`${WEB_APP_URL}?action=getPendingTrips`);
-                const result = await response.json();
+            const pendingDiv = document.getElementById('pendingTrip');
+
+            if (trips && trips.length > 0) {
+                const serverTrip = trips.find(t => 
+                    t.staffNumber && t.staffNumber.toString() === selectedDriver.staffNumber.toString() && 
+                    t.status === 'pending'
+                );
                 
-                if (result.success && result.trips) {
-                    // Check if there's a pending trip for this driver
-                    const serverTrip = result.trips.find(t => 
+                if (serverTrip) {
+                    pendingTrip = {
+                        ...serverTrip,
+                        departureDate: serverTrip.departureDate,
+                        departureTime: serverTrip.departureTime
+                    };
+                    localStorage.setItem(key, JSON.stringify(pendingTrip));
+                } else {
+                    const completedTrip = trips.find(t => 
                         t.staffNumber && t.staffNumber.toString() === selectedDriver.staffNumber.toString() && 
-                        t.status === 'pending'
+                        (t.status === 'complete' || t.status === 'submitted')
                     );
                     
-                    if (serverTrip) {
-                        // There's a pending trip on server - use it
-                        pendingTrip = {
-                            ...serverTrip,
-                            departureDate: serverTrip.departureDate,
-                            departureTime: serverTrip.departureTime
-                        };
-                        localStorage.setItem(key, JSON.stringify(pendingTrip));
-                        console.log('Loaded pending trip from server:', pendingTrip);
+                    if (completedTrip) {
+                        localStorage.removeItem(key);
+                        pendingTrip = null;
                     } else {
-                        // Check if trip was completed (status = 'complete' or 'submitted')
-                        const completedTrip = result.trips.find(t => 
-                            t.staffNumber && t.staffNumber.toString() === selectedDriver.staffNumber.toString() && 
-                            (t.status === 'complete' || t.status === 'submitted')
-                        );
-                        
-                        if (completedTrip) {
-                            // Trip was completed, clear local storage
-                            localStorage.removeItem(key);
-                            pendingTrip = null;
+                        const localTrip = JSON.parse(localStorage.getItem(key));
+                        if (localTrip && localTrip.status !== 'complete') {
+                            pendingTrip = localTrip;
                         } else {
-                            // No trip on server, check localStorage
-                            const localTrip = JSON.parse(localStorage.getItem(key));
-                            if (localTrip && localTrip.status !== 'complete') {
-                                pendingTrip = localTrip;
-                            } else {
-                                pendingTrip = null;
-                            }
+                            pendingTrip = null;
                         }
                     }
                 }
-            } catch (error) {
-                console.log('Server unavailable, using local data:', error);
-                // Fallback to localStorage
+            } else {
                 const localTrip = JSON.parse(localStorage.getItem(key));
                 if (localTrip && localTrip.status !== 'complete') {
                     pendingTrip = localTrip;
@@ -1110,20 +1096,31 @@
                 }
             }
 
-            // Update UI based on pending trip status
+            // Update UI
             if (pendingTrip && pendingTrip.status !== 'complete' && pendingTrip.status !== 'submitted') {
-                // Has pending trip - needs to record return
                 pendingDiv.style.display = 'block';
                 document.getElementById('pendingDate').textContent = pendingTrip.departureDate || '-';
                 document.getElementById('pendingTime').textContent = pendingTrip.departureTime || '-';
             } else {
-                // No pending trip - ready for new trip
                 pendingDiv.style.display = 'none';
                 pendingTrip = null;
                 localStorage.removeItem(key);
             }
 
             updateButtons();
+        }
+
+        async function loadPendingTrip() {
+            if (!selectedDriver) return;
+
+            // Use DataCache: show cached data instantly, fetch fresh in background
+            await DataCache.fetchWithCache(
+                `${WEB_APP_URL}?action=getPendingTrips`,
+                DataCache.KEYS.PENDING_TRIPS,
+                DataCache.EXPIRY.PENDING_TRIPS,
+                (trips) => { processPendingTripsData(trips); },
+                (result) => (result.success && result.trips) ? result.trips : null
+            );
         }
 
         function updateButtons() {
@@ -1351,64 +1348,22 @@
         let cachedServerTrips = null;
         let isLoadingHistory = false;
         
-        async function loadTripHistory(showLoading = true) {
+        function renderTripHistoryFromData(trips) {
+            if (!selectedDriver) return;
+            cachedServerTrips = trips;
+            
             const container = document.getElementById('tripHistory');
             const monthFilter = document.getElementById('monthFilter').value;
-            
-            if (!selectedDriver) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">👤</div>
-                        <p>اختر اسمك لعرض سجل رحلاتك</p>
-                    </div>
-                `;
-                return;
-            }
-
-            // Show loading only on first load
-            if (showLoading && !cachedServerTrips) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">...</div>
-                        <p>جاري تحميل السجل...</p>
-                    </div>
-                `;
-            }
-            
-            // Prevent multiple simultaneous loads
-            if (isLoadingHistory) return;
-            isLoadingHistory = true;
 
             let history = [];
-            
-            // Try to fetch from server
-            try {
-                const response = await fetch(`${WEB_APP_URL}?action=getPendingTrips`);
-                const result = await response.json();
-                
-                if (result.success && result.trips) {
-                    cachedServerTrips = result.trips;
-                    // Filter trips for this driver
-                    history = result.trips.filter(t => 
-                        t.staffNumber === selectedDriver.staffNumber
-                    ).map(trip => ({
-                        ...trip,
-                        approved: trip.status === 'submitted'
-                    }));
-                }
-            } catch (error) {
-                // Use cached data if available
-                if (cachedServerTrips) {
-                    history = cachedServerTrips.filter(t => 
-                        t.staffNumber === selectedDriver.staffNumber
-                    ).map(trip => ({
-                        ...trip,
-                        approved: trip.status === 'submitted'
-                    }));
-                }
+            if (trips && trips.length > 0) {
+                history = trips.filter(t => 
+                    t.staffNumber === selectedDriver.staffNumber
+                ).map(trip => ({
+                    ...trip,
+                    approved: trip.status === 'submitted'
+                }));
             }
-            
-            isLoadingHistory = false;
             
             // Also get local history and merge
             const key = `trip_history_${selectedDriver.staffNumber}`;
@@ -1449,6 +1404,27 @@
             allDriverHistory = history;
             driverHistoryPage = 1;
             renderDriverHistoryPage();
+        }
+
+        async function loadTripHistory() {
+            if (!selectedDriver) {
+                document.getElementById('tripHistory').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">👤</div>
+                        <p>اختر اسمك لعرض سجل رحلاتك</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Use DataCache: show cached data instantly, fetch fresh in background
+            await DataCache.fetchWithCache(
+                `${WEB_APP_URL}?action=getPendingTrips`,
+                DataCache.KEYS.PENDING_TRIPS,
+                DataCache.EXPIRY.PENDING_TRIPS,
+                (trips) => { renderTripHistoryFromData(trips); },
+                (result) => (result.success && result.trips) ? result.trips : null
+            );
         }
 
         function renderDriverHistoryPage() {
@@ -1581,39 +1557,14 @@
         async function autoRefreshHistory() {
             if (!selectedDriver) return;
             
-            try {
-                const response = await fetch(`${WEB_APP_URL}?action=getPendingTrips`);
-                const result = await response.json();
-                
-                if (result.success && result.trips) {
-                    // Update cache
-                    cachedServerTrips = result.trips;
-                    
-                    // Filter trips for this driver
-                    const driverTrips = result.trips.filter(t => 
-                        t.staffNumber === selectedDriver.staffNumber
-                    );
-                    
-                    // Create hash to detect changes
-                    const newHash = JSON.stringify(driverTrips.map(t => ({
-                        id: t.tripId,
-                        status: t.status
-                    })));
-                    
-                    if (newHash !== lastHistoryHash) {
-                        lastHistoryHash = newHash;
-                        // Silent update without loading indicator
-                        loadTripHistory(false);
-                        loadPendingTrip();
-                    }
-                }
-            } catch (error) {
-                // Silent fail
-            }
+            // Invalidate cache to force fresh fetch
+            DataCache.invalidate(DataCache.KEYS.PENDING_TRIPS);
+            loadTripHistory();
+            loadPendingTrip();
         }
         
-        // Check for updates every 10 seconds
-        setInterval(autoRefreshHistory, 10000);
+        // Check for updates every 15 seconds
+        setInterval(autoRefreshHistory, 15000);
 
         // ============================================
         // OFFLINE SUPPORT | دعم العمل بدون إنترنت

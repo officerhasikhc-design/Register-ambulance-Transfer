@@ -1098,6 +1098,7 @@
         </div>
     </div>
 
+    <script src="data-cache.js"></script>
     <script>
         // ============================================
         // 🔍 DIAGNOSTIC SCRIPT - سكريبت التشخيص
@@ -1641,55 +1642,28 @@
         let isLoadingPendingTrips = false;
         
         async function loadPendingTrips(showLoading = true, forceRefresh = false) {
-            const container = document.getElementById('pendingTripsContainer');
-            
             // Clear cache if force refresh
             if (forceRefresh) {
                 cachedPendingTrips = null;
+                DataCache.invalidate(DataCache.KEYS.PENDING_TRIPS);
             }
-            
-            // Show loading
-            if (showLoading) {
-                container.innerHTML = `
-                    <div style="background: white; padding: 16px; border-radius: 10px; text-align: center; color: #6b7280;">
-                        <span>... ${currentLang === 'en' ? 'Loading...' : 'جاري التحميل...'}</span>
-                    </div>
-                `;
-            }
-            
-            // Prevent multiple simultaneous loads
-            if (isLoadingPendingTrips) return;
-            isLoadingPendingTrips = true;
 
-            try {
-                // Fetch from Google Sheets
-                const response = await fetch(`${WEB_APP_URL}?action=getPendingTrips`);
-                const result = await response.json();
-                
-                isLoadingPendingTrips = false;
-                
-                if (result.success && result.trips) {
-                    cachedPendingTrips = result.trips;
-                    displayPendingTrips(result.trips);
-                } else {
-                    // Fallback to localStorage or cache
-                    if (cachedPendingTrips) {
-                        displayPendingTrips(cachedPendingTrips);
+            // Use DataCache: show cached data instantly, fetch fresh in background
+            await DataCache.fetchWithCache(
+                `${WEB_APP_URL}?action=getPendingTrips`,
+                DataCache.KEYS.PENDING_TRIPS,
+                DataCache.EXPIRY.PENDING_TRIPS,
+                (trips) => {
+                    if (trips) {
+                        cachedPendingTrips = trips;
+                        displayPendingTrips(trips);
                     } else {
                         const localTrips = JSON.parse(localStorage.getItem('pending_trips_for_nurse')) || [];
                         displayPendingTrips(localTrips.filter(t => !t.submittedToSystem));
                     }
-                }
-            } catch (error) {
-                isLoadingPendingTrips = false;
-                // Fallback to cache or localStorage
-                if (cachedPendingTrips) {
-                    displayPendingTrips(cachedPendingTrips);
-                } else {
-                    const localTrips = JSON.parse(localStorage.getItem('pending_trips_for_nurse')) || [];
-                    displayPendingTrips(localTrips.filter(t => !t.submittedToSystem));
-                }
-            }
+                },
+                (result) => (result.success && result.trips) ? result.trips : null
+            );
         }
 
         // Store trips globally for usePendingTrip function
@@ -1931,21 +1905,23 @@
 
         // Load vehicles from server (source of truth)
         async function loadVehiclesFromServer() {
-            try {
-                const response = await fetch(`${WEB_APP_URL}?action=getVehicles`);
-                const result = await response.json();
-                if (result.success && result.vehicles && result.vehicles.length > 0) {
-                    VEHICLES_DATA = result.vehicles.map(v => ({
-                        id: v.id,
-                        number: v.vehicleNumber,
-                        isDefault: v.isDefault || false
-                    }));
-                    localStorage.setItem('ambulance_vehicles', JSON.stringify(VEHICLES_DATA));
-                    populateVehicleDropdown();
-                }
-            } catch (error) {
-                console.error('Failed to load vehicles from server, using local data:', error);
-            }
+            await DataCache.fetchWithCache(
+                `${WEB_APP_URL}?action=getVehicles`,
+                DataCache.KEYS.VEHICLES,
+                DataCache.EXPIRY.VEHICLES,
+                (vehicles) => {
+                    if (vehicles && vehicles.length > 0) {
+                        VEHICLES_DATA = vehicles.map(v => ({
+                            id: v.id,
+                            number: v.vehicleNumber,
+                            isDefault: v.isDefault || false
+                        }));
+                        localStorage.setItem('ambulance_vehicles', JSON.stringify(VEHICLES_DATA));
+                        populateVehicleDropdown();
+                    }
+                },
+                (result) => (result.success && result.vehicles) ? result.vehicles : null
+            );
         }
 
         function populateVehicleDropdown() {
@@ -2153,27 +2129,27 @@
             const year = document.getElementById('yearFilter').value;
             const month = document.getElementById('monthFilter').value;
 
-            try {
-                let url = `${WEB_APP_URL}?action=getAllRecords&year=${year}`;
-                if (month !== 'all') url += `&month=${month}`;
+            let url = `${WEB_APP_URL}?action=getAllRecords&year=${year}`;
+            if (month !== 'all') url += `&month=${month}`;
 
-                const response = await fetch(url);
-                const result = await response.json();
-
-                if (result.success) {
-                    allRecords = result.data;
-                    nurseRecordsPage = 1;
-                    displayRecords(result.data);
-                } else {
-                    console.error('Error:', result.error);
-                    allRecords = [];
-                    displayRecords([]);
-                }
-            } catch (error) {
-                console.error('Error fetching records:', error);
-                allRecords = [];
-                displayRecords([]);
-            }
+            // Use DataCache: show cached records instantly, fetch fresh in background
+            const cacheKey = DataCache.KEYS.RECORDS + '_' + year + '_' + month;
+            await DataCache.fetchWithCache(
+                url,
+                cacheKey,
+                DataCache.EXPIRY.RECORDS,
+                (records) => {
+                    if (records) {
+                        allRecords = records;
+                        nurseRecordsPage = 1;
+                        displayRecords(records);
+                    } else {
+                        allRecords = [];
+                        displayRecords([]);
+                    }
+                },
+                (result) => (result.success && result.data) ? result.data : null
+            );
         }
 
         function displayRecords(records) {
@@ -2472,35 +2448,9 @@
         let lastDataHash = '';
         
         async function smartRefreshPendingTrips() {
-            try {
-                const response = await fetch(`${WEB_APP_URL}?action=getPendingTrips`);
-                const result = await response.json();
-                
-                if (result.success && result.trips) {
-                    // Update cache
-                    cachedPendingTrips = result.trips;
-                    
-                    // Create a hash of the data to detect changes
-                    const newHash = JSON.stringify(result.trips.map(t => ({
-                        id: t.tripId,
-                        status: t.status,
-                        returnDate: t.returnDate,
-                        returnTime: t.returnTime
-                    })));
-                    
-                    if (newHash !== lastDataHash) {
-                        const hadPreviousData = lastDataHash !== '';
-                        lastDataHash = newHash;
-                        currentPendingTrips = result.trips;
-                        localStorage.setItem('pending_trips_for_nurse', JSON.stringify(result.trips));
-                        
-                        // Silent update without loading indicator
-                        displayPendingTrips(result.trips);
-                    }
-                }
-            } catch (error) {
-                console.error('Smart refresh error:', error);
-            }
+            // Invalidate cache to force fresh fetch
+            DataCache.invalidate(DataCache.KEYS.PENDING_TRIPS);
+            loadPendingTrips(false, true);
         }
         
         // Check for updates every 15 seconds

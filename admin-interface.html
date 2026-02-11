@@ -907,6 +907,7 @@
         </div>
     </div>
 
+    <script src="data-cache.js"></script>
     <script>
         // ============================================
         // CONFIGURATION - UPDATE THIS URL
@@ -952,49 +953,45 @@
 
 
         async function loadStats() {
-            try {
-                const url = `${WEB_APP_URL}?action=getStats`;
-                const response = await fetch(url);
-                const result = await response.json();
-                
-                if (result.success) {
-                    document.getElementById('totalCases').textContent = result.data.total;
-                    document.getElementById('thisMonth').textContent = result.data.thisMonth;
-                    document.getElementById('today').textContent = result.data.today;
-                }
-            } catch (error) {
-                console.error('Error loading stats:', error);
-            }
+            await DataCache.fetchWithCache(
+                `${WEB_APP_URL}?action=getStats`,
+                DataCache.KEYS.STATS,
+                DataCache.EXPIRY.STATS,
+                (stats) => {
+                    if (stats) {
+                        document.getElementById('totalCases').textContent = stats.total;
+                        document.getElementById('thisMonth').textContent = stats.thisMonth;
+                        document.getElementById('today').textContent = stats.today;
+                    }
+                },
+                (result) => (result.success && result.data) ? result.data : null
+            );
         }
 
         async function loadNotifications() {
-            try {
-                // Load pending trips for notifications
-                const url = `${WEB_APP_URL}?action=getPendingTrips`;
-                const response = await fetch(url);
-                const result = await response.json();
-                
-                if (result.success && result.trips) {
-                    // Filter only pending trips (not yet returned)
-                    const pendingOnly = result.trips.filter(t => t.status === 'pending');
-                    notificationData = pendingOnly.slice(0, 5);
-                    displayNotificationsDropdown(notificationData);
-                    
-                    // Update badge count - show pending trips count
-                    const badge = document.getElementById('notificationCount');
-                    if (pendingOnly.length > 0) {
-                        badge.textContent = pendingOnly.length;
-                        badge.style.display = 'flex';
+            await DataCache.fetchWithCache(
+                `${WEB_APP_URL}?action=getPendingTrips`,
+                DataCache.KEYS.NOTIFICATIONS,
+                DataCache.EXPIRY.NOTIFICATIONS,
+                (trips) => {
+                    if (trips) {
+                        const pendingOnly = trips.filter(t => t.status === 'pending');
+                        notificationData = pendingOnly.slice(0, 5);
+                        displayNotificationsDropdown(notificationData);
+                        
+                        const badge = document.getElementById('notificationCount');
+                        if (pendingOnly.length > 0) {
+                            badge.textContent = pendingOnly.length;
+                            badge.style.display = 'flex';
+                        } else {
+                            badge.style.display = 'none';
+                        }
                     } else {
-                        badge.style.display = 'none';
+                        document.getElementById('notificationCount').style.display = 'none';
                     }
-                } else {
-                    document.getElementById('notificationCount').style.display = 'none';
-                }
-            } catch (error) {
-                console.error('Error loading notifications:', error);
-                document.getElementById('notificationCount').style.display = 'none';
-            }
+                },
+                (result) => (result.success && result.trips) ? result.trips : null
+            );
         }
 
         function displayNotificationsDropdown(trips) {
@@ -1041,37 +1038,24 @@
             const year = document.getElementById('yearFilter').value;
             const month = document.getElementById('monthFilter').value;
 
-            try {
-                let url = `${WEB_APP_URL}?action=getAllRecords`;
-                
-                // Apply year filter if not "all"
-                if (year !== 'all') {
-                    url += `&year=${year}`;
-                }
-                
-                // Apply month filter if not "all"
-                if (month !== 'all') {
-                    url += `&month=${month}`;
-                }
-                
-                if (search) url += `&search=${encodeURIComponent(search)}`;
+            let url = `${WEB_APP_URL}?action=getAllRecords`;
+            if (year !== 'all') url += `&year=${year}`;
+            if (month !== 'all') url += `&month=${month}`;
+            if (search) url += `&search=${encodeURIComponent(search)}`;
 
-                const response = await fetch(url);
-                const result = await response.json();
-
-                if (result.success) {
-                    allRecords = result.data;
+            // Use DataCache: show cached records instantly, fetch fresh in background
+            const cacheKey = DataCache.KEYS.RECORDS + '_' + year + '_' + month + '_' + search;
+            await DataCache.fetchWithCache(
+                url,
+                cacheKey,
+                DataCache.EXPIRY.RECORDS,
+                (records) => {
+                    allRecords = records || [];
+                    currentPage = 1;
                     displayRecordsWithPagination();
-                } else {
-                    console.error('Error:', result.error);
-                    allRecords = [];
-                    displayRecordsWithPagination();
-                }
-            } catch (error) {
-                console.error('Error loading records:', error);
-                allRecords = [];
-                displayRecordsWithPagination();
-            }
+                },
+                (result) => (result.success && result.data) ? result.data : null
+            );
         }
 
         function displayRecordsWithPagination() {
@@ -1388,22 +1372,22 @@
         async function loadPendingTrips() {
             const container = document.getElementById('pendingTripsContainer');
             
-            try {
-                const response = await fetch(`${WEB_APP_URL}?action=getPendingTrips`);
-                const result = await response.json();
-                
-                if (result.success && result.trips && result.trips.length > 0) {
-                    allPendingTrips = result.trips;
-                    adminPendingPage = 1;
-                    renderAdminPendingPage();
-                } else {
-                    allPendingTrips = [];
-                    container.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 20px;">لا توجد رحلات معلقة</p>';
-                }
-            } catch (error) {
-                console.error('Error loading pending trips:', error);
-                container.innerHTML = '<p style="color: var(--error); text-align: center; padding: 20px;">خطأ في تحميل الرحلات</p>';
-            }
+            await DataCache.fetchWithCache(
+                `${WEB_APP_URL}?action=getPendingTrips`,
+                DataCache.KEYS.PENDING_TRIPS,
+                DataCache.EXPIRY.PENDING_TRIPS,
+                (trips) => {
+                    if (trips && trips.length > 0) {
+                        allPendingTrips = trips;
+                        adminPendingPage = 1;
+                        renderAdminPendingPage();
+                    } else {
+                        allPendingTrips = [];
+                        container.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 20px;">لا توجد رحلات معلقة</p>';
+                    }
+                },
+                (result) => (result.success && result.trips) ? result.trips : null
+            );
         }
 
         function renderAdminPendingPage() {
@@ -1676,6 +1660,7 @@
 
         // Refresh data every 30 seconds
         setInterval(() => {
+            DataCache.invalidateAll();
             loadStats();
             loadNotifications();
             loadRecords();
