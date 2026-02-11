@@ -2564,22 +2564,21 @@
             const content = document.createElement('div');
             content.style.cssText = `
                 background: white;
-                border-radius: 12px;
-                padding: 24px;
-                max-width: 320px;
+                border-radius: 8px;
+                padding: 16px;
+                max-width: 280px;
                 width: 90%;
                 text-align: center;
-                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             `;
 
             const isEnglish = currentLang === 'en';
             content.innerHTML = `
-                <div style="font-size: 48px; margin-bottom: 16px;">🚪</div>
-                <h3 style="margin: 0 0 12px 0; color: #1f2937; font-size: 18px;">${isEnglish ? 'Logout' : 'تسجيل الخروج'}</h3>
-                <p style="margin: 0 0 24px 0; color: #6b7280; font-size: 14px;">${isEnglish ? 'Do you want to logout from the system?' : 'هل تريد تسجيل الخروج من النظام؟'}</p>
-                <div style="display: flex; gap: 12px; justify-content: center;">
-                    <button onclick="cancelNurseLogout()" style="padding: 8px 20px; border: 1px solid #d1d5db; background: white; color: #6b7280; border-radius: 8px; font-size: 14px; cursor: pointer; font-family: inherit;">${isEnglish ? 'Cancel' : 'إلغاء'}</button>
-                    <button onclick="confirmNurseLogout()" style="padding: 8px 20px; border: none; background: #ef4444; color: white; border-radius: 8px; font-size: 14px; cursor: pointer; font-family: inherit;">${isEnglish ? 'Logout' : 'تسجيل الخروج'}</button>
+                <h3 style="margin: 0 0 12px 0; color: #1f2937; font-size: 16px;">${isEnglish ? 'Logout' : 'تسجيل الخروج'}</h3>
+                <p style="margin: 0 0 20px 0; color: #6b7280; font-size: 13px;">${isEnglish ? 'Do you want to logout from the system?' : 'هل تريد تسجيل الخروج من النظام؟'}</p>
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <button onclick="cancelNurseLogout()" style="padding: 6px 16px; border: 1px solid #d1d5db; background: white; color: #6b7280; border-radius: 6px; font-size: 13px; cursor: pointer; font-family: inherit;">${isEnglish ? 'Cancel' : 'إلغاء'}</button>
+                    <button onclick="confirmNurseLogout()" style="padding: 6px 16px; border: none; background: #ef4444; color: white; border-radius: 6px; font-size: 13px; cursor: pointer; font-family: inherit;">${isEnglish ? 'Logout' : 'تسجيل الخروج'}</button>
                 </div>
             `;
 

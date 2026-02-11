@@ -758,7 +758,7 @@
                             </div>
                         </div>
                     </div>
-                    <a href="login.html" class="nav-link" onclick="localStorage.removeItem('userSession');" style="background: #fee2e2; color: #dc2626;">تسجيل الخروج</a>
+                    <a href="#" class="nav-link" onclick="showAdminLogoutConfirm(event)" style="background: #fee2e2; color: #dc2626;">تسجيل الخروج</a>
                     <a href="settings-interface.html" class="nav-link settings">الإعدادات</a>
                     <a href="nurse-interface.html" class="nav-link">صفحة التمريض</a>
                     <a href="driver-interface.html" class="nav-link">صفحة السائق</a>
@@ -1613,6 +1613,66 @@
         // Add filter change listeners
         document.getElementById('yearFilter').addEventListener('change', applyFilters);
         document.getElementById('monthFilter').addEventListener('change', applyFilters);
+
+        // Admin logout confirmation
+        function showAdminLogoutConfirm(event) {
+            event.preventDefault();
+            
+            // Create custom confirm dialog
+            const dialog = document.createElement('div');
+            dialog.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 9999;
+                font-family: inherit;
+            `;
+
+            const content = document.createElement('div');
+            content.style.cssText = `
+                background: white;
+                border-radius: 8px;
+                padding: 16px;
+                max-width: 280px;
+                width: 90%;
+                text-align: center;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            `;
+
+            content.innerHTML = `
+                <h3 style="margin: 0 0 12px 0; color: #1f2937; font-size: 16px;">تسجيل الخروج</h3>
+                <p style="margin: 0 0 20px 0; color: #6b7280; font-size: 13px;">هل تريد تسجيل الخروج من النظام؟</p>
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <button onclick="cancelAdminLogout()" style="padding: 6px 16px; border: 1px solid #d1d5db; background: white; color: #6b7280; border-radius: 6px; font-size: 13px; cursor: pointer; font-family: inherit;">إلغاء</button>
+                    <button onclick="confirmAdminLogout()" style="padding: 6px 16px; border: none; background: #ef4444; color: white; border-radius: 6px; font-size: 13px; cursor: pointer; font-family: inherit;">تسجيل الخروج</button>
+                </div>
+            `;
+
+            dialog.appendChild(content);
+            document.body.appendChild(dialog);
+
+            // Store reference to dialog
+            window.adminLogoutDialog = dialog;
+        }
+
+        function cancelAdminLogout() {
+            if (window.adminLogoutDialog) {
+                document.body.removeChild(window.adminLogoutDialog);
+                window.adminLogoutDialog = null;
+            }
+        }
+
+        function confirmAdminLogout() {
+            cancelAdminLogout();
+            localStorage.removeItem('userSession');
+            window.location.href = 'login.html';
+        }
 
         // Refresh data every 30 seconds
         setInterval(() => {
