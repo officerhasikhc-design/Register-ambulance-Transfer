@@ -647,8 +647,8 @@
         <!-- Driver Info (when logged in) -->
         <div class="driver-info-section" id="driverInfoSection" style="display: none;">
             <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 12px; padding: 16px; margin-bottom: 16px; text-align: center; position: relative;">
-                <button onclick="logout()" style="position: absolute; top: 10px; left: 10px; background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 4px;">
-                    <span>🚪</span> خروج
+                <button onclick="logout()" style="position: absolute; top: 10px; left: 10px; background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit;">
+                    خروج
                 </button>
                 <div style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">مرحباً</div>
                 <div style="font-size: 20px; font-weight: 700; color: #1e40af;" id="loggedInDriverName"></div>
@@ -862,10 +862,66 @@
 
         // Logout function - تسجيل الخروج
         function logout() {
-            if (confirm('هل تريد تسجيل الخروج؟')) {
-                // Clear session
-                localStorage.removeItem('userSession');
-                localStorage.removeItem('selected_driver');
+            showLogoutConfirm();
+        }
+
+        function showLogoutConfirm() {
+            // Create custom confirm dialog
+            const dialog = document.createElement('div');
+            dialog.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 9999;
+                font-family: inherit;
+            `;
+
+            const content = document.createElement('div');
+            content.style.cssText = `
+                background: white;
+                border-radius: 12px;
+                padding: 24px;
+                max-width: 320px;
+                width: 90%;
+                text-align: center;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            `;
+
+            content.innerHTML = `
+                <div style="font-size: 48px; margin-bottom: 16px;">🚪</div>
+                <h3 style="margin: 0 0 12px 0; color: #1f2937; font-size: 18px;">تسجيل الخروج</h3>
+                <p style="margin: 0 0 24px 0; color: #6b7280; font-size: 14px;">هل تريد تسجيل الخروج من النظام؟</p>
+                <div style="display: flex; gap: 12px; justify-content: center;">
+                    <button onclick="cancelLogout()" style="padding: 8px 20px; border: 1px solid #d1d5db; background: white; color: #6b7280; border-radius: 8px; font-size: 14px; cursor: pointer; font-family: inherit;">إلغاء</button>
+                    <button onclick="confirmLogout()" style="padding: 8px 20px; border: none; background: #ef4444; color: white; border-radius: 8px; font-size: 14px; cursor: pointer; font-family: inherit;">تسجيل الخروج</button>
+                </div>
+            `;
+
+            dialog.appendChild(content);
+            document.body.appendChild(dialog);
+
+            // Store reference to dialog
+            window.logoutDialog = dialog;
+        }
+
+        function cancelLogout() {
+            if (window.logoutDialog) {
+                document.body.removeChild(window.logoutDialog);
+                window.logoutDialog = null;
+            }
+        }
+
+        function confirmLogout() {
+            cancelLogout();
+            // Clear session
+            localStorage.removeItem('userSession');
+            localStorage.removeItem('selected_driver');
                 
                 // Redirect to login page
                 window.location.href = 'login.html';
