@@ -240,39 +240,45 @@
         @keyframes active-glow {
             0%, 100% { 
                 border-color: #86efac;
-                box-shadow: 0 0 0 0 rgba(134, 239, 172, 0);
+                box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+                transform: scale(1);
             }
             50% { 
-                border-color: #4ade80;
-                box-shadow: 0 0 0 3px rgba(134, 239, 172, 0.2);
+                border-color: #22c55e;
+                box-shadow: 0 0 12px 4px rgba(34, 197, 94, 0.35);
+                transform: scale(1.02);
             }
         }
 
         @keyframes active-glow-blue {
             0%, 100% { 
                 border-color: #93c5fd;
-                box-shadow: 0 0 0 0 rgba(147, 197, 253, 0);
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+                transform: scale(1);
             }
             50% { 
-                border-color: #60a5fa;
-                box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.25);
+                border-color: #3b82f6;
+                box-shadow: 0 0 12px 4px rgba(59, 130, 246, 0.35);
+                transform: scale(1.02);
             }
         }
 
         .btn-departure.active-btn {
-            animation: active-glow 2.5s ease-in-out infinite;
+            animation: active-glow 1.8s ease-in-out infinite;
         }
 
         .btn-departure.active-btn:hover {
             animation: none;
+            transform: scale(1.03);
         }
         
         .btn-return.pulse-attention {
-            animation: active-glow-blue 2.5s ease-in-out infinite;
+            animation: active-glow-blue 1.8s ease-in-out infinite;
         }
         
         .btn-return.pulse-attention:hover {
             animation: none;
+            transform: scale(1.03);
         }
 
         .btn:disabled {
@@ -713,7 +719,7 @@
             <div class="pending-trip-header">
                 <span class="pending-title">رحلة قيد التنفيذ</span>
                 <span class="pending-separator">-</span>
-                <span class="pending-reminder">يرجى تسجيل العودة</span>
+                <span class="pending-reminder">يرجى تسجيل العودة عند الوصول</span>
             </div>
             <div class="departure-label">بيانات رحلة الذهاب</div>
             <div class="pending-trip-details">
