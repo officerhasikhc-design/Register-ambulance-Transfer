@@ -686,7 +686,7 @@
                 <div style="text-align: right;">
                     <div style="font-size: 12px; color: #9ca3af; margin-bottom: 2px;">مرحباً</div>
                     <div style="font-size: 15px; font-weight: 600; color: #374151;" id="loggedInDriverName"></div>
-                    <div style="font-size: 12px; color: #9ca3af; margin-top: 2px;">الرقم الوظيفي: <span id="loggedInStaffNumber" style="direction: ltr;"></span></div>
+                    <div style="font-size: 12px; color: #9ca3af; margin-top: 2px;"><span id="staffNumberLabel">الرقم الوظيفي</span>: <span id="loggedInStaffNumber" style="direction: ltr;"></span></div>
                 </div>
                 <button onclick="logout()" style="background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap;">
                     خروج
@@ -782,7 +782,6 @@
         // CONFIGURATION
         // ============================================
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwDUAGlnGBKZMhq8UbzEYBUaP3UNi49Be5PdwqQfnyIiB1HomgXVLrmUTrgeLKhyb-j/exec';
-        const REMINDER_HOURS = 6;
 
         // ============================================
         // DRIVERS DATA
@@ -816,9 +815,6 @@
             
             // Load user session and auto-select driver
             loadUserSession();
-            
-            // Check for pending trip reminder
-            checkPendingTripReminder();
             
             // Request notification permission
             requestNotificationPermission();
@@ -872,18 +868,26 @@
                     }
                     
                     if (userData.type === 'driver') {
+                        // Determine employee type from session or DRIVERS_DATA
+                        let empType = userData.employeeType || 'employee';
+                        const matchedDriver = DRIVERS_DATA.find(d => d.staffNumber === userData.staffNumber);
+                        if (matchedDriver) {
+                            empType = matchedDriver.type || empType;
+                        }
+                        
                         // Hide dropdown and show driver info
                         document.getElementById('driverSelection').style.display = 'none';
                         document.getElementById('driverInfoSection').style.display = 'block';
                         document.getElementById('loggedInDriverName').textContent = userData.nameAr;
                         document.getElementById('loggedInStaffNumber').textContent = userData.staffNumber;
+                        document.getElementById('staffNumberLabel').textContent = empType === 'daily-paid' ? 'الرقم المدني' : 'الرقم الوظيفي';
                         
                         // Set selected driver from session
                         selectedDriver = {
                             nameAr: userData.nameAr,
                             nameEn: userData.nameEn,
                             staffNumber: userData.staffNumber,
-                            type: 'employee'
+                            type: empType
                         };
                         
                         document.getElementById('staffNumber').value = userData.staffNumber;
@@ -1192,36 +1196,19 @@
             const key = `pending_trip_${selectedDriver.staffNumber}`;
             localStorage.setItem(key, JSON.stringify(pendingTrip));
 
-            // Schedule reminder notification
-            scheduleReminder(pendingTrip);
-
             if (isOnline) {
                 try {
-                    // Send to Google Sheets - use regular fetch for faster processing
-                    const response = await fetch(WEB_APP_URL, {
+                    await fetch(WEB_APP_URL, {
                         method: 'POST',
+                        mode: 'no-cors',
                         headers: { 'Content-Type': 'text/plain' },
                         body: JSON.stringify(tripData)
                     });
-                    if (response.ok) {
-                        const result = await response.json();
-                        console.log('Departure recorded:', result);
-                    }
                     showSuccess('تم تسجيل وقت الذهاب', `${date} - ${time}`);
                 } catch (error) {
-                    console.error('Error with regular fetch, trying no-cors:', error);
-                    try {
-                        await fetch(WEB_APP_URL, {
-                            method: 'POST',
-                            mode: 'no-cors',
-                            headers: { 'Content-Type': 'text/plain' },
-                            body: JSON.stringify(tripData)
-                        });
-                        showSuccess('تم تسجيل وقت الذهاب', `${date} - ${time}`);
-                    } catch (error2) {
-                        queueOfflineData(tripData);
-                        showSuccess('تم الحفظ محلياً', `${date} - ${time}\nسيتم الإرسال عند توفر الإنترنت`);
-                    }
+                    console.error('Fetch failed, saving offline:', error);
+                    queueOfflineData(tripData);
+                    showSuccess('تم الحفظ محلياً', `${date} - ${time}\nسيتم الإرسال عند توفر الإنترنت`);
                 }
             } else {
                 // Offline - queue for later
@@ -1281,9 +1268,6 @@
             // Update pending_trips_for_nurse in localStorage
             updatePendingTripForNurseWithReturn(selectedDriver.staffNumber, date, time);
 
-            // Clear reminder
-            clearReminder();
-
             // Clear pending
             const key = `pending_trip_${selectedDriver.staffNumber}`;
             localStorage.removeItem(key);
@@ -1291,32 +1275,17 @@
 
             if (isOnline) {
                 try {
-                    // Send to Google Sheets - use regular fetch to ensure email is sent immediately
-                    const response = await fetch(WEB_APP_URL, {
+                    await fetch(WEB_APP_URL, {
                         method: 'POST',
+                        mode: 'no-cors',
                         headers: { 'Content-Type': 'text/plain' },
                         body: JSON.stringify(returnData)
                     });
-                    if (response.ok) {
-                        const result = await response.json();
-                        console.log('Return recorded:', result);
-                    }
                     showSuccessAndReload('✅ تم تسجيل وقت العودة بنجاح!', 'الرحلة مكتملة - جاهز لتسجيل رحلة جديدة');
                 } catch (error) {
-                    console.error('Error with regular fetch, trying no-cors:', error);
-                    try {
-                        await fetch(WEB_APP_URL, {
-                            method: 'POST',
-                            mode: 'no-cors',
-                            headers: { 'Content-Type': 'text/plain' },
-                            body: JSON.stringify(returnData)
-                        });
-                        showSuccessAndReload('✅ تم تسجيل وقت العودة بنجاح!', 'الرحلة مكتملة - جاهز لتسجيل رحلة جديدة');
-                    } catch (error2) {
-                        console.error('Both fetch methods failed:', error2);
-                        queueOfflineData(returnData);
-                        showSuccessAndReload('✅ تم الحفظ محلياً', 'سيتم الإرسال عند توفر الإنترنت');
-                    }
+                    console.error('Fetch failed, saving offline:', error);
+                    queueOfflineData(returnData);
+                    showSuccessAndReload('✅ تم الحفظ محلياً', 'سيتم الإرسال عند توفر الإنترنت');
                 }
             } else {
                 // Offline - queue for later
@@ -1597,67 +1566,6 @@
             }
         }
 
-        function scheduleReminder(trip) {
-            // Store reminder time
-            const reminderTime = trip.departureTimestamp + (REMINDER_HOURS * 60 * 60 * 1000);
-            localStorage.setItem(`reminder_${selectedDriver.staffNumber}`, reminderTime);
-        }
-
-        function clearReminder() {
-            if (selectedDriver) {
-                localStorage.removeItem(`reminder_${selectedDriver.staffNumber}`);
-            }
-        }
-
-        function checkPendingTripReminder() {
-            // Trigger server reminder check on page load (backup for hourly trigger)
-            triggerServerReminderCheck();
-            
-            // Check every minute for local browser reminders
-            setInterval(() => {
-                if (!selectedDriver) return;
-                
-                const reminderTime = localStorage.getItem(`reminder_${selectedDriver.staffNumber}`);
-                if (reminderTime && Date.now() >= parseInt(reminderTime)) {
-                    showReminderNotification();
-                    // Update reminder to next 6 hours
-                    const newReminderTime = Date.now() + (REMINDER_HOURS * 60 * 60 * 1000);
-                    localStorage.setItem(`reminder_${selectedDriver.staffNumber}`, newReminderTime);
-                }
-            }, 60000);
-        }
-
-        function showReminderNotification() {
-            const loginUrl = 'https://officerhasikhc-design.github.io/Register-ambulance-Transfer/login.html';
-            
-            if ('Notification' in window && Notification.permission === 'granted') {
-                const notification = new Notification('تذكير - سجل الإسعاف', {
-                    body: 'لديك رحلة معلقة! يرجى تسجيل وقت العودة.\nانقر هنا لفتح النظام',
-                    icon: 'moh-logo.png',
-                    tag: 'trip-reminder',
-                    requireInteraction: true
-                });
-                
-                // Open login page when notification is clicked
-                notification.onclick = function() {
-                    window.open(loginUrl, '_blank');
-                    notification.close();
-                };
-            }
-            
-            // Also trigger server-side reminder check (sends emails to nurses/admin)
-            triggerServerReminderCheck();
-        }
-        
-        async function triggerServerReminderCheck() {
-            try {
-                const response = await fetch(`${WEB_APP_URL}?action=checkReminders`);
-                const result = await response.json();
-                console.log('Server reminder check:', result);
-            } catch (error) {
-                console.error('Failed to trigger server reminder check:', error);
-            }
-        }
 
         // ============================================
         // AUTO-REFRESH FOR REAL-TIME UPDATES

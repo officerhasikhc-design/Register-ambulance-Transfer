@@ -1409,36 +1409,16 @@
             addDiagMessage('info', `   Sending: ${JSON.stringify(returnData)}`);
             
             try {
-                const response = await fetch(WEB_APP_URL, {
+                await fetch(WEB_APP_URL, {
                     method: 'POST',
+                    mode: 'no-cors',
                     headers: { 'Content-Type': 'text/plain' },
                     body: JSON.stringify(returnData)
                 });
-                
-                const result = await response.json();
-                addDiagMessage('success', `   ✅ Response: ${JSON.stringify(result)}`);
-                
-                if (result.success) {
-                    addDiagMessage('success', `   ✅ Return recorded successfully!`);
-                    addDiagMessage('info', `   Now click "Raw Data" to verify the update in Google Sheets`);
-                } else {
-                    addDiagMessage('error', `   ❌ Failed: ${result.error}`);
-                }
+                addDiagMessage('success', `   ✅ Request sent successfully`);
+                addDiagMessage('info', `   Now click "Raw Data" to verify the update in Google Sheets`);
             } catch (error) {
                 addDiagMessage('error', `   ❌ Error: ${error.message}`);
-                addDiagMessage('warning', `   Trying with no-cors mode...`);
-                
-                try {
-                    await fetch(WEB_APP_URL, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        headers: { 'Content-Type': 'text/plain' },
-                        body: JSON.stringify(returnData)
-                    });
-                    addDiagMessage('warning', `   Request sent (no-cors) - cannot verify response`);
-                } catch (e2) {
-                    addDiagMessage('error', `   ❌ no-cors also failed: ${e2.message}`);
-                }
             }
             
             addDiagMessage('info', '========== TEST COMPLETE ==========');
@@ -2091,28 +2071,14 @@
             try {
                 let submitSuccess = false;
                 
-                // Try with regular fetch first to get response
-                try {
-                    const response = await fetch(WEB_APP_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'text/plain' },
-                        body: JSON.stringify(formData)
-                    });
-                    
-                    if (response.ok) {
-                        const result = await response.json();
-                        submitSuccess = result.success;
-                    }
-                } catch (corsError) {
-                    // Fallback to no-cors
-                    await fetch(WEB_APP_URL, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        headers: { 'Content-Type': 'text/plain' },
-                        body: JSON.stringify(formData)
-                    });
-                    submitSuccess = true; // Assume success with no-cors
-                }
+                // Single fetch with no-cors to prevent duplicate requests
+                await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify(formData)
+                });
+                submitSuccess = true;
 
                 // Animate the selected trip card sliding out after successful submit
                 if (selectedTripId) {
