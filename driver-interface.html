@@ -902,7 +902,6 @@
                         
                         // Load pending trip and history
                         loadPendingTrip();
-                        loadTripHistory();
                         updateButtons();
                         
                         window.loggedInUser = userData;
@@ -1014,7 +1013,6 @@
 
                 // Load pending trip for this driver
                 loadPendingTrip();
-                loadTripHistory();
             } else {
                 selectedDriver = null;
                 staffInput.value = '';
@@ -1108,12 +1106,15 @@
         async function loadPendingTrip() {
             if (!selectedDriver) return;
 
-            // Use DataCache: show cached data instantly, fetch fresh in background
+            // Single fetch that updates both pending trip and trip history
             await DataCache.fetchWithCache(
                 `${WEB_APP_URL}?action=getPendingTrips`,
                 DataCache.KEYS.PENDING_TRIPS,
                 DataCache.EXPIRY.PENDING_TRIPS,
-                (trips) => { processPendingTripsData(trips); },
+                (trips) => {
+                    processPendingTripsData(trips);
+                    renderTripHistoryFromData(trips);
+                },
                 (result) => (result.success && Array.isArray(result.trips)) ? result.trips : null
             );
         }
@@ -1353,7 +1354,7 @@
             let history = [];
             if (trips && trips.length > 0) {
                 history = trips.filter(t => 
-                    t.staffNumber === selectedDriver.staffNumber
+                    t.staffNumber && t.staffNumber.toString() === selectedDriver.staffNumber.toString()
                 ).map(trip => ({
                     ...trip,
                     approved: trip.status === 'submitted'
@@ -1367,6 +1368,7 @@
             // Merge: add local trips that aren't in server data
             // But skip local trips that were previously synced (approved/submitted)
             // and no longer exist on server (deleted by admin)
+            const serverDataAvailable = trips !== null && trips !== undefined;
             const cleanedLocalHistory = [];
             localHistory.forEach(localTrip => {
                 const exists = history.some(t => 
@@ -1374,11 +1376,21 @@
                     t.departureTime === localTrip.departureTime
                 );
                 if (!exists) {
-                    // Only keep truly local trips (not yet synced to server)
-                    // If server data is available and trip was approved/submitted, it was deleted
-                    if (trips && trips.length > 0 && (localTrip.approved || localTrip.status === 'submitted')) {
+                    // If server data is available and trip was approved/submitted, it was deleted by admin
+                    if (serverDataAvailable && (localTrip.approved || localTrip.status === 'submitted' || localTrip.status === 'complete')) {
                         // Trip was on server but now deleted — skip it
+                    } else if (serverDataAvailable) {
+                        // Trip not on server and not approved — could be a local-only trip, skip stale ones
+                        // Only keep if it's recent (within last 24 hours)
+                        const tripDate = new Date(localTrip.departureDate);
+                        const now = new Date();
+                        const ageMs = now - tripDate;
+                        if (ageMs < 24 * 60 * 60 * 1000) {
+                            history.push(localTrip);
+                            cleanedLocalHistory.push(localTrip);
+                        }
                     } else {
+                        // No server data — keep all local trips
                         history.push(localTrip);
                         cleanedLocalHistory.push(localTrip);
                     }
@@ -1387,7 +1399,7 @@
                 }
             });
             // Update local history to remove deleted trips
-            if (trips && trips.length > 0 && cleanedLocalHistory.length !== localHistory.length) {
+            if (serverDataAvailable && cleanedLocalHistory.length !== localHistory.length) {
                 localStorage.setItem(key, JSON.stringify(cleanedLocalHistory));
             }
             
@@ -1428,14 +1440,12 @@
                 return;
             }
 
-            // Use DataCache: show cached data instantly, fetch fresh in background
-            await DataCache.fetchWithCache(
-                `${WEB_APP_URL}?action=getPendingTrips`,
-                DataCache.KEYS.PENDING_TRIPS,
-                DataCache.EXPIRY.PENDING_TRIPS,
-                (trips) => { renderTripHistoryFromData(trips); },
-                (result) => (result.success && Array.isArray(result.trips)) ? result.trips : null
-            );
+            // Re-render from cached server trips if available, otherwise trigger full reload
+            if (cachedServerTrips !== null && cachedServerTrips !== undefined) {
+                renderTripHistoryFromData(cachedServerTrips);
+            } else {
+                await loadPendingTrip();
+            }
         }
 
         function renderDriverHistoryPage() {
@@ -1534,7 +1544,6 @@
             
             // Update UI immediately without full reload
             loadPendingTrip();
-            loadTripHistory();
             
             // Reset buttons
             document.getElementById('btnDeparture').disabled = false;
@@ -1570,7 +1579,6 @@
             
             // Invalidate cache to force fresh fetch
             DataCache.invalidate(DataCache.KEYS.PENDING_TRIPS);
-            loadTripHistory();
             loadPendingTrip();
         }
         
@@ -1657,7 +1665,6 @@
                 // Refresh data
                 setTimeout(() => {
                     loadPendingTrip();
-                    loadTripHistory();
                 }, 1000);
             }
 
@@ -1684,7 +1691,6 @@
                     statusBar.className = 'connection-status synced';
                     statusText.textContent = '✅ ' + event.data.message;
                     loadPendingTrip();
-                    loadTripHistory();
                 }
             });
         }
