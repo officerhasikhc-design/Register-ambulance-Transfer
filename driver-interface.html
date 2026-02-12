@@ -1056,38 +1056,33 @@
             const key = `pending_trip_${selectedDriver.staffNumber}`;
             const pendingDiv = document.getElementById('pendingTrip');
 
-            if (trips && trips.length > 0) {
-                const serverTrip = trips.find(t => 
-                    t.staffNumber && t.staffNumber.toString() === selectedDriver.staffNumber.toString() && 
-                    t.status === 'pending'
-                );
-                
-                if (serverTrip) {
-                    pendingTrip = {
-                        ...serverTrip,
-                        departureDate: serverTrip.departureDate,
-                        departureTime: serverTrip.departureTime
-                    };
-                    localStorage.setItem(key, JSON.stringify(pendingTrip));
-                } else {
-                    const completedTrip = trips.find(t => 
+            if (trips !== null && trips !== undefined) {
+                // Server data is available — treat it as authoritative
+                if (trips.length > 0) {
+                    const serverTrip = trips.find(t => 
                         t.staffNumber && t.staffNumber.toString() === selectedDriver.staffNumber.toString() && 
-                        (t.status === 'complete' || t.status === 'submitted')
+                        t.status === 'pending'
                     );
                     
-                    if (completedTrip) {
+                    if (serverTrip) {
+                        pendingTrip = {
+                            ...serverTrip,
+                            departureDate: serverTrip.departureDate,
+                            departureTime: serverTrip.departureTime
+                        };
+                        localStorage.setItem(key, JSON.stringify(pendingTrip));
+                    } else {
+                        // Trip not found on server (deleted or completed) — clear local
                         localStorage.removeItem(key);
                         pendingTrip = null;
-                    } else {
-                        const localTrip = JSON.parse(localStorage.getItem(key));
-                        if (localTrip && localTrip.status !== 'complete') {
-                            pendingTrip = localTrip;
-                        } else {
-                            pendingTrip = null;
-                        }
                     }
+                } else {
+                    // Server returned empty list — no pending trips exist, clear local
+                    localStorage.removeItem(key);
+                    pendingTrip = null;
                 }
             } else {
+                // Server data unavailable (network error) — fall back to localStorage
                 const localTrip = JSON.parse(localStorage.getItem(key));
                 if (localTrip && localTrip.status !== 'complete') {
                     pendingTrip = localTrip;
@@ -1119,7 +1114,7 @@
                 DataCache.KEYS.PENDING_TRIPS,
                 DataCache.EXPIRY.PENDING_TRIPS,
                 (trips) => { processPendingTripsData(trips); },
-                (result) => (result.success && result.trips) ? result.trips : null
+                (result) => (result.success && Array.isArray(result.trips)) ? result.trips : null
             );
         }
 
@@ -1370,15 +1365,31 @@
             const localHistory = JSON.parse(localStorage.getItem(key)) || [];
             
             // Merge: add local trips that aren't in server data
+            // But skip local trips that were previously synced (approved/submitted)
+            // and no longer exist on server (deleted by admin)
+            const cleanedLocalHistory = [];
             localHistory.forEach(localTrip => {
                 const exists = history.some(t => 
                     t.departureDate === localTrip.departureDate && 
                     t.departureTime === localTrip.departureTime
                 );
                 if (!exists) {
-                    history.push(localTrip);
+                    // Only keep truly local trips (not yet synced to server)
+                    // If server data is available and trip was approved/submitted, it was deleted
+                    if (trips && trips.length > 0 && (localTrip.approved || localTrip.status === 'submitted')) {
+                        // Trip was on server but now deleted — skip it
+                    } else {
+                        history.push(localTrip);
+                        cleanedLocalHistory.push(localTrip);
+                    }
+                } else {
+                    cleanedLocalHistory.push(localTrip);
                 }
             });
+            // Update local history to remove deleted trips
+            if (trips && trips.length > 0 && cleanedLocalHistory.length !== localHistory.length) {
+                localStorage.setItem(key, JSON.stringify(cleanedLocalHistory));
+            }
             
             // Sort by date (newest first)
             history.sort((a, b) => new Date(b.departureDate) - new Date(a.departureDate));
@@ -1423,7 +1434,7 @@
                 DataCache.KEYS.PENDING_TRIPS,
                 DataCache.EXPIRY.PENDING_TRIPS,
                 (trips) => { renderTripHistoryFromData(trips); },
-                (result) => (result.success && result.trips) ? result.trips : null
+                (result) => (result.success && Array.isArray(result.trips)) ? result.trips : null
             );
         }
 

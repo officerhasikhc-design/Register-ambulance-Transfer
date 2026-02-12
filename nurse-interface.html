@@ -1654,7 +1654,7 @@
                 DataCache.KEYS.PENDING_TRIPS,
                 DataCache.EXPIRY.PENDING_TRIPS,
                 (trips) => {
-                    if (trips) {
+                    if (trips !== null && trips !== undefined) {
                         cachedPendingTrips = trips;
                         displayPendingTrips(trips);
                     } else {
@@ -1662,7 +1662,7 @@
                         displayPendingTrips(localTrips.filter(t => !t.submittedToSystem));
                     }
                 },
-                (result) => (result.success && result.trips) ? result.trips : null
+                (result) => (result.success && Array.isArray(result.trips)) ? result.trips : null
             );
         }
 

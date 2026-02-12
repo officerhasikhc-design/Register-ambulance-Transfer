@@ -2028,21 +2028,6 @@
                         } else {
                             badge.style.display = 'none';
                             if (sidebarBadge) sidebarBadge.style.display = 'none';
-                        }
-                    } else {
-                        document.getElementById('notificationCount').style.display = 'none';
-                    }
-                },
-                (result) => (result.success && result.trips) ? result.trips : null
-            );
-        }
-
-        function displayNotificationsDropdown(pendingTrips, approvedTrips) {
-            const container = document.getElementById('notificationDropdownContent');
-            
-            if (pendingTrips.length === 0 && approvedTrips.length === 0) {
-                container.innerHTML = '<div class="notification-dropdown-item" style="text-align: center; color: var(--text-secondary);">لا توجد إشعارات جديدة</div>';
-                return;
             }
 
             let html = '';
@@ -2506,7 +2491,7 @@
                     renderTripSection('pendingTripsContainer', pendingTripsArr, pendingPage, 'pending');
                     renderTripSection('approvedTripsContainer', approvedTripsArr, approvedPage, 'approved');
                 },
-                (result) => (result.success && result.trips) ? result.trips : null
+                (result) => (result.success && Array.isArray(result.trips)) ? result.trips : null
             );
         }
 
@@ -2592,6 +2577,21 @@
             }
         }
 
+        // Clear local pending trip caches used by driver/nurse pages
+        function clearLocalPendingTripCaches() {
+            // Clear nurse pending trips local cache
+            localStorage.removeItem('pending_trips_for_nurse');
+            // Clear all driver pending trip caches (pending_trip_<staffNumber>)
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('pending_trip_')) {
+                    keysToRemove.push(key);
+                }
+            }
+            keysToRemove.forEach(key => localStorage.removeItem(key));
+        }
+
         // Delete pending trip
         async function deletePendingTrip(tripId) {
             const confirmed = await sysConfirm({
@@ -2611,6 +2611,8 @@
                 
                 if (result.success) {
                     showToast(`تم حذف الطلب ${tripId} بنجاح`, 'success');
+                    DataCache.invalidateAll();
+                    clearLocalPendingTripCaches();
                     loadPendingTrips();
                 } else {
                     showToast(result.error || 'فشل في الحذف', 'error');
@@ -2659,8 +2661,12 @@
                 
                 if (result.success) {
                     showToast(`تم حذف الطلب ${id} بنجاح`, 'success');
+                    // Invalidate all caches so driver/nurse pages get fresh data
+                    DataCache.invalidateAll();
+                    clearLocalPendingTripCaches();
                     loadRecords();
                     loadStats();
+                    loadPendingTrips();
                 } else {
                     showToast(result.error || 'فشل في الحذف', 'error');
                 }
@@ -2722,10 +2728,17 @@
                 
                 showToast(pendingAction === 'archive' ? 'تم أرشفة السجل بنجاح' : 'تم حذف السجل بنجاح', 'success');
                 
+                // Invalidate all caches so driver/nurse pages get fresh data
+                DataCache.invalidateAll();
+                if (pendingAction === 'delete') {
+                    clearLocalPendingTripCaches();
+                }
+                
                 // Reload data
                 setTimeout(() => {
                     loadStats();
                     loadRecords();
+                    loadPendingTrips();
                 }, 1000);
                 
             } catch (error) {
