@@ -2003,32 +2003,9 @@
             );
         }
 
-        async function loadNotifications() {
-            await DataCache.fetchWithCache(
-                `${WEB_APP_URL}?action=getPendingTrips`,
-                DataCache.KEYS.NOTIFICATIONS,
-                DataCache.EXPIRY.NOTIFICATIONS,
-                (trips) => {
-                    if (trips) {
-                        const pendingOnly = trips.filter(t => t.status === 'pending');
-                        const approvedOnly = trips.filter(t => t.status === 'complete' || t.status === 'submitted');
-                        const totalNotif = pendingOnly.length + approvedOnly.length;
-                        
-                        displayNotificationsDropdown(pendingOnly, approvedOnly);
-                        
-                        const badge = document.getElementById('notificationCount');
-                        const sidebarBadge = document.getElementById('sidebarPendingCount');
-                        if (totalNotif > 0) {
-                            badge.textContent = totalNotif;
-                            badge.style.display = 'flex';
-                            if (sidebarBadge) {
-                                sidebarBadge.textContent = pendingOnly.length;
-                                sidebarBadge.style.display = pendingOnly.length > 0 ? 'inline-block' : 'none';
-                            }
-                        } else {
-                            badge.style.display = 'none';
-                            if (sidebarBadge) sidebarBadge.style.display = 'none';
-            }
+        function displayNotificationsDropdown(pendingTrips, approvedTrips) {
+            const container = document.getElementById('notificationList');
+            if (!container) return;
 
             let html = '';
 
@@ -2068,7 +2045,34 @@
                 `;
             });
 
+            if (!html) {
+                html = '<div style="padding: 16px; text-align: center; color: var(--text-secondary);">لا توجد إشعارات</div>';
+            }
+
             container.innerHTML = html;
+        }
+
+        function updateNotificationBadges(trips) {
+            if (!trips) return;
+            const pendingOnly = trips.filter(t => t.status === 'pending');
+            const approvedOnly = trips.filter(t => t.status === 'complete' || t.status === 'submitted');
+            const totalNotif = pendingOnly.length + approvedOnly.length;
+            
+            displayNotificationsDropdown(pendingOnly, approvedOnly);
+            
+            const badge = document.getElementById('notificationCount');
+            const sidebarBadge = document.getElementById('sidebarPendingCount');
+            if (totalNotif > 0) {
+                badge.textContent = totalNotif;
+                badge.style.display = 'flex';
+                if (sidebarBadge) {
+                    sidebarBadge.textContent = pendingOnly.length;
+                    sidebarBadge.style.display = pendingOnly.length > 0 ? 'inline-block' : 'none';
+                }
+            } else {
+                badge.style.display = 'none';
+                if (sidebarBadge) sidebarBadge.style.display = 'none';
+            }
         }
 
         function getTimeAgo(date) {
@@ -2455,11 +2459,8 @@
         })();
         updateRecordsTitle();
 
-        // Initialize
-        loadStats();
-        loadNotifications();
-        loadRecords();
-        loadPendingTrips();
+        // Initialize — run all loads in parallel for fast page display
+        Promise.all([loadStats(), loadRecords(), loadPendingTrips()]);
 
         // Load pending trips from drivers — split into pending & approved
         let pendingTripsArr = [];
@@ -2474,6 +2475,9 @@
                 DataCache.KEYS.PENDING_TRIPS,
                 DataCache.EXPIRY.PENDING_TRIPS,
                 (trips) => {
+                    // Update notification badges from same data (no extra fetch)
+                    updateNotificationBadges(trips);
+                    
                     if (trips && trips.length > 0) {
                         pendingTripsArr = trips.filter(t => t.status === 'pending');
                         approvedTripsArr = trips.filter(t => t.status === 'complete' || t.status === 'submitted');
@@ -2766,11 +2770,9 @@
             }
         }
 
-        // Refresh data every 30 seconds
+        // Refresh data every 30 seconds (cache handles stale-while-revalidate)
         setInterval(() => {
-            DataCache.invalidateAll();
             loadStats();
-            loadNotifications();
             loadRecords();
             loadPendingTrips();
         }, 30000);
