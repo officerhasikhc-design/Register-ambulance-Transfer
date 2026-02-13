@@ -2106,7 +2106,9 @@
                 DataCache.EXPIRY.RECORDS,
                 (records) => {
                     allRecords = records || [];
-                    currentPage = 1;
+                    const totalPages = Math.ceil(allRecords.length / recordsPerPage);
+                    if (currentPage > totalPages && totalPages > 0) currentPage = totalPages;
+                    if (currentPage < 1) currentPage = 1;
                     displayRecordsWithPagination();
                 },
                 (result) => (result.success && result.data) ? result.data : null
@@ -2195,7 +2197,7 @@
                             return `
                             <tr>
                                 <td><span style="background:var(--lighter-blue);color:var(--primary-blue);padding:2px 8px;border-radius:6px;font-size:12px;font-weight:700;">${recordId}</span></td>
-                                <td>${record['Departure Date']}</td>
+                                <td>${(record['Departure Date'] || '').toString().split('T')[0]}</td>
                                 <td><strong>${record['Vehicle Number']}</strong></td>
                                 <td>${record['Driver Name']}</td>
                                 <td>${record['Destination']}</td>
@@ -2235,7 +2237,7 @@
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">تاريخ المغادرة</div>
-                        <div class="detail-value">${currentRecord['Departure Date']}</div>
+                        <div class="detail-value">${(currentRecord['Departure Date'] || '').toString().split('T')[0]}</div>
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">ساعة المغادرة</div>
@@ -2243,7 +2245,7 @@
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">تاريخ العودة</div>
-                        <div class="detail-value">${currentRecord['Return Date']}</div>
+                        <div class="detail-value">${(currentRecord['Return Date'] || '').toString().split('T')[0]}</div>
                     </div>
                     <div class="detail-item">
                         <div class="detail-label">ساعة العودة</div>
@@ -2307,9 +2309,9 @@
                         <div class="item"><div class="label">رقم السيارة</div><div class="value">${currentRecord['Vehicle Number']}</div></div>
                         <div class="item"><div class="label">اسم السائق</div><div class="value">${currentRecord['Driver Name']}</div></div>
                         <div class="item"><div class="label">الرقم الوظيفي</div><div class="value">${currentRecord['Staff Number']}</div></div>
-                        <div class="item"><div class="label">تاريخ المغادرة</div><div class="value">${currentRecord['Departure Date']}</div></div>
+                        <div class="item"><div class="label">تاريخ المغادرة</div><div class="value">${(currentRecord['Departure Date'] || '').toString().split('T')[0]}</div></div>
                         <div class="item"><div class="label">ساعة المغادرة</div><div class="value">${currentRecord['Departure Time']}</div></div>
-                        <div class="item"><div class="label">تاريخ العودة</div><div class="value">${currentRecord['Return Date']}</div></div>
+                        <div class="item"><div class="label">تاريخ العودة</div><div class="value">${(currentRecord['Return Date'] || '').toString().split('T')[0]}</div></div>
                         <div class="item"><div class="label">ساعة العودة</div><div class="value">${currentRecord['Return Time']}</div></div>
                         <div class="item"><div class="label">الجهة المحول إليها</div><div class="value">${currentRecord['Destination']}</div></div>
                         <div class="item full"><div class="label">حالة المريض / التشخيص</div><div class="value">${currentRecord['Patient Condition / Diagnosis']}</div></div>
@@ -2488,8 +2490,12 @@
                         pendingTripsArr = [];
                         approvedTripsArr = [];
                     }
-                    pendingPage = 1;
-                    approvedPage = 1;
+                    const pendingTotalPages = Math.ceil(pendingTripsArr.length / TRIPS_PER_PAGE);
+                    if (pendingPage > pendingTotalPages && pendingTotalPages > 0) pendingPage = pendingTotalPages;
+                    if (pendingPage < 1) pendingPage = 1;
+                    const approvedTotalPages = Math.ceil(approvedTripsArr.length / TRIPS_PER_PAGE);
+                    if (approvedPage > approvedTotalPages && approvedTotalPages > 0) approvedPage = approvedTotalPages;
+                    if (approvedPage < 1) approvedPage = 1;
                     document.getElementById('pendingCount').textContent = pendingTripsArr.length;
                     document.getElementById('approvedCount').textContent = approvedTripsArr.length;
                     // Clean up old pagination before re-render
@@ -2535,8 +2541,8 @@
                             </div>
                             <div class="trip-meta">
                                 الرقم: ${trip.staffNumber || '-'}<br>
-                                الذهاب: ${trip.departureDate || '-'} ${trip.departureTime || ''}<br>
-                                ${hasReturn ? `العودة: ${trip.returnDate} ${trip.returnTime}` : '<span style="color:var(--warning);">العودة: لم تُسجل بعد</span>'}
+                                الذهاب: ${(trip.departureDate || '-').toString().split('T')[0]} ${trip.departureTime || ''}<br>
+                                ${hasReturn ? `العودة: ${(trip.returnDate || '').toString().split('T')[0]} ${trip.returnTime}` : '<span style="color:var(--warning);">العودة: لم تُسجل بعد</span>'}
                             </div>
                         </div>
                         <div class="trip-actions">

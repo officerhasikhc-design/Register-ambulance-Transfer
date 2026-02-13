@@ -1704,6 +1704,8 @@
                 const hasReturn = trip.status === 'complete' || (returnDateExists && returnTimeExists);
                 
                 const tripIdDisplay = trip.tripId || '-';
+                const depDateClean = (trip.departureDate || '').toString().split('T')[0];
+                const retDateClean = (trip.returnDate || '').toString().split('T')[0];
                 
                 return `
                 <div class="pending-trip-card" id="trip-card-${index}" data-trip-id="${trip.tripId}" style="border-right: 4px solid ${hasReturn ? '#10b981' : '#f59e0b'}; transition: all 0.4s ease-out;">
@@ -1728,16 +1730,16 @@
                         </div>
                         <div>
                             <strong>${currentLang === 'en' ? 'Departure' : 'الذهاب'}</strong>
-                            ${trip.departureDate} ${trip.departureTime}
+                            ${depDateClean} ${trip.departureTime}
                         </div>
                         <div>
                             <strong>${currentLang === 'en' ? 'Return' : 'العودة'}</strong>
                             ${hasReturn ? 
-                                `${trip.returnDate} ${trip.returnTime}` : 
+                                `${retDateClean} ${trip.returnTime}` : 
                                 `<span style="color: #f59e0b; font-weight: 600;">${currentLang === 'en' ? 'Not recorded yet' : 'لم تُسجل بعد'}</span>`}
                         </div>
                     </div>
-                    <button class="btn-use-trip" onclick="usePendingTrip(${index})">
+                    <button class="btn-use-trip" onclick="usePendingTrip(${index})" style="align-self: stretch; margin-top: 8px;">
                         ${currentLang === 'en' ? 'Complete Data' : 'إكمال البيانات'}
                     </button>
                 </div>`;
@@ -2185,6 +2187,7 @@
                 <table class="record-table">
                     <thead>
                         <tr>
+                            <th>${currentLang === 'en' ? 'Request #' : 'رقم الطلب'}</th>
                             <th>${currentLang === 'en' ? 'Date' : 'التاريخ'}</th>
                             <th>${currentLang === 'en' ? 'Vehicle' : 'السيارة'}</th>
                             <th>${currentLang === 'en' ? 'Driver' : 'السائق'}</th>
@@ -2194,9 +2197,13 @@
                         </tr>
                     </thead>
                     <tbody>
-                        ${pageRecords.map(record => `
+                        ${pageRecords.map(record => {
+                            const recordId = record.ID || '-';
+                            const depDate = (record['Departure Date'] || '').toString().split('T')[0];
+                            return `
                             <tr>
-                                <td>${record['Departure Date'] || ''}</td>
+                                <td><span style="background:#e0e7ff;color:#1e40af;padding:4px 10px;border-radius:8px;font-size:13px;font-weight:700;">${recordId}</span></td>
+                                <td>${depDate}</td>
                                 <td><strong>${record['Vehicle Number'] || ''}</strong></td>
                                 <td>${record['Driver Name'] || ''}</td>
                                 <td>${record['Destination'] || ''}</td>
@@ -2209,7 +2216,7 @@
                                     </div>
                                 </td>
                             </tr>
-                        `).join('')}
+                        `}).join('')}
                     </tbody>
                 </table>
             `;
@@ -2339,7 +2346,7 @@
                 html += `
                     <tr>
                         <td>${startIdx + idx + 1}</td>
-                        <td>${record['Departure Date'] || '-'}</td>
+                        <td>${(record['Departure Date'] || '-').toString().split('T')[0]}</td>
                         <td>${record['Vehicle Number'] || '-'}</td>
                         <td>${record['Driver Name'] || '-'}</td>
                         <td>${record['Departure Time'] || '-'}</td>

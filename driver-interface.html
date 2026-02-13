@@ -1425,7 +1425,9 @@
             }
 
             allDriverHistory = history;
-            driverHistoryPage = 1;
+            const totalPages = Math.ceil(allDriverHistory.length / DRIVER_TRIPS_PER_PAGE);
+            if (driverHistoryPage > totalPages && totalPages > 0) driverHistoryPage = totalPages;
+            if (driverHistoryPage < 1) driverHistoryPage = 1;
             renderDriverHistoryPage();
         }
 
@@ -1477,7 +1479,7 @@
                             <span class="trip-id">${tripId}</span>
                             <span class="trip-item-status ${statusClass}">${statusText}</span>
                         </div>
-                        <div class="trip-item-date">${trip.departureDate}</div>
+                        <div class="trip-item-date">${(trip.departureDate || '').toString().split('T')[0]}</div>
                         <div class="trip-item-times">
                             <div class="time-row">
                                 <span class="time-label">الذهاب:</span>
