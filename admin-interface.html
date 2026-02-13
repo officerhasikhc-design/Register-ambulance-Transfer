@@ -2556,13 +2556,28 @@
             }
 
             const isPending = type === 'pending';
-            const dotClass = isPending ? 'dot-warning' : 'dot-success';
             const deleteIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
 
             let html = pageTrips.map(trip => {
                 const driverName = trip.driverNameAr || trip.driverName || '-';
                 const tripId = trip.tripId || '-';
                 const hasReturn = trip.returnDate && trip.returnTime;
+                const statusRaw = (trip.status || '').toString().trim().toLowerCase();
+                const dotClass = isPending ? 'dot-warning' : (statusRaw === 'submitted' ? 'dot-success' : 'dot-warning');
+                let statusNote = '';
+                if (!isPending) {
+                    if (statusRaw === 'complete') {
+                        statusNote = `<div style="margin-top:6px;padding:4px 8px;background:#fef3c7;color:#92400e;border-radius:6px;font-size:11px;font-weight:600;display:flex;align-items:center;gap:4px;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            في انتظار إكمال الممرضة لبقية التفاصيل
+                        </div>`;
+                    } else if (statusRaw === 'submitted') {
+                        statusNote = `<div style="margin-top:6px;padding:4px 8px;background:#d1fae5;color:#065f46;border-radius:6px;font-size:11px;font-weight:600;display:flex;align-items:center;gap:4px;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            تم إكمال البيانات من قبل التمريض
+                        </div>`;
+                    }
+                }
                 return `
                     <div class="trip-card">
                         <div class="trip-status-dot ${dotClass}"></div>
@@ -2576,6 +2591,7 @@
                                 الذهاب: ${(trip.departureDate || '-').toString().split('T')[0]} ${trip.departureTime || ''}<br>
                                 ${hasReturn ? `العودة: ${(trip.returnDate || '').toString().split('T')[0]} ${trip.returnTime}` : '<span style="color:var(--warning);">العودة: لم تُسجل بعد</span>'}
                             </div>
+                            ${statusNote}
                         </div>
                         <div class="trip-actions">
                             <button onclick="deletePendingTrip('${tripId}')" title="حذف">${deleteIcon}</button>
