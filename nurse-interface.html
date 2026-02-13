@@ -1655,8 +1655,9 @@
                 DataCache.EXPIRY.PENDING_TRIPS,
                 (trips) => {
                     if (trips !== null && trips !== undefined) {
-                        cachedPendingTrips = trips;
-                        displayPendingTrips(trips);
+                        const nurseTrips = trips.filter(t => t.status !== 'submitted');
+                        cachedPendingTrips = nurseTrips;
+                        displayPendingTrips(nurseTrips);
                     } else {
                         const localTrips = JSON.parse(localStorage.getItem('pending_trips_for_nurse')) || [];
                         displayPendingTrips(localTrips.filter(t => !t.submittedToSystem));
@@ -1861,7 +1862,6 @@
 
         function clearFormForPendingTrip() {
             // Clear all form fields except nurse name
-            document.getElementById('vehicleNumber').value = '';
             document.getElementById('driverName').value = '';
             document.getElementById('staffNumber').value = '';
             document.getElementById('departureDate').value = '';
@@ -1876,6 +1876,10 @@
             document.getElementById('returnTimeHour').value = '';
             document.getElementById('returnTimeMinute').value = '';
             document.getElementById('returnTimeAmPm').value = '';
+            
+            // Restore default vehicle if set by admin
+            const defaultVehicle = VEHICLES_DATA.find(v => v.isDefault);
+            document.getElementById('vehicleNumber').value = defaultVehicle ? defaultVehicle.number : '';
             
             // Re-set nurse name from session
             loadUserSession();
@@ -1927,17 +1931,20 @@
         function populateVehicleDropdown() {
             const vehicleSelect = document.getElementById('vehicleNumber');
             const currentValue = vehicleSelect.value;
+            const defaultVehicle = VEHICLES_DATA.find(v => v.isDefault);
+            
             vehicleSelect.innerHTML = `<option value="">${currentLang === 'en' ? 'Select Vehicle' : 'اختر السيارة'}</option>`;
             
             // Sort: default vehicle first
             const sorted = [...VEHICLES_DATA].sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0));
             sorted.forEach(vehicle => {
-                const defaultLabel = vehicle.isDefault ? ' ⭐' : '';
-                vehicleSelect.innerHTML += `<option value="${vehicle.number}" ${vehicle.isDefault ? 'selected' : ''}>${vehicle.number}${defaultLabel}</option>`;
+                vehicleSelect.innerHTML += `<option value="${vehicle.number}">${vehicle.number}</option>`;
             });
 
-            // Restore previous selection if it existed
-            if (currentValue && !sorted.find(v => v.isDefault)) {
+            // Always select default vehicle if one is set by admin
+            if (defaultVehicle) {
+                vehicleSelect.value = defaultVehicle.number;
+            } else if (currentValue) {
                 vehicleSelect.value = currentValue;
             }
         }
@@ -2111,6 +2118,11 @@
             document.getElementById('ambulanceForm').reset();
             document.getElementById('staffNumber').style.background = '#f3f4f6';
             hideValidation();
+            // Restore default vehicle after reset
+            const defaultVehicle = VEHICLES_DATA.find(v => v.isDefault);
+            if (defaultVehicle) {
+                document.getElementById('vehicleNumber').value = defaultVehicle.number;
+            }
         }
 
         function closeModal() {

@@ -9,6 +9,9 @@
  */
 
 const DataCache = {
+    // In-flight request deduplication
+    _inflight: {},
+
     // Cache keys
     KEYS: {
         PENDING_TRIPS: 'cache_pending_trips',
@@ -125,10 +128,14 @@ const DataCache = {
             onData(cached.data, { fromCache: true, isExpired: cached.isExpired });
         }
 
-        // Step 2: Fetch fresh data in background
+        // Step 2: Fetch fresh data in background (with request deduplication)
         try {
-            const response = await fetch(url);
-            const result = await response.json();
+            if (!this._inflight[url]) {
+                this._inflight[url] = fetch(url).then(r => r.json()).finally(() => {
+                    delete this._inflight[url];
+                });
+            }
+            const result = await this._inflight[url];
             const freshData = extractData ? extractData(result) : result;
 
             if (freshData !== null && freshData !== undefined) {
@@ -156,63 +163,63 @@ const DataCache = {
      * Preload all data for a specific page type
      * Call this as early as possible (before DOM ready)
      */
+    _preloadFetch(url, cacheKey, extractData) {
+        if (!this._inflight[url]) {
+            this._inflight[url] = fetch(url).then(r => r.json()).finally(() => {
+                delete this._inflight[url];
+            });
+        }
+        return this._inflight[url].then(result => {
+            const data = extractData(result);
+            if (data) this.set(cacheKey, data);
+        }).catch(() => {});
+    },
+
     preload(webAppUrl, pageType) {
         const fetches = [];
 
         if (pageType === 'driver' || pageType === 'nurse' || pageType === 'admin') {
-            // Preload pending trips
-            fetches.push(
-                fetch(`${webAppUrl}?action=getPendingTrips`)
-                    .then(r => r.json())
-                    .then(result => {
-                        if (result.success && result.trips) {
-                            this.set(this.KEYS.PENDING_TRIPS, result.trips);
-                        }
-                    })
-                    .catch(() => {})
-            );
-        }
-
-        if (pageType === 'nurse' || pageType === 'admin') {
-            // Preload records
-            fetches.push(
-                fetch(`${webAppUrl}?action=getRecords`)
-                    .then(r => r.json())
-                    .then(result => {
-                        if (result.success && result.records) {
-                            this.set(this.KEYS.RECORDS, result.records);
-                        }
-                    })
-                    .catch(() => {})
-            );
-        }
-
-        if (pageType === 'admin') {
-            // Preload stats
-            fetches.push(
-                fetch(`${webAppUrl}?action=getStats`)
-                    .then(r => r.json())
-                    .then(result => {
-                        if (result.success) {
-                            this.set(this.KEYS.STATS, result.data);
-                        }
-                    })
-                    .catch(() => {})
-            );
+            fetches.push(this._preloadFetch(
+                `${webAppUrl}?action=getPendingTrips`,
+                this.KEYS.PENDING_TRIPS,
+                r => (r.success && r.trips) ? r.trips : null
+            ));
         }
 
         if (pageType === 'nurse') {
-            // Preload vehicles
-            fetches.push(
-                fetch(`${webAppUrl}?action=getVehicles`)
-                    .then(r => r.json())
-                    .then(result => {
-                        if (result.success && result.vehicles) {
-                            this.set(this.KEYS.VEHICLES, result.vehicles);
-                        }
-                    })
-                    .catch(() => {})
-            );
+            fetches.push(this._preloadFetch(
+                `${webAppUrl}?action=getRecords`,
+                this.KEYS.RECORDS,
+                r => (r.success && r.records) ? r.records : null
+            ));
+        }
+
+        if (pageType === 'admin') {
+            const now = new Date();
+            const year = now.getFullYear().toString();
+            const month = String(now.getMonth() + 1);
+            const cacheKey = this.KEYS.RECORDS + '_' + year + '_' + month + '_';
+            fetches.push(this._preloadFetch(
+                `${webAppUrl}?action=getAllRecords&year=${year}&month=${month}`,
+                cacheKey,
+                r => (r.success && r.data) ? r.data : null
+            ));
+        }
+
+        if (pageType === 'admin') {
+            fetches.push(this._preloadFetch(
+                `${webAppUrl}?action=getStats`,
+                this.KEYS.STATS,
+                r => r.success ? r.data : null
+            ));
+        }
+
+        if (pageType === 'nurse') {
+            fetches.push(this._preloadFetch(
+                `${webAppUrl}?action=getVehicles`,
+                this.KEYS.VEHICLES,
+                r => (r.success && r.vehicles) ? r.vehicles : null
+            ));
         }
 
         return Promise.allSettled(fetches);
