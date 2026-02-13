@@ -1990,18 +1990,20 @@
         }
 
 
+        function applyStats(stats) {
+            if (stats) {
+                document.getElementById('totalCases').textContent = stats.total;
+                document.getElementById('thisMonth').textContent = stats.thisMonth;
+                document.getElementById('today').textContent = stats.today;
+            }
+        }
+
         async function loadStats() {
             await DataCache.fetchWithCache(
                 `${WEB_APP_URL}?action=getStats`,
                 DataCache.KEYS.STATS,
                 DataCache.EXPIRY.STATS,
-                (stats) => {
-                    if (stats) {
-                        document.getElementById('totalCases').textContent = stats.total;
-                        document.getElementById('thisMonth').textContent = stats.thisMonth;
-                        document.getElementById('today').textContent = stats.today;
-                    }
-                },
+                applyStats,
                 (result) => (result.success && result.data) ? result.data : null
             );
         }
@@ -2464,8 +2466,8 @@
         })();
         updateRecordsTitle();
 
-        // Initialize — run all loads in parallel for fast page display
-        Promise.all([loadStats(), loadRecords(), loadPendingTrips()]);
+        // Initialize — single combined request for fast page display
+        loadAdminData();
 
         // Load pending trips from drivers — split into pending & approved
         let pendingTripsArr = [];
@@ -2474,36 +2476,66 @@
         let approvedPage = 1;
         const TRIPS_PER_PAGE = 5;
 
+        function applyTrips(trips) {
+            updateNotificationBadges(trips);
+            if (trips && trips.length > 0) {
+                pendingTripsArr = trips.filter(t => t.status === 'pending');
+                approvedTripsArr = trips.filter(t => t.status === 'complete' || t.status === 'submitted');
+            } else {
+                pendingTripsArr = [];
+                approvedTripsArr = [];
+            }
+            const pendingTotalPages = Math.ceil(pendingTripsArr.length / TRIPS_PER_PAGE);
+            if (pendingPage > pendingTotalPages && pendingTotalPages > 0) pendingPage = pendingTotalPages;
+            if (pendingPage < 1) pendingPage = 1;
+            const approvedTotalPages = Math.ceil(approvedTripsArr.length / TRIPS_PER_PAGE);
+            if (approvedPage > approvedTotalPages && approvedTotalPages > 0) approvedPage = approvedTotalPages;
+            if (approvedPage < 1) approvedPage = 1;
+            document.getElementById('pendingCount').textContent = pendingTripsArr.length;
+            document.getElementById('approvedCount').textContent = approvedTripsArr.length;
+            document.getElementById('pendingTripsContainer').parentElement.querySelector('.trip-section-pagination')?.remove();
+            document.getElementById('approvedTripsContainer').parentElement.querySelector('.trip-section-pagination')?.remove();
+            renderTripSection('pendingTripsContainer', pendingTripsArr, pendingPage, 'pending');
+            renderTripSection('approvedTripsContainer', approvedTripsArr, approvedPage, 'approved');
+        }
+
+        function applyRecords(records) {
+            allRecords = records || [];
+            const totalPages = Math.ceil(allRecords.length / recordsPerPage);
+            if (currentPage > totalPages && totalPages > 0) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+            displayRecordsWithPagination();
+        }
+
+        async function loadAdminData() {
+            const search = document.getElementById('searchInput').value;
+            const year = document.getElementById('yearFilter').value;
+            const month = document.getElementById('monthFilter').value;
+            let url = `${WEB_APP_URL}?action=getAdminData`;
+            if (year !== 'all') url += `&year=${year}`;
+            if (month !== 'all') url += `&month=${month}`;
+            if (search) url += `&search=${encodeURIComponent(search)}`;
+
+            await DataCache.fetchWithCache(
+                url,
+                DataCache.KEYS.ADMIN_DATA,
+                DataCache.EXPIRY.ADMIN_DATA,
+                (data) => {
+                    if (!data) return;
+                    applyStats(data.stats);
+                    applyRecords(data.records);
+                    applyTrips(data.trips);
+                },
+                (result) => result.success ? result : null
+            );
+        }
+
         async function loadPendingTrips() {
             await DataCache.fetchWithCache(
                 `${WEB_APP_URL}?action=getPendingTrips`,
                 DataCache.KEYS.PENDING_TRIPS,
                 DataCache.EXPIRY.PENDING_TRIPS,
-                (trips) => {
-                    // Update notification badges from same data (no extra fetch)
-                    updateNotificationBadges(trips);
-                    
-                    if (trips && trips.length > 0) {
-                        pendingTripsArr = trips.filter(t => t.status === 'pending');
-                        approvedTripsArr = trips.filter(t => t.status === 'complete' || t.status === 'submitted');
-                    } else {
-                        pendingTripsArr = [];
-                        approvedTripsArr = [];
-                    }
-                    const pendingTotalPages = Math.ceil(pendingTripsArr.length / TRIPS_PER_PAGE);
-                    if (pendingPage > pendingTotalPages && pendingTotalPages > 0) pendingPage = pendingTotalPages;
-                    if (pendingPage < 1) pendingPage = 1;
-                    const approvedTotalPages = Math.ceil(approvedTripsArr.length / TRIPS_PER_PAGE);
-                    if (approvedPage > approvedTotalPages && approvedTotalPages > 0) approvedPage = approvedTotalPages;
-                    if (approvedPage < 1) approvedPage = 1;
-                    document.getElementById('pendingCount').textContent = pendingTripsArr.length;
-                    document.getElementById('approvedCount').textContent = approvedTripsArr.length;
-                    // Clean up old pagination before re-render
-                    document.getElementById('pendingTripsContainer').parentElement.querySelector('.trip-section-pagination')?.remove();
-                    document.getElementById('approvedTripsContainer').parentElement.querySelector('.trip-section-pagination')?.remove();
-                    renderTripSection('pendingTripsContainer', pendingTripsArr, pendingPage, 'pending');
-                    renderTripSection('approvedTripsContainer', approvedTripsArr, approvedPage, 'approved');
-                },
+                applyTrips,
                 (result) => (result.success && Array.isArray(result.trips)) ? result.trips : null
             );
         }
@@ -2677,9 +2709,7 @@
                     // Invalidate all caches so driver/nurse pages get fresh data
                     DataCache.invalidateAll();
                     clearLocalPendingTripCaches();
-                    loadRecords();
-                    loadStats();
-                    loadPendingTrips();
+                    loadAdminData();
                 } else {
                     showToast(result.error || 'فشل في الحذف', 'error');
                 }
@@ -2749,9 +2779,7 @@
                 
                 // Reload data
                 setTimeout(() => {
-                    loadStats();
-                    loadRecords();
-                    loadPendingTrips();
+                    loadAdminData();
                 }, 1000);
                 
             } catch (error) {
@@ -2779,11 +2807,9 @@
             }
         }
 
-        // Refresh data every 30 seconds (cache handles stale-while-revalidate)
+        // Refresh data every 30 seconds using combined endpoint (1 request instead of 3)
         setInterval(() => {
-            loadStats();
-            loadRecords();
-            loadPendingTrips();
+            loadAdminData();
         }, 30000);
     </script>
 </body>

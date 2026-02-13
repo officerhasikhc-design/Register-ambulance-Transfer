@@ -19,7 +19,8 @@ const DataCache = {
         STATS: 'cache_stats',
         VEHICLES: 'cache_vehicles',
         NOTIFICATIONS: 'cache_notifications',
-        TIMESTAMPS: 'cache_timestamps'
+        TIMESTAMPS: 'cache_timestamps',
+        ADMIN_DATA: 'cache_admin_data'
     },
 
     // Cache expiry times (milliseconds)
@@ -28,7 +29,8 @@ const DataCache = {
         RECORDS: 10 * 60 * 1000,          // 10 minutes
         STATS: 5 * 60 * 1000,             // 5 minutes
         VEHICLES: 30 * 60 * 1000,         // 30 minutes
-        NOTIFICATIONS: 5 * 60 * 1000      // 5 minutes
+        NOTIFICATIONS: 5 * 60 * 1000,     // 5 minutes
+        ADMIN_DATA: 5 * 60 * 1000         // 5 minutes
     },
 
     /**
@@ -131,11 +133,10 @@ const DataCache = {
         // Step 2: Fetch fresh data in background (with request deduplication)
         try {
             if (!this._inflight[url]) {
-                this._inflight[url] = fetch(url).then(r => r.json()).finally(() => {
-                    delete this._inflight[url];
-                });
+                this._inflight[url] = fetch(url).then(r => r.json());
             }
             const result = await this._inflight[url];
+            delete this._inflight[url];
             const freshData = extractData ? extractData(result) : result;
 
             if (freshData !== null && freshData !== undefined) {
@@ -151,6 +152,7 @@ const DataCache = {
                 }
             }
         } catch (error) {
+            delete this._inflight[url];
             // If no cached data was shown, report the error
             if (!cached || !cached.data) {
                 console.error('DataCache: Fetch failed and no cache available', error);
@@ -165,9 +167,7 @@ const DataCache = {
      */
     _preloadFetch(url, cacheKey, extractData) {
         if (!this._inflight[url]) {
-            this._inflight[url] = fetch(url).then(r => r.json()).finally(() => {
-                delete this._inflight[url];
-            });
+            this._inflight[url] = fetch(url).then(r => r.json());
         }
         return this._inflight[url].then(result => {
             const data = extractData(result);
@@ -178,7 +178,7 @@ const DataCache = {
     preload(webAppUrl, pageType) {
         const fetches = [];
 
-        if (pageType === 'driver' || pageType === 'nurse' || pageType === 'admin') {
+        if (pageType === 'driver' || pageType === 'nurse') {
             fetches.push(this._preloadFetch(
                 `${webAppUrl}?action=getPendingTrips`,
                 this.KEYS.PENDING_TRIPS,
@@ -198,19 +198,11 @@ const DataCache = {
             const now = new Date();
             const year = now.getFullYear().toString();
             const month = String(now.getMonth() + 1);
-            const cacheKey = this.KEYS.RECORDS + '_' + year + '_' + month + '_';
+            const url = `${webAppUrl}?action=getAdminData&year=${year}&month=${month}`;
             fetches.push(this._preloadFetch(
-                `${webAppUrl}?action=getAllRecords&year=${year}&month=${month}`,
-                cacheKey,
-                r => (r.success && r.data) ? r.data : null
-            ));
-        }
-
-        if (pageType === 'admin') {
-            fetches.push(this._preloadFetch(
-                `${webAppUrl}?action=getStats`,
-                this.KEYS.STATS,
-                r => r.success ? r.data : null
+                url,
+                this.KEYS.ADMIN_DATA,
+                r => r.success ? r : null
             ));
         }
 
