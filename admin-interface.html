@@ -1837,6 +1837,9 @@
         // ============================================
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwDUAGlnGBKZMhq8UbzEYBUaP3UNi49Be5PdwqQfnyIiB1HomgXVLrmUTrgeLKhyb-j/exec';
         
+        // Start fetching data immediately (before DOM ready) for faster loading
+        DataCache.preload(WEB_APP_URL, 'admin');
+
         let currentRecord = null;
         let allRecords = [];
         let currentPage = 1;
@@ -2004,7 +2007,7 @@
         }
 
         function displayNotificationsDropdown(pendingTrips, approvedTrips) {
-            const container = document.getElementById('notificationList');
+            const container = document.getElementById('notificationDropdownContent');
             if (!container) return;
 
             let html = '';
