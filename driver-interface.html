@@ -1236,83 +1236,63 @@
             const key = `pending_trip_${selectedDriver.staffNumber}`;
             localStorage.setItem(key, JSON.stringify(pendingTrip));
 
-            try {
-                if (isOnline) {
-                    try {
-                        await fetch(WEB_APP_URL, {
-                            method: 'POST',
-                            mode: 'no-cors',
-                            headers: { 'Content-Type': 'text/plain' },
-                            body: JSON.stringify(tripData)
-                        });
-                        showSuccess('تم تسجيل وقت الذهاب', `${date} - ${time}`);
-                    } catch (error) {
-                        console.error('Fetch failed, saving offline:', error);
-                        queueOfflineData(tripData);
-                        showSuccess('⚠️ لا يوجد اتصال - تم الحفظ محلياً', `${date} - ${time}\nسيتم الإرسال عند توفر الإنترنت`);
-                    }
-                } else {
-                    // Offline - queue for later
+            // === OPTIMISTIC UI: Update everything INSTANTLY before server call ===
+            
+            // Update UI immediately - show pending trip
+            const pendingDiv = document.getElementById('pendingTrip');
+            pendingDiv.style.display = 'block';
+            document.getElementById('pendingDate').textContent = date;
+            document.getElementById('pendingTime').textContent = time;
+            
+            // Update buttons to disable departure and enable return
+            updateButtons();
+            
+            // Immediately add the new trip to trip history list
+            const newTripEntry = {
+                tripId: '',
+                driverName: selectedDriver.nameEn,
+                driverNameAr: selectedDriver.nameAr,
+                staffNumber: selectedDriver.staffNumber,
+                departureDate: date,
+                departureTime: time,
+                returnDate: '',
+                returnTime: '',
+                status: 'pending',
+                offlineSaved: !isOnline
+            };
+            
+            const existsInHistory = allDriverHistory.some(t => 
+                t.departureDate === date && t.departureTime === time
+            );
+            if (!existsInHistory) {
+                allDriverHistory.unshift(newTripEntry);
+                driverHistoryPage = 1;
+                renderDriverHistoryPage();
+            }
+            
+            // Invalidate cache so next background fetch gets fresh data with tripId
+            DataCache.invalidate(DataCache.KEYS.PENDING_TRIPS);
+            
+            // Reset button text (button stays disabled via updateButtons since pendingTrip exists)
+            btn.innerHTML = '<span>→ تسجيل وقت الذهاب</span>';
+            isSubmittingDeparture = false;
+            
+            // Show success immediately
+            showSuccess('تم تسجيل وقت الذهاب', `${date} - ${time}`);
+            
+            // === SEND TO SERVER IN BACKGROUND (non-blocking) ===
+            if (isOnline) {
+                fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify(tripData)
+                }).catch(error => {
+                    console.error('Background fetch failed, queuing offline:', error);
                     queueOfflineData(tripData);
-                    showSuccess('⚠️ لا يوجد اتصال - تم الحفظ محلياً', `${date} - ${time}\nسيتم الإرسال عند توفر الإنترنت`);
-                }
-
-                // Update UI immediately - show pending trip
-                const pendingDiv = document.getElementById('pendingTrip');
-                pendingDiv.style.display = 'block';
-                document.getElementById('pendingDate').textContent = date;
-                document.getElementById('pendingTime').textContent = time;
-                
-                // Update buttons to disable departure and enable return
-                updateButtons();
-                
-                // Immediately add the new trip to trip history list (Optimistic UI)
-                const newTripEntry = {
-                    tripId: '',
-                    driverName: selectedDriver.nameEn,
-                    driverNameAr: selectedDriver.nameAr,
-                    staffNumber: selectedDriver.staffNumber,
-                    departureDate: date,
-                    departureTime: time,
-                    returnDate: '',
-                    returnTime: '',
-                    status: 'pending',
-                    offlineSaved: !isOnline
-                };
-                
-                // Add to allDriverHistory at the top and re-render
-                const existsInHistory = allDriverHistory.some(t => 
-                    t.departureDate === date && t.departureTime === time
-                );
-                if (!existsInHistory) {
-                    allDriverHistory.unshift(newTripEntry);
-                    driverHistoryPage = 1;
-                    renderDriverHistoryPage();
-                }
-                
-                // Invalidate cache so next background fetch gets fresh data with tripId
-                DataCache.invalidate(DataCache.KEYS.PENDING_TRIPS);
-                
-                // Reset button text
-                btn.innerHTML = '<span>→ تسجيل وقت الذهاب</span>';
-                btn.disabled = false;
-            } catch (error) {
-                console.error('Error in recordDeparture:', error);
-                alert('حدث خطأ أثناء تسجيل الذهاب. يرجى المحاولة مرة أخرى.');
-                
-                // Reset button and clear pending trip on error
-                btn.innerHTML = '<span>→ تسجيل وقت الذهاب</span>';
-                btn.disabled = false;
-                btn.classList.add('active-btn');
-                
-                // Clear the failed pending trip
-                const key = `pending_trip_${selectedDriver.staffNumber}`;
-                localStorage.removeItem(key);
-                pendingTrip = null;
-                updateButtons();
-            } finally {
-                // Always reset the submission flag
-                isSubmittingDeparture = false;
+                });
+            } else {
+                queueOfflineData(tripData);
             }
         }
 
@@ -1380,37 +1360,32 @@
             // Clear pending trip after return
             const key = `pending_trip_${selectedDriver.staffNumber}`;
 
-            try {
-                if (isOnline) {
-                    try {
-                        await fetch(WEB_APP_URL, {
-                            method: 'POST',
-                            mode: 'no-cors',
-                            headers: { 'Content-Type': 'text/plain' },
-                            body: JSON.stringify(returnData)
-                        });
-                        showSuccessAndReload('✅ تم تسجيل وقت العودة بنجاح!', 'الرحلة مكتملة - جاهز لتسجيل رحلة جديدة');
-                    } catch (error) {
-                        console.error('Fetch failed, saving offline:', error);
-                        queueOfflineData(returnData);
-                        showSuccessAndReload('✅ تم الحفظ محلياً', 'سيتم الإرسال عند توفر الإنترنت');
-                    }
-                } else {
-                    // Offline - queue for later
+            // === OPTIMISTIC UI: Show success INSTANTLY before server call ===
+            
+            // Reset button and flag immediately
+            btn.innerHTML = '<span>← تسجيل وقت العودة</span>';
+            btn.disabled = false;
+            isSubmittingReturn = false;
+            
+            // Show success and reload UI immediately
+            showSuccessAndReload('✅ تم تسجيل وقت العودة بنجاح!', 'الرحلة مكتملة - جاهز لتسجيل رحلة جديدة');
+            
+            // Invalidate cache for fresh data
+            DataCache.invalidate(DataCache.KEYS.PENDING_TRIPS);
+            
+            // === SEND TO SERVER IN BACKGROUND (non-blocking) ===
+            if (isOnline) {
+                fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify(returnData)
+                }).catch(error => {
+                    console.error('Background fetch failed, queuing offline:', error);
                     queueOfflineData(returnData);
-                    showSuccessAndReload('✅ تم الحفظ محلياً', '⚠️ سيتم الإرسال عند توفر الإنترنت');
-                }
-            } catch (error) {
-                console.error('Error in recordReturn:', error);
-                alert('حدث خطأ أثناء تسجيل العودة. يرجى المحاولة مرة أخرى.');
-                
-                // Reset button on error
-                btn.innerHTML = '<span>← تسجيل وقت العودة</span>';
-                btn.disabled = false;
-                btn.classList.add('pulse-attention');
-            } finally {
-                // Always reset the submission flag
-                isSubmittingReturn = false;
+                });
+            } else {
+                queueOfflineData(returnData);
             }
         }
         
