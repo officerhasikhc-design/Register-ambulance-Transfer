@@ -301,6 +301,40 @@
             animation: none !important;
         }
 
+        .btn-processing {
+            position: relative;
+            pointer-events: none;
+        }
+
+        .btn-processing .btn-processing-text {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            opacity: 0.7;
+            animation: processingPulse 0.6s ease-in-out;
+        }
+
+        .btn-processing .btn-processing-text .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid currentColor;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes processingPulse {
+            0% { opacity: 0; transform: scale(0.95); }
+            30% { opacity: 0.8; transform: scale(1); }
+            100% { opacity: 0.7; transform: scale(1); }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         .btn-icon {
             font-size: 22px;
         }
@@ -1202,11 +1236,12 @@
                 return;
             }
 
-            // Set flag and disable button
+            // Set flag and show processing indicator inside button
             isSubmittingDeparture = true;
             const btn = document.getElementById('btnDeparture');
             btn.disabled = true;
-            btn.innerHTML = '<span>جاري الإرسال...</span>';
+            btn.classList.add('btn-processing');
+            btn.innerHTML = '<span class="btn-processing-text"><span class="spinner"></span> جاري التسجيل...</span>';
 
             const now = new Date();
             const date = now.toISOString().split('T')[0];
@@ -1273,7 +1308,8 @@
             // Invalidate cache so next background fetch gets fresh data with tripId
             DataCache.invalidate(DataCache.KEYS.PENDING_TRIPS);
             
-            // Reset button text (button stays disabled via updateButtons since pendingTrip exists)
+            // Brief flash then restore button text (button stays disabled via updateButtons)
+            btn.classList.remove('btn-processing');
             btn.innerHTML = '<span>→ تسجيل وقت الذهاب</span>';
             isSubmittingDeparture = false;
             
@@ -1323,11 +1359,12 @@
                 return;
             }
 
-            // Set flag and disable button
+            // Set flag and show processing indicator inside button
             isSubmittingReturn = true;
             const btn = document.getElementById('btnReturn');
             btn.disabled = true;
-            btn.innerHTML = '<span>جاري الإرسال...</span>';
+            btn.classList.add('btn-processing');
+            btn.innerHTML = '<span class="btn-processing-text"><span class="spinner"></span> جاري التسجيل...</span>';
 
             const now = new Date();
             const date = now.toISOString().split('T')[0];
@@ -1363,6 +1400,7 @@
             // === OPTIMISTIC UI: Show success INSTANTLY before server call ===
             
             // Reset button and flag immediately
+            btn.classList.remove('btn-processing');
             btn.innerHTML = '<span>← تسجيل وقت العودة</span>';
             btn.disabled = false;
             isSubmittingReturn = false;
