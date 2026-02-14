@@ -1,6 +1,6 @@
 // Service Worker for Ambulance Log PWA
 // نظام سجل الإسعاف - دعم العمل بدون إنترنت
-const CACHE_NAME = 'ambulance-log-v10-optimized';
+const CACHE_NAME = 'ambulance-log-v11-responsive';
 const OFFLINE_QUEUE_KEY = 'offline_queue';
 
 const urlsToCache = [

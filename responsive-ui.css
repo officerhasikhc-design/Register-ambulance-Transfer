@@ -1,0 +1,450 @@
+/**
+ * Responsive UI Framework - إطار عمل واجهة متجاوبة
+ * Ensures consistent spacing, buttons, and layout across all devices
+ * يضمن تناسق المسافات والأزرار والتخطيط عبر جميع الأجهزة
+ */
+
+:root {
+    /* Consistent Spacing System - نظام مسافات متناسق */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 12px;
+    --spacing-lg: 16px;
+    --spacing-xl: 20px;
+    --spacing-2xl: 24px;
+    --spacing-3xl: 32px;
+    --spacing-4xl: 40px;
+    
+    /* Button Sizes - أحجام الأزرار */
+    --btn-height-sm: 40px;
+    --btn-height-md: 48px;
+    --btn-height-lg: 56px;
+    
+    /* Font Sizes - أحجام الخطوط */
+    --font-xs: 12px;
+    --font-sm: 14px;
+    --font-md: 16px;
+    --font-lg: 18px;
+    --font-xl: 20px;
+    --font-2xl: 24px;
+    
+    /* Border Radius - انحناء الحواف */
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    
+    /* Colors - الألوان */
+    --primary-blue: #1e40af;
+    --lighter-blue: #eff6ff;
+    --success-green: #10b981;
+    --warning-yellow: #f59e0b;
+    --danger-red: #ef4444;
+    --text-dark: #1f2937;
+    --text-gray: #6b7280;
+    --border-color: #e5e7eb;
+    --bg-white: #ffffff;
+    --bg-gray: #f9fafb;
+}
+
+/* ============================================
+   RESPONSIVE CONTAINER - حاوية متجاوبة
+   ============================================ */
+.responsive-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--spacing-lg);
+}
+
+@media (max-width: 768px) {
+    .responsive-container {
+        padding: var(--spacing-md);
+    }
+}
+
+@media (max-width: 480px) {
+    .responsive-container {
+        padding: var(--spacing-sm);
+    }
+}
+
+/* ============================================
+   CONSISTENT BUTTONS - أزرار متناسقة
+   ============================================ */
+.btn {
+    /* Base styles */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    
+    /* Sizing */
+    min-height: var(--btn-height-md);
+    padding: 0 var(--spacing-xl);
+    
+    /* Typography */
+    font-family: 'Cairo', sans-serif;
+    font-size: var(--font-md);
+    font-weight: 600;
+    line-height: 1.5;
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+    
+    /* Visual */
+    border: 2px solid transparent;
+    border-radius: var(--radius-md);
+    background: var(--primary-blue);
+    color: white;
+    cursor: pointer;
+    
+    /* Interaction */
+    transition: all 0.2s ease;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    
+    /* Touch target size (minimum 44x44px for accessibility) */
+    min-width: 44px;
+}
+
+.btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
+}
+
+.btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Button Sizes */
+.btn-sm {
+    min-height: var(--btn-height-sm);
+    padding: 0 var(--spacing-md);
+    font-size: var(--font-sm);
+}
+
+.btn-lg {
+    min-height: var(--btn-height-lg);
+    padding: 0 var(--spacing-2xl);
+    font-size: var(--font-lg);
+}
+
+/* Button Variants */
+.btn-primary {
+    background: var(--primary-blue);
+    color: white;
+}
+
+.btn-success {
+    background: var(--success-green);
+    color: white;
+}
+
+.btn-warning {
+    background: var(--warning-yellow);
+    color: white;
+}
+
+.btn-danger {
+    background: var(--danger-red);
+    color: white;
+}
+
+.btn-outline {
+    background: transparent;
+    border-color: var(--primary-blue);
+    color: var(--primary-blue);
+}
+
+.btn-outline:hover:not(:disabled) {
+    background: var(--primary-blue);
+    color: white;
+}
+
+/* Full width button */
+.btn-block {
+    width: 100%;
+}
+
+/* ============================================
+   RESPONSIVE GRID - شبكة متجاوبة
+   ============================================ */
+.grid {
+    display: grid;
+    gap: var(--spacing-lg);
+}
+
+.grid-cols-1 { grid-template-columns: repeat(1, 1fr); }
+.grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+@media (max-width: 768px) {
+    .grid-cols-2,
+    .grid-cols-3,
+    .grid-cols-4 {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    .grid-cols-3,
+    .grid-cols-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* ============================================
+   SPACING UTILITIES - أدوات المسافات
+   ============================================ */
+.m-0 { margin: 0; }
+.m-xs { margin: var(--spacing-xs); }
+.m-sm { margin: var(--spacing-sm); }
+.m-md { margin: var(--spacing-md); }
+.m-lg { margin: var(--spacing-lg); }
+.m-xl { margin: var(--spacing-xl); }
+
+.mt-0 { margin-top: 0; }
+.mt-sm { margin-top: var(--spacing-sm); }
+.mt-md { margin-top: var(--spacing-md); }
+.mt-lg { margin-top: var(--spacing-lg); }
+.mt-xl { margin-top: var(--spacing-xl); }
+
+.mb-0 { margin-bottom: 0; }
+.mb-sm { margin-bottom: var(--spacing-sm); }
+.mb-md { margin-bottom: var(--spacing-md); }
+.mb-lg { margin-bottom: var(--spacing-lg); }
+.mb-xl { margin-bottom: var(--spacing-xl); }
+
+.p-0 { padding: 0; }
+.p-xs { padding: var(--spacing-xs); }
+.p-sm { padding: var(--spacing-sm); }
+.p-md { padding: var(--spacing-md); }
+.p-lg { padding: var(--spacing-lg); }
+.p-xl { padding: var(--spacing-xl); }
+
+/* ============================================
+   FORM INPUTS - حقول الإدخال
+   ============================================ */
+.form-input,
+.form-select,
+.form-textarea {
+    width: 100%;
+    min-height: var(--btn-height-md);
+    padding: var(--spacing-md) var(--spacing-lg);
+    
+    font-family: 'Cairo', sans-serif;
+    font-size: var(--font-md);
+    line-height: 1.5;
+    
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-white);
+    color: var(--text-dark);
+    
+    transition: all 0.2s ease;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+}
+
+.form-textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: var(--spacing-sm);
+    font-size: var(--font-md);
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+/* ============================================
+   CARDS - البطاقات
+   ============================================ */
+.card {
+    background: var(--bg-white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 2px solid var(--border-color);
+}
+
+.card-title {
+    margin: 0;
+    font-size: var(--font-xl);
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.card-body {
+    padding: var(--spacing-md) 0;
+}
+
+.card-footer {
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--border-color);
+}
+
+/* ============================================
+   RESPONSIVE TYPOGRAPHY - خطوط متجاوبة
+   ============================================ */
+h1, h2, h3, h4, h5, h6 {
+    margin: 0 0 var(--spacing-md) 0;
+    font-family: 'Cairo', sans-serif;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--text-dark);
+}
+
+h1 { font-size: clamp(24px, 5vw, 32px); }
+h2 { font-size: clamp(20px, 4vw, 28px); }
+h3 { font-size: clamp(18px, 3.5vw, 24px); }
+h4 { font-size: clamp(16px, 3vw, 20px); }
+h5 { font-size: clamp(14px, 2.5vw, 18px); }
+h6 { font-size: clamp(12px, 2vw, 16px); }
+
+p {
+    margin: 0 0 var(--spacing-md) 0;
+    line-height: 1.6;
+}
+
+/* ============================================
+   MOBILE OPTIMIZATIONS - تحسينات الهاتف
+   ============================================ */
+@media (max-width: 480px) {
+    /* Larger touch targets on mobile */
+    .btn {
+        min-height: var(--btn-height-lg);
+        font-size: var(--font-lg);
+    }
+    
+    .form-input,
+    .form-select {
+        min-height: var(--btn-height-lg);
+        font-size: var(--font-lg);
+    }
+    
+    /* Prevent zoom on input focus */
+    .form-input,
+    .form-select,
+    .form-textarea {
+        font-size: 16px; /* Prevents iOS zoom */
+    }
+    
+    /* Better spacing on small screens */
+    .card {
+        padding: var(--spacing-md);
+    }
+}
+
+/* ============================================
+   TABLET OPTIMIZATIONS - تحسينات التابلت
+   ============================================ */
+@media (min-width: 481px) and (max-width: 768px) {
+    .btn {
+        min-height: var(--btn-height-md);
+        font-size: var(--font-md);
+    }
+}
+
+/* ============================================
+   DESKTOP OPTIMIZATIONS - تحسينات الكمبيوتر
+   ============================================ */
+@media (min-width: 1024px) {
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(30, 64, 175, 0.25);
+    }
+}
+
+/* ============================================
+   SAFE AREA INSETS - مناطق الأمان
+   ============================================ */
+@supports (padding: max(0px)) {
+    .responsive-container {
+        padding-left: max(var(--spacing-lg), env(safe-area-inset-left));
+        padding-right: max(var(--spacing-lg), env(safe-area-inset-right));
+        padding-bottom: max(var(--spacing-lg), env(safe-area-inset-bottom));
+    }
+}
+
+/* ============================================
+   ACCESSIBILITY - إمكانية الوصول
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Focus visible for keyboard navigation */
+.btn:focus-visible,
+.form-input:focus-visible,
+.form-select:focus-visible {
+    outline: 3px solid var(--primary-blue);
+    outline-offset: 2px;
+}
+
+/* ============================================
+   UTILITY CLASSES - فئات مساعدة
+   ============================================ */
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.flex-wrap { flex-wrap: wrap; }
+.items-center { align-items: center; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.gap-sm { gap: var(--spacing-sm); }
+.gap-md { gap: var(--spacing-md); }
+.gap-lg { gap: var(--spacing-lg); }
+
+.w-full { width: 100%; }
+.h-full { height: 100%; }
+
+.hidden { display: none; }
+.block { display: block; }
+.inline-block { display: inline-block; }
+
+/* ============================================
+   PRINT STYLES - أنماط الطباعة
+   ============================================ */
+@media print {
+    .btn,
+    .no-print {
+        display: none !important;
+    }
+    
+    .card {
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+}
