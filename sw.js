@@ -1,6 +1,6 @@
 // Service Worker for Ambulance Log PWA
 // نظام سجل الإسعاف - دعم العمل بدون إنترنت
-const CACHE_NAME = 'ambulance-log-v22-offline-fix';
+const CACHE_NAME = 'ambulance-log-v23-icon-update';
 const OFFLINE_QUEUE_KEY = 'offline_queue';
 
 const urlsToCache = [
@@ -11,7 +11,11 @@ const urlsToCache = [
   './admin-interface.html',
   './settings-interface.html',
   './moh-logo.png',
+  './moh-photo_Page_1.png',
   './manifest.json',
+  './manifest-ar.json',
+  './manifest-en.json',
+  './browserconfig.xml',
   // New optimization files
   './request-optimizer.js',
   './ui-optimizer.js',
@@ -176,7 +180,7 @@ function getAllFromStore(store) {
 
 // Activate event - Take control immediately and clean old caches
 self.addEventListener('activate', event => {
-  console.log('[SW] Activating Service Worker v22-offline-fix...');
+  console.log('[SW] Activating Service Worker v23-icon-update...');
   event.waitUntil(
     Promise.all([
       self.clients.claim(),
