@@ -757,19 +757,26 @@
 
         .trip-section {
             background: var(--white);
-            border-radius: 12px;
-            box-shadow: var(--shadow);
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+
+        .trip-section:hover {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.06);
         }
 
         .trip-section-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 16px 20px;
+            padding: 18px 20px;
             border-bottom: 1px solid var(--border-color);
+            background: linear-gradient(to bottom, #fafbfc, #f8f9fa);
         }
 
         .trip-section-header .section-title {
@@ -817,16 +824,73 @@
             display: flex;
             align-items: flex-start;
             gap: 12px;
-            padding: 14px;
-            border-radius: 10px;
-            border: 1px solid var(--border-color);
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
             margin-bottom: 10px;
-            transition: all 0.15s;
+            transition: all 0.2s;
             background: var(--white);
+        }
+
+        .trip-card:hover {
+            border-color: var(--light-blue);
+            background: linear-gradient(to left, rgba(59, 130, 246, 0.02), var(--white));
+            transform: translateX(-2px);
         }
 
         .trip-card:last-child {
             margin-bottom: 0;
+        }
+
+        /* Delete animation */
+        .trip-card.deleting {
+            animation: slideOutDelete 0.4s ease-out forwards;
+            pointer-events: none;
+            background: linear-gradient(to left, #fee2e2, #fef2f2) !important;
+            border-color: #fca5a5 !important;
+        }
+
+        @keyframes slideOutDelete {
+            0% {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+                max-height: 200px;
+                margin-bottom: 10px;
+                padding: 14px 16px;
+            }
+            50% {
+                opacity: 0.5;
+                transform: translateX(30px) scale(0.98);
+            }
+            100% {
+                opacity: 0;
+                transform: translateX(60px) scale(0.95);
+                max-height: 0;
+                margin-bottom: 0;
+                padding: 0 16px;
+                border-width: 0;
+            }
+        }
+
+        /* Table row delete animation */
+        tr.deleting {
+            animation: rowSlideOut 0.4s ease-out forwards;
+            pointer-events: none;
+        }
+
+        tr.deleting td {
+            background: linear-gradient(to left, #fee2e2, #fef2f2) !important;
+        }
+
+        @keyframes rowSlideOut {
+            0% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateX(50px);
+            }
         }
 
         .trip-card:hover {
@@ -933,35 +997,79 @@
 
         .trip-section-pagination {
             display: flex;
+            flex-direction: row-reverse;
             justify-content: center;
             align-items: center;
-            gap: 8px;
+            gap: 12px;
             padding: 12px 16px;
             border-top: 1px solid var(--border-color);
             font-size: 12px;
             color: var(--text-secondary);
+            background: #fafbfc;
         }
 
         .trip-section-pagination button {
-            padding: 4px 12px;
+            padding: 6px 16px;
             border: 1px solid var(--border-color);
-            border-radius: 6px;
+            border-radius: 8px;
             background: var(--white);
             color: var(--primary-blue);
             cursor: pointer;
             font-size: 12px;
             font-weight: 600;
-            transition: all 0.15s;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
 
         .trip-section-pagination button:disabled {
-            background: #f9fafb;
+            background: #f3f4f6;
             color: #9ca3af;
             cursor: default;
+            border-color: #e5e7eb;
         }
 
         .trip-section-pagination button:not(:disabled):hover {
             background: var(--lighter-blue);
+            border-color: var(--light-blue);
+            transform: translateY(-1px);
+        }
+
+        .trip-section-pagination span {
+            font-weight: 600;
+            color: var(--text-primary);
+            padding: 4px 12px;
+            background: var(--lighter-blue);
+            border-radius: 6px;
+        }
+
+        /* Trip Search Box */
+        .trip-search-box {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border-color);
+            background: #fafbfc;
+        }
+
+        .trip-search-box input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: inherit;
+            background: var(--white);
+            transition: all 0.2s;
+        }
+
+        .trip-search-box input:focus {
+            outline: none;
+            border-color: var(--light-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .trip-search-box input::placeholder {
+            color: #9ca3af;
         }
 
         /* Notification Bell Styles */
@@ -1697,6 +1805,9 @@
                             </div>
                             <span class="section-count count-warning" id="pendingCount">0</span>
                         </div>
+                        <div class="trip-search-box">
+                            <input type="text" id="pendingSearchInput" placeholder="بحث في الرحلات المعلقة..." oninput="filterTrips('pending')">
+                        </div>
                         <div class="trip-section-body" id="pendingTripsContainer">
                             <div class="trip-section-empty">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -1713,6 +1824,9 @@
                                 رحلات معتمدة
                             </div>
                             <span class="section-count count-success" id="approvedCount">0</span>
+                        </div>
+                        <div class="trip-search-box">
+                            <input type="text" id="approvedSearchInput" placeholder="بحث في الرحلات المعتمدة..." oninput="filterTrips('approved')">
                         </div>
                         <div class="trip-section-body" id="approvedTripsContainer">
                             <div class="trip-section-empty">
@@ -2206,7 +2320,7 @@
                             const recordId = record.ID || '-';
                             
                             return `
-                            <tr>
+                            <tr data-record-id="${recordId}">
                                 <td><span style="background:var(--lighter-blue);color:var(--primary-blue);padding:2px 8px;border-radius:6px;font-size:12px;font-weight:700;">${recordId}</span></td>
                                 <td>${(record['Departure Date'] || '').toString().split('T')[0]}</td>
                                 <td><strong>${record['Vehicle Number']}</strong></td>
@@ -2491,18 +2605,24 @@
                 pendingTripsArr = [];
                 approvedTripsArr = [];
             }
-            const pendingTotalPages = Math.ceil(pendingTripsArr.length / TRIPS_PER_PAGE);
+            
+            // Get filtered trips based on search
+            const filteredPending = getFilteredTrips('pending');
+            const filteredApproved = getFilteredTrips('approved');
+            
+            const pendingTotalPages = Math.ceil(filteredPending.length / TRIPS_PER_PAGE);
             if (pendingPage > pendingTotalPages && pendingTotalPages > 0) pendingPage = pendingTotalPages;
             if (pendingPage < 1) pendingPage = 1;
-            const approvedTotalPages = Math.ceil(approvedTripsArr.length / TRIPS_PER_PAGE);
+            const approvedTotalPages = Math.ceil(filteredApproved.length / TRIPS_PER_PAGE);
             if (approvedPage > approvedTotalPages && approvedTotalPages > 0) approvedPage = approvedTotalPages;
             if (approvedPage < 1) approvedPage = 1;
+            
             document.getElementById('pendingCount').textContent = pendingTripsArr.length;
             document.getElementById('approvedCount').textContent = approvedTripsArr.length;
             document.getElementById('pendingTripsContainer').parentElement.querySelector('.trip-section-pagination')?.remove();
             document.getElementById('approvedTripsContainer').parentElement.querySelector('.trip-section-pagination')?.remove();
-            renderTripSection('pendingTripsContainer', pendingTripsArr, pendingPage, 'pending');
-            renderTripSection('approvedTripsContainer', approvedTripsArr, approvedPage, 'approved');
+            renderTripSection('pendingTripsContainer', filteredPending, pendingPage, 'pending');
+            renderTripSection('approvedTripsContainer', filteredApproved, approvedPage, 'approved');
         }
         
         // Show skeleton loading for trips on first load
@@ -2617,7 +2737,7 @@
                     }
                 }
                 return `
-                    <div class="trip-card">
+                    <div class="trip-card" data-trip-id="${tripId}">
                         <div class="trip-status-dot ${dotClass}"></div>
                         <div class="trip-info">
                             <div class="trip-main">
@@ -2645,9 +2765,15 @@
                 const paginationDiv = document.createElement('div');
                 paginationDiv.className = 'trip-section-pagination';
                 paginationDiv.innerHTML = `
-                    <button onclick="changeTripPage('${type}', -1)" ${page <= 1 ? 'disabled' : ''}>السابق</button>
+                    <button onclick="changeTripPage('${type}', 1)" ${page >= totalPages ? 'disabled' : ''}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                        التالي
+                    </button>
                     <span>${page} / ${totalPages}</span>
-                    <button onclick="changeTripPage('${type}', 1)" ${page >= totalPages ? 'disabled' : ''}>التالي</button>
+                    <button onclick="changeTripPage('${type}', -1)" ${page <= 1 ? 'disabled' : ''}>
+                        السابق
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </button>
                 `;
                 container.parentElement.appendChild(paginationDiv);
             }
@@ -2655,24 +2781,61 @@
 
         function changeTripPage(type, delta) {
             if (type === 'pending') {
-                const totalPages = Math.ceil(pendingTripsArr.length / TRIPS_PER_PAGE);
+                const filtered = getFilteredTrips('pending');
+                const totalPages = Math.ceil(filtered.length / TRIPS_PER_PAGE);
                 const newPage = pendingPage + delta;
                 if (newPage >= 1 && newPage <= totalPages) {
                     pendingPage = newPage;
-                    // Remove old pagination
                     const section = document.getElementById('pendingTripsContainer').parentElement;
                     section.querySelector('.trip-section-pagination')?.remove();
-                    renderTripSection('pendingTripsContainer', pendingTripsArr, pendingPage, 'pending');
+                    renderTripSection('pendingTripsContainer', filtered, pendingPage, 'pending');
                 }
             } else {
-                const totalPages = Math.ceil(approvedTripsArr.length / TRIPS_PER_PAGE);
+                const filtered = getFilteredTrips('approved');
+                const totalPages = Math.ceil(filtered.length / TRIPS_PER_PAGE);
                 const newPage = approvedPage + delta;
                 if (newPage >= 1 && newPage <= totalPages) {
                     approvedPage = newPage;
                     const section = document.getElementById('approvedTripsContainer').parentElement;
                     section.querySelector('.trip-section-pagination')?.remove();
-                    renderTripSection('approvedTripsContainer', approvedTripsArr, approvedPage, 'approved');
+                    renderTripSection('approvedTripsContainer', filtered, approvedPage, 'approved');
                 }
+            }
+        }
+
+        // Get filtered trips based on search input
+        function getFilteredTrips(type) {
+            const searchInput = document.getElementById(type === 'pending' ? 'pendingSearchInput' : 'approvedSearchInput');
+            const searchTerm = (searchInput?.value || '').trim().toLowerCase();
+            const trips = type === 'pending' ? pendingTripsArr : approvedTripsArr;
+            
+            if (!searchTerm) return trips;
+            
+            return trips.filter(trip => {
+                const driverName = (trip.driverNameAr || trip.driverName || '').toLowerCase();
+                const tripId = (trip.tripId || trip.id || '').toString().toLowerCase();
+                const departureDate = (trip.departureDate || '').toString().toLowerCase();
+                const notes = (trip.notes || '').toLowerCase();
+                
+                return driverName.includes(searchTerm) || 
+                       tripId.includes(searchTerm) || 
+                       departureDate.includes(searchTerm) ||
+                       notes.includes(searchTerm);
+            });
+        }
+
+        // Filter trips on search input
+        function filterTrips(type) {
+            if (type === 'pending') {
+                pendingPage = 1;
+                const section = document.getElementById('pendingTripsContainer').parentElement;
+                section.querySelector('.trip-section-pagination')?.remove();
+                renderTripSection('pendingTripsContainer', getFilteredTrips('pending'), pendingPage, 'pending');
+            } else {
+                approvedPage = 1;
+                const section = document.getElementById('approvedTripsContainer').parentElement;
+                section.querySelector('.trip-section-pagination')?.remove();
+                renderTripSection('approvedTripsContainer', getFilteredTrips('approved'), approvedPage, 'approved');
             }
         }
 
@@ -2702,6 +2865,20 @@
             });
             if (!confirmed) return;
             
+            // Find and animate the card immediately
+            const tripCard = document.querySelector(`[data-trip-id="${tripId}"]`);
+            if (tripCard) {
+                tripCard.classList.add('deleting');
+            }
+            
+            // Remove from local arrays immediately for instant feedback
+            pendingTripsArr = pendingTripsArr.filter(t => (t.tripId || t.id) !== tripId);
+            approvedTripsArr = approvedTripsArr.filter(t => (t.tripId || t.id) !== tripId);
+            
+            // Update counts immediately
+            document.getElementById('pendingCount').textContent = pendingTripsArr.length;
+            document.getElementById('approvedCount').textContent = approvedTripsArr.length;
+            
             showToast('جاري حذف الطلب...', 'info');
             
             try {
@@ -2712,12 +2889,24 @@
                     showToast(`تم حذف الطلب ${tripId} بنجاح`, 'success');
                     DataCache.invalidateAll();
                     clearLocalPendingTripCaches();
-                    loadPendingTrips();
+                    
+                    // Re-render after animation completes
+                    setTimeout(() => {
+                        const pendingSection = document.getElementById('pendingTripsContainer').parentElement;
+                        const approvedSection = document.getElementById('approvedTripsContainer').parentElement;
+                        pendingSection.querySelector('.trip-section-pagination')?.remove();
+                        approvedSection.querySelector('.trip-section-pagination')?.remove();
+                        renderTripSection('pendingTripsContainer', getFilteredTrips('pending'), pendingPage, 'pending');
+                        renderTripSection('approvedTripsContainer', getFilteredTrips('approved'), approvedPage, 'approved');
+                    }, 400);
                 } else {
                     showToast(result.error || 'فشل في الحذف', 'error');
+                    // Reload to restore state on error
+                    loadPendingTrips();
                 }
             } catch (error) {
                 showToast('خطأ في الاتصال: ' + error.message, 'error');
+                loadPendingTrips();
             }
         }
 
@@ -2749,6 +2938,15 @@
             });
             if (!confirmed) return;
             
+            // Find and animate the row immediately
+            const tableRow = document.querySelector(`tr[data-record-id="${id}"]`);
+            if (tableRow) {
+                tableRow.classList.add('deleting');
+            }
+            
+            // Remove from local array immediately
+            allRecords = allRecords.filter(r => r.id !== id && r.ID !== id);
+            
             showToast('جاري حذف السجل...', 'info');
             
             try {
@@ -2760,15 +2958,20 @@
                 
                 if (result.success) {
                     showToast(`تم حذف الطلب ${id} بنجاح`, 'success');
-                    // Invalidate all caches so driver/nurse pages get fresh data
                     DataCache.invalidateAll();
                     clearLocalPendingTripCaches();
-                    loadAdminData();
+                    
+                    // Re-render table after animation
+                    setTimeout(() => {
+                        renderTable(allRecords);
+                    }, 400);
                 } else {
                     showToast(result.error || 'فشل في الحذف', 'error');
+                    loadAdminData();
                 }
             } catch (error) {
                 showToast('خطأ في الاتصال: ' + error.message, 'error');
+                loadAdminData();
             }
         }
         
