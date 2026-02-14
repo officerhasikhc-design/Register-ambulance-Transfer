@@ -2862,6 +2862,32 @@
         setInterval(() => {
             loadAdminData();
         }, 30000);
+
+        // Register Service Worker for PWA with auto-update
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => {
+                    console.log('[App] Service Worker registered successfully');
+                    setInterval(() => { reg.update(); }, 60000);
+                    reg.addEventListener('updatefound', () => {
+                        const newWorker = reg.installing;
+                        console.log('[App] New Service Worker found, installing...');
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                console.log('[App] New version available! Reloading...');
+                                setTimeout(() => window.location.reload(), 1000);
+                            }
+                        });
+                    });
+                })
+                .catch(err => console.error('[App] SW registration failed:', err));
+            navigator.serviceWorker.addEventListener('message', event => {
+                if (event.data && event.data.type === 'SW_UPDATED') {
+                    console.log('[App] ' + event.data.message);
+                    window.location.reload();
+                }
+            });
+        }
     </script>
 </body>
 </html>

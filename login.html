@@ -822,6 +822,7 @@
             navigator.serviceWorker.addEventListener('message', event => {
                 if (event.data && event.data.type === 'SW_UPDATED') {
                     console.log('[App] ' + event.data.message);
+                    window.location.reload();
                 }
             });
         }

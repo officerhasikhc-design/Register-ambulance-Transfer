@@ -1892,10 +1892,34 @@
             navigator.serviceWorker.register('./sw.js')
                 .then(reg => {
                     console.log('[App] Service Worker registered successfully');
-                    // Note: We use manual sync via connection monitoring instead of Background Sync API
-                    // Background Sync API may not be available in all browsers
+                    
+                    // Check for updates every 60 seconds
+                    setInterval(() => {
+                        reg.update();
+                    }, 60000);
+                    
+                    // Listen for updates
+                    reg.addEventListener('updatefound', () => {
+                        const newWorker = reg.installing;
+                        console.log('[App] New Service Worker found, installing...');
+                        
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                console.log('[App] New version available! Reloading...');
+                                setTimeout(() => window.location.reload(), 1000);
+                            }
+                        });
+                    });
                 })
                 .catch(err => console.log('Service Worker registration failed:', err));
+            
+            // Listen for messages from Service Worker
+            navigator.serviceWorker.addEventListener('message', event => {
+                if (event.data && event.data.type === 'SW_UPDATED') {
+                    console.log('[App] ' + event.data.message);
+                    window.location.reload();
+                }
+            });
         }
 
         // Initialize connection status on load

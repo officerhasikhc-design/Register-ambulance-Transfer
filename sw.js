@@ -1,6 +1,6 @@
 // Service Worker for Ambulance Log PWA
 // نظام سجل الإسعاف - دعم العمل بدون إنترنت
-const CACHE_NAME = 'ambulance-log-v26-og-image';
+const CACHE_NAME = 'ambulance-log-v27-force-update';
 const OFFLINE_QUEUE_KEY = 'offline_queue';
 
 const urlsToCache = [
@@ -33,7 +33,7 @@ const urlsToCache = [
 
 // Install event - Skip waiting to activate immediately
 self.addEventListener('install', event => {
-  console.log('[SW] Installing Service Worker v22-offline-fix...');
+  console.log('[SW] Installing Service Worker v27-force-update...');
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -61,6 +61,30 @@ self.addEventListener('fetch', event => {
   // Handle POST requests (data submissions)
   if (event.request.method === 'POST') {
     event.respondWith(handlePostRequest(event.request.clone()));
+    return;
+  }
+  
+  // Handle navigation requests (HTML pages) - Network First with login fallback
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          if (response.status === 200) {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(event.request, responseClone);
+            });
+          }
+          return response;
+        })
+        .catch(() => {
+          return caches.match(event.request)
+            .then(cached => {
+              // If no cached version, fallback to login page
+              return cached || caches.match('./login.html');
+            });
+        })
+    );
     return;
   }
   
@@ -187,7 +211,7 @@ function getAllFromStore(store) {
 
 // Activate event - Take control immediately and clean old caches
 self.addEventListener('activate', event => {
-  console.log('[SW] Activating Service Worker v23-icon-update...');
+  console.log('[SW] Activating Service Worker v27-force-update...');
   event.waitUntil(
     Promise.all([
       self.clients.claim(),
