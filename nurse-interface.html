@@ -24,7 +24,7 @@
     <meta property="og:type" content="website">
     <meta property="og:locale" content="en_US">
     <meta property="og:site_name" content="Hasik Health Center">
-    <link rel="icon" type="image/png" href="moh-logo.png">
+    <link rel="icon" type="image/png" sizes="48x48" href="icon-48x48.png">
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -2417,7 +2417,17 @@
         // ============================================
         // FILTER LISTENERS
         // ============================================
-        document.getElementById('yearFilter').addEventListener('change', loadRecords);
+        document.getElementById('yearFilter').addEventListener('change', function() {
+            const selectedYear = parseInt(this.value);
+            const currentYear = new Date().getFullYear();
+            const monthFilter = document.getElementById('monthFilter');
+            
+            if (selectedYear !== currentYear) {
+                monthFilter.value = 'all';
+            }
+            
+            loadRecords();
+        });
         document.getElementById('monthFilter').addEventListener('change', loadRecords);
 
         // ============================================
