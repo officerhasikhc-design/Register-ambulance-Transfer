@@ -1201,6 +1201,12 @@
                 return;
             }
 
+            // Don't update buttons if a submission is in progress
+            if (isSubmittingDeparture || isSubmittingReturn) {
+                console.log('Skipping updateButtons - submission in progress');
+                return;
+            }
+
             if (pendingTrip) {
                 btnDeparture.disabled = true;
                 btnDeparture.classList.remove('active-btn');
@@ -1311,7 +1317,12 @@
                 renderDriverHistoryPage();
             }
             
-            DataCache.invalidate(DataCache.KEYS.PENDING_TRIPS);
+            // Invalidate cache after adding to local history to prevent interference
+            setTimeout(() => {
+                if (!isSubmittingDeparture) {
+                    DataCache.invalidate(DataCache.KEYS.PENDING_TRIPS);
+                }
+            }, 2000);
 
             // === SEND TO SERVER IN BACKGROUND (non-blocking) ===
             if (isOnline) {
@@ -1328,10 +1339,12 @@
                 queueOfflineData(tripData);
             }
 
-            // Keep "جاري التسجيل" visible until trip appears in list
-            await new Promise(r => setTimeout(r, 600));
+            // Wait for DOM to actually paint the trip list with 'قيد التنفيذ'
+            await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+            // Extra delay so user clearly sees the transition and the "قيد التنفيذ" status
+            await new Promise(r => setTimeout(r, 1500));
 
-            // Done processing - let updateButtons handle the final state
+            // Done processing - switch to registered state
             btn.classList.remove('btn-processing');
             isSubmittingDeparture = false;
             updateButtons();
@@ -1390,6 +1403,25 @@
                 returnTime: time
             };
 
+            // === UPDATE UI IMMEDIATELY TO SHOW SAVING STATUS ===
+            // Update the trip in history to show "جاري الحفظ" status
+            allDriverHistory = allDriverHistory.map(t => {
+                if (t.staffNumber === selectedDriver.staffNumber && 
+                    t.departureDate === pendingTrip.departureDate && 
+                    t.departureTime === pendingTrip.departureTime && 
+                    t.status === 'pending') {
+                    return { 
+                        ...t, 
+                        returnDate: date, 
+                        returnTime: time, 
+                        status: 'saving',
+                        statusText: 'جاري الحفظ...'
+                    };
+                }
+                return t;
+            });
+            renderDriverHistoryPage();
+
             // Complete the trip locally first (always)
             pendingTrip.returnDate = date;
             pendingTrip.returnTime = time;
@@ -1405,7 +1437,18 @@
             // Clear pending trip after return
             const key = `pending_trip_${selectedDriver.staffNumber}`;
 
-            // Invalidate cache for fresh data
+            // Update trip in allDriverHistory to show as complete
+            allDriverHistory = allDriverHistory.map(t => {
+                if (t.staffNumber === selectedDriver.staffNumber && 
+                    t.departureDate === pendingTrip.departureDate && 
+                    t.departureTime === pendingTrip.departureTime && 
+                    (t.status === 'saving' || t.status === 'pending')) {
+                    return { ...t, returnDate: date, returnTime: time, status: 'complete' };
+                }
+                return t;
+            });
+            renderDriverHistoryPage();
+
             DataCache.invalidate(DataCache.KEYS.PENDING_TRIPS);
 
             // === SEND TO SERVER IN BACKGROUND (non-blocking) ===
@@ -1423,8 +1466,9 @@
                 queueOfflineData(returnData);
             }
 
-            // Show "processing" briefly so user sees feedback
-            await new Promise(r => setTimeout(r, 600));
+            // Wait for DOM to actually paint the trip as 'مكتملة'
+            await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+            await new Promise(r => setTimeout(r, 400));
 
             // Switch to "done" state in the button
             btn.classList.remove('btn-processing');
@@ -1436,19 +1480,15 @@
                 navigator.vibrate([100, 50, 100]);
             }
 
-            // Keep "done" visible briefly, then reset everything
-            await new Promise(r => setTimeout(r, 1200));
+            // Keep "done" visible briefly, then reset
+            await new Promise(r => setTimeout(r, 1000));
 
             // Clear pending trip
-            const clearKey = `pending_trip_${selectedDriver.staffNumber}`;
-            localStorage.removeItem(clearKey);
+            localStorage.removeItem(key);
             pendingTrip = null;
 
             // Hide pending trip UI
             document.getElementById('pendingTrip').style.display = 'none';
-
-            // Reload trip history
-            loadPendingTrip();
 
             // Reset both buttons
             btn.classList.remove('btn-registered');
@@ -1503,7 +1543,7 @@
             const key = `trip_history_${selectedDriver.staffNumber}`;
             let history = JSON.parse(localStorage.getItem(key)) || [];
             
-            // Check if trip already exists (prevent duplicates)
+            // Check if trip already exists in localStorage (prevent duplicates)
             const exists = history.some(t => 
                 t.departureDate === trip.departureDate && 
                 t.departureTime === trip.departureTime
@@ -1521,8 +1561,31 @@
             
             localStorage.setItem(key, JSON.stringify(history));
             
-            // Update UI immediately to show the completed trip
-            allDriverHistory = history;
+            // === FIX: Merge with existing allDriverHistory instead of replacing ===
+            // Add the new trip to the current allDriverHistory (which contains server trips)
+            const existingInAllHistory = allDriverHistory.some(t => 
+                t.departureDate === trip.departureDate && 
+                t.departureTime === trip.departureTime
+            );
+            
+            if (!existingInAllHistory) {
+                // Add to the beginning of allDriverHistory
+                allDriverHistory.unshift(trip);
+                
+                // Remove any duplicate that might exist (same date/time but different data)
+                allDriverHistory = allDriverHistory.filter((trip, index, self) =>
+                    index === self.findIndex((t) => (
+                        t.departureDate === trip.departureDate && 
+                        t.departureTime === trip.departureTime
+                    ))
+                );
+                
+                // Keep only last 100 trips in allDriverHistory as well
+                if (allDriverHistory.length > 100) {
+                    allDriverHistory = allDriverHistory.slice(0, 100);
+                }
+            }
+            
             renderDriverHistoryPage();
         }
 
@@ -1650,7 +1713,10 @@
                 let statusText = 'قيد التنفيذ';
                 let statusClass = 'status-pending';
                 
-                if (isApproved) {
+                if (trip.statusText === 'جاري الحفظ...') {
+                    statusText = 'جاري الحفظ...';
+                    statusClass = 'status-pending';
+                } else if (isApproved) {
                     statusText = '✅ تم الاعتماد';
                     statusClass = 'status-approved';
                 } else if (isComplete) {
@@ -1667,7 +1733,7 @@
                 } else if (!isComplete) {
                     tripIdDisplay = '';
                 } else {
-                    tripIdDisplay = '<span style="font-size:11px;color:#6b7280;font-weight:500;">بانتظار رقم الطلب</span>';
+                    tripIdDisplay = '';
                 }
                 
                 return `
@@ -1755,8 +1821,12 @@
             // Hide pending trip UI
             document.getElementById('pendingTrip').style.display = 'none';
             
-            // Reload trip history to show the completed trip
-            loadPendingTrip();
+            // Reload trip history to show the completed trip (delayed to avoid interference)
+            setTimeout(() => {
+                if (!isSubmittingReturn && !isSubmittingDeparture) {
+                    loadPendingTrip();
+                }
+            }, 2000);
             
             // Reset buttons
             document.getElementById('btnDeparture').classList.remove('btn-registered');
@@ -1790,6 +1860,12 @@
         
         async function autoRefreshHistory() {
             if (!selectedDriver) return;
+            
+            // Don't refresh if user is currently submitting a trip
+            if (isSubmittingDeparture || isSubmittingReturn) {
+                console.log('Skipping auto-refresh - trip submission in progress');
+                return;
+            }
             
             // Invalidate cache to force fresh fetch
             DataCache.invalidate(DataCache.KEYS.PENDING_TRIPS);
