@@ -65,7 +65,9 @@
 
 @media (max-width: 480px) {
     .responsive-container {
-        padding: var(--spacing-sm);
+        padding: var(--spacing-md);
+        /* Use more screen space on mobile */
+        max-width: 100%;
     }
 }
 
@@ -337,12 +339,14 @@ p {
     .btn {
         min-height: var(--btn-height-lg);
         font-size: var(--font-lg);
+        padding: 0 var(--spacing-2xl);
     }
     
     .form-input,
     .form-select {
         min-height: var(--btn-height-lg);
         font-size: var(--font-lg);
+        padding: var(--spacing-lg) var(--spacing-xl);
     }
     
     /* Prevent zoom on input focus */
@@ -352,9 +356,20 @@ p {
         font-size: 16px; /* Prevents iOS zoom */
     }
     
-    /* Better spacing on small screens */
+    /* Better spacing on small screens - use more space */
     .card {
-        padding: var(--spacing-md);
+        padding: var(--spacing-lg);
+        margin: var(--spacing-sm) 0;
+    }
+    
+    /* Larger text on mobile */
+    .form-label {
+        font-size: var(--font-lg);
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .card-title {
+        font-size: var(--font-2xl);
     }
 }
 

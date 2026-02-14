@@ -22,7 +22,7 @@ const urlsToCache = [
 
 // Install event - Skip waiting to activate immediately
 self.addEventListener('install', event => {
-  console.log('[SW] Installing Service Worker v10-optimized...');
+  console.log('[SW] Installing Service Worker v12-mobile-fullscreen...');
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -179,7 +179,7 @@ function getAllFromStore(store) {
 
 // Activate event - Take control immediately and clean old caches
 self.addEventListener('activate', event => {
-  console.log('[SW] Activating Service Worker v10-optimized...');
+  console.log('[SW] Activating Service Worker v12-mobile-fullscreen...');
   event.waitUntil(
     Promise.all([
       self.clients.claim(),
