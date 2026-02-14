@@ -1,6 +1,6 @@
 // Service Worker for Ambulance Log PWA
 // نظام سجل الإسعاف - دعم العمل بدون إنترنت
-const CACHE_NAME = 'ambulance-log-v16-final-fix';
+const CACHE_NAME = 'ambulance-log-v20-tripid-fix';
 const OFFLINE_QUEUE_KEY = 'offline_queue';
 
 const urlsToCache = [
@@ -22,7 +22,7 @@ const urlsToCache = [
 
 // Install event - Skip waiting to activate immediately
 self.addEventListener('install', event => {
-  console.log('[SW] Installing Service Worker v13-offline-fix...');
+  console.log('[SW] Installing Service Worker v20-tripid-fix...');
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -123,12 +123,9 @@ function openOfflineDB() {
   });
 }
 
-// Sync offline requests when back online
-self.addEventListener('sync', event => {
-  if (event.tag === 'sync-offline-data') {
-    event.waitUntil(syncOfflineData());
-  }
-});
+// Background Sync disabled - using manual sync instead
+// Note: Background Sync API may not be available in all browsers
+// We handle offline sync manually via connection monitoring
 
 // Process queued offline requests
 async function syncOfflineData() {
@@ -179,7 +176,7 @@ function getAllFromStore(store) {
 
 // Activate event - Take control immediately and clean old caches
 self.addEventListener('activate', event => {
-  console.log('[SW] Activating Service Worker v15-syntax-fix...');
+  console.log('[SW] Activating Service Worker v20-tripid-fix...');
   event.waitUntil(
     Promise.all([
       self.clients.claim(),

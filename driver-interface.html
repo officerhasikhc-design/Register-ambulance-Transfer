@@ -1074,6 +1074,7 @@
             if (!selectedDriver) return;
             const key = `pending_trip_${selectedDriver.staffNumber}`;
             const pendingDiv = document.getElementById('pendingTrip');
+            const localTrip = JSON.parse(localStorage.getItem(key));
 
             if (trips !== null && trips !== undefined) {
                 // Server data is available — treat it as authoritative
@@ -1090,19 +1091,26 @@
                             departureTime: serverTrip.departureTime
                         };
                         localStorage.setItem(key, JSON.stringify(pendingTrip));
+                    } else if (localTrip && localTrip.status === 'pending' && localTrip.offlineSaved) {
+                        // Keep local offline trip even if not on server yet
+                        pendingTrip = localTrip;
+                        console.log('🔄 Keeping offline pending trip:', pendingTrip);
                     } else {
-                        // Trip not found on server (deleted or completed) — clear local
+                        // Trip not found on server and no offline trip — clear local
                         localStorage.removeItem(key);
                         pendingTrip = null;
                     }
+                } else if (localTrip && localTrip.status === 'pending' && localTrip.offlineSaved) {
+                    // Server returned empty but we have offline trip — keep it
+                    pendingTrip = localTrip;
+                    console.log('🔄 Keeping offline pending trip (empty server):', pendingTrip);
                 } else {
-                    // Server returned empty list — no pending trips exist, clear local
+                    // Server returned empty list and no offline trip — clear local
                     localStorage.removeItem(key);
                     pendingTrip = null;
                 }
             } else {
                 // Server data unavailable (network error) — fall back to localStorage
-                const localTrip = JSON.parse(localStorage.getItem(key));
                 if (localTrip && localTrip.status !== 'complete') {
                     pendingTrip = localTrip;
                 } else {
@@ -1284,7 +1292,7 @@
             pendingTrip.returnTimestamp = now.getTime();
             pendingTrip.status = 'complete';
 
-            // Save to history
+            // Save to history immediately (works offline)
             saveTripToHistory(pendingTrip);
             
             // Update pending_trips_for_nurse in localStorage
@@ -1312,6 +1320,10 @@
                 queueOfflineData(returnData);
                 showSuccessAndReload('✅ تم الحفظ محلياً', '⚠️ سيتم الإرسال عند توفر الإنترنت');
             }
+            
+            // Reset button text immediately
+            btn.innerHTML = '<span>← تسجيل وقت العودة</span>';
+            btn.disabled = true;
         }
         
         // Update the pending trip for nurse with return data
@@ -1351,7 +1363,17 @@
         function saveTripToHistory(trip) {
             const key = `trip_history_${selectedDriver.staffNumber}`;
             let history = JSON.parse(localStorage.getItem(key)) || [];
-            history.unshift(trip);
+            
+            // Check if trip already exists (prevent duplicates)
+            const exists = history.some(t => 
+                t.departureDate === trip.departureDate && 
+                t.departureTime === trip.departureTime
+            );
+            
+            if (!exists) {
+                history.unshift(trip);
+                console.log('💾 Saved trip to local history:', trip);
+            }
             
             // Keep only last 100 trips
             if (history.length > 100) {
@@ -1359,6 +1381,10 @@
             }
             
             localStorage.setItem(key, JSON.stringify(history));
+            
+            // Update UI immediately to show the completed trip
+            allDriverHistory = history;
+            renderDriverHistoryPage();
         }
 
         // Cache for server data
@@ -1480,6 +1506,7 @@
             let html = pageTrips.map(trip => {
                 const isComplete = trip.status === 'complete' || trip.status === 'submitted';
                 const isApproved = trip.status === 'submitted';
+                const isOffline = !trip.tripId && trip.offlineSaved !== false;
                 
                 let statusText = 'قيد التنفيذ';
                 let statusClass = 'status-pending';
@@ -1492,12 +1519,19 @@
                     statusClass = 'status-complete';
                 }
                 
-                const tripId = trip.tripId || '-';
+                // Show offline message or trip ID
+                let tripIdDisplay;
+                if (isOffline) {
+                    tripIdDisplay = '<span style="font-size:11px;color:#f59e0b;font-weight:500;">⚠️ الرحلة مسجلة - سيتم حفظها عند توفر الإنترنت</span>';
+                } else {
+                    const tripId = trip.tripId || '-';
+                    tripIdDisplay = `<span class="trip-id">${tripId}</span>`;
+                }
                 
                 return `
-                    <div class="trip-item ${isApproved ? 'trip-approved' : ''}">
+                    <div class="trip-item ${isApproved ? 'trip-approved' : ''} ${isOffline ? 'trip-offline' : ''}">
                         <div class="trip-item-header">
-                            <span class="trip-id">${tripId}</span>
+                            ${tripIdDisplay}
                             <span class="trip-item-status ${statusClass}">${statusText}</span>
                         </div>
                         <div class="trip-item-date">${(trip.departureDate || '').toString().split('T')[0]}</div>
@@ -1571,8 +1605,16 @@
                 msg.classList.remove('show');
             }, 3000);
             
-            // Update UI immediately without full reload
-            loadPendingTrip();
+            // Clear pending trip from localStorage and memory
+            const key = `pending_trip_${selectedDriver.staffNumber}`;
+            localStorage.removeItem(key);
+            pendingTrip = null;
+            
+            // Hide pending trip UI
+            document.getElementById('pendingTrip').style.display = 'none';
+            
+            // Reload trip history to show the completed trip
+            loadDriverHistory();
             
             // Reset buttons
             document.getElementById('btnDeparture').disabled = false;
@@ -1676,6 +1718,36 @@
                         body: JSON.stringify(item)
                     });
                     successCount++;
+                    
+                    // Update offlineSaved flag for synced trips
+                    if (selectedDriver && item.staffNumber === selectedDriver.staffNumber) {
+                        if (item.action === 'driverDeparture') {
+                            // Update pending trip
+                            const key = `pending_trip_${selectedDriver.staffNumber}`;
+                            const localTrip = JSON.parse(localStorage.getItem(key));
+                            if (localTrip && localTrip.status === 'pending') {
+                                localTrip.offlineSaved = false;
+                                localStorage.setItem(key, JSON.stringify(localTrip));
+                                pendingTrip = localTrip;
+                                console.log('✅ Synced offline departure to server');
+                            }
+                        } else if (item.action === 'driverReturn') {
+                            // Update completed trip in history
+                            const historyKey = `trip_history_${selectedDriver.staffNumber}`;
+                            let history = JSON.parse(localStorage.getItem(historyKey)) || [];
+                            history = history.map(trip => {
+                                if (trip.departureDate === item.departureDate && 
+                                    trip.departureTime === item.departureTime && 
+                                    trip.returnDate === item.returnDate && 
+                                    trip.returnTime === item.returnTime) {
+                                    return { ...trip, offlineSaved: false };
+                                }
+                                return trip;
+                            });
+                            localStorage.setItem(historyKey, JSON.stringify(history));
+                            console.log('✅ Synced offline return to server');
+                        }
+                    }
                 } catch (error) {
                     // Keep failed items in queue
                     newQueue.push(item);
@@ -1688,14 +1760,18 @@
                 statusBar.className = 'connection-status synced';
                 statusText.textContent = `✅ تم مزامنة ${successCount} رحلة بنجاح`;
                 
-                // Refresh data
+                // Reload trip data to get trip IDs from server
                 setTimeout(() => {
                     loadPendingTrip();
-                }, 1000);
+                }, 2000);
             }
 
             if (newQueue.length > 0) {
-                setTimeout(syncOfflineQueue, 30000); // Retry in 30 seconds
+                setTimeout(() => {
+                    if (newQueue.length > 0) {
+                        setTimeout(syncOfflineQueue, 30000); // Retry in 30 seconds
+                    }
+                });
             }
         }
 
