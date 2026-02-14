@@ -2529,17 +2529,20 @@
             displayRecordsWithPagination();
         }
 
-        // Show skeleton while loading
-        showTripsSkeleton();
-        
-        // Try to load trips from cache instantly
-        const cachedTrips = DataCache.get(DataCache.KEYS.PENDING_TRIPS, DataCache.EXPIRY.PENDING_TRIPS);
-        if (cachedTrips && cachedTrips.data) {
-            // Show cached data immediately
-            applyTrips(cachedTrips.data);
+        // === INSTANT DISPLAY: Show cached data immediately on page load ===
+        const cachedAdminData = DataCache.get(DataCache.KEYS.ADMIN_DATA, DataCache.EXPIRY.ADMIN_DATA * 2);
+        if (cachedAdminData && cachedAdminData.data) {
+            // Show ALL cached data instantly (stats + records + trips)
+            const data = cachedAdminData.data;
+            if (data.stats) applyStats(data.stats);
+            if (data.records) applyRecords(data.records);
+            if (data.trips) applyTrips(data.trips);
+        } else {
+            // No cache available - show skeleton
+            showTripsSkeleton();
         }
         
-        // Initialize — single combined request for fast page display
+        // Fetch fresh data in background (will update UI if data changed)
         loadAdminData();
 
         async function loadAdminData() {
