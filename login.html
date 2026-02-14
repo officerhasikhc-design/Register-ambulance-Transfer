@@ -14,6 +14,7 @@
     <!-- HTML Meta Tags -->
     <meta name="description" content="Ambulance Reg System - Ambulance Activity Log | نظام سجل الإسعاف - سجل رحلات الإسعاف | Ministry of Health - Hasik Health Center | وزارة الصحة - مركز حاسك الصحي">
     <meta name="theme-color" content="#1e40af">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Ambulance Log | سجل الإسعاف">
@@ -671,11 +672,39 @@
             errorMessage.classList.add('show');
         }
 
-        // Register Service Worker for PWA
+        // Register Service Worker for PWA with auto-update
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js')
-                .then(reg => console.log('Service Worker registered'))
-                .catch(err => console.log('Service Worker registration failed:', err));
+                .then(reg => {
+                    console.log('[App] Service Worker registered successfully');
+                    
+                    // Check for updates every 60 seconds
+                    setInterval(() => {
+                        reg.update();
+                    }, 60000);
+                    
+                    // Listen for updates
+                    reg.addEventListener('updatefound', () => {
+                        const newWorker = reg.installing;
+                        console.log('[App] New Service Worker found, installing...');
+                        
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                console.log('[App] New version available! Reloading...');
+                                // Auto-reload to get the new version
+                                setTimeout(() => window.location.reload(), 1000);
+                            }
+                        });
+                    });
+                })
+                .catch(err => console.error('[App] Service Worker registration failed:', err));
+            
+            // Listen for messages from Service Worker
+            navigator.serviceWorker.addEventListener('message', event => {
+                if (event.data && event.data.type === 'SW_UPDATED') {
+                    console.log('[App] ' + event.data.message);
+                }
+            });
         }
     </script>
 </body>

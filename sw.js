@@ -1,6 +1,6 @@
 // Service Worker for Ambulance Log PWA
 // نظام سجل الإسعاف - دعم العمل بدون إنترنت
-const CACHE_NAME = 'ambulance-log-v9';
+const CACHE_NAME = 'ambulance-log-v10-optimized';
 const OFFLINE_QUEUE_KEY = 'offline_queue';
 
 const urlsToCache = [
@@ -11,15 +11,35 @@ const urlsToCache = [
   './admin-interface.html',
   './settings-interface.html',
   './moh-logo.png',
-  './manifest.json'
+  './manifest.json',
+  // New optimization files
+  './request-optimizer.js',
+  './ui-optimizer.js',
+  './connection-monitor.js',
+  './data-cache.js',
+  './session-manager.js'
 ];
 
 // Install event - Skip waiting to activate immediately
 self.addEventListener('install', event => {
+  console.log('[SW] Installing Service Worker v10-optimized...');
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
+      .then(cache => {
+        console.log('[SW] Caching app shell...');
+        // Cache files one by one to avoid failures
+        return Promise.allSettled(
+          urlsToCache.map(url => 
+            cache.add(url).catch(err => {
+              console.warn(`[SW] Failed to cache ${url}:`, err);
+              return null;
+            })
+          )
+        );
+      })
+      .then(() => console.log('[SW] Installation complete'))
+      .catch(err => console.error('[SW] Installation failed:', err))
   );
 });
 
@@ -157,18 +177,35 @@ function getAllFromStore(store) {
   });
 }
 
-// Activate event - Take control immediately
+// Activate event - Take control immediately and clean old caches
 self.addEventListener('activate', event => {
+  console.log('[SW] Activating Service Worker v10-optimized...');
   event.waitUntil(
     Promise.all([
       self.clients.claim(),
       caches.keys().then(cacheNames => {
+        const oldCaches = cacheNames.filter(cacheName => cacheName !== CACHE_NAME);
+        if (oldCaches.length > 0) {
+          console.log('[SW] Deleting old caches:', oldCaches);
+        }
         return Promise.all(
-          cacheNames.filter(cacheName => cacheName !== CACHE_NAME)
-            .map(cacheName => caches.delete(cacheName))
+          oldCaches.map(cacheName => caches.delete(cacheName))
         );
       })
     ])
+    .then(() => {
+      console.log('[SW] Activation complete - App updated!');
+      // Notify all clients about the update
+      return self.clients.matchAll().then(clients => {
+        clients.forEach(client => {
+          client.postMessage({
+            type: 'SW_UPDATED',
+            message: 'تم تحديث التطبيق بنجاح',
+            version: CACHE_NAME
+          });
+        });
+      });
+    })
   );
 });
 
