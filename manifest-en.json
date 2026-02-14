@@ -1,8 +1,8 @@
 {
-  "name": "نظام سجل نشاط الإسعاف - مركز حاسك الصحي",
-  "short_name": "سجل الإسعاف",
-  "description": "نظام تسجيل رحلات الإسعاف - المديرية العامة للخدمات الصحية بمحافظة ظفار - مركز حاسك الصحي",
-  "start_url": "./login.html?lang=ar",
+  "name": "Ambulance Activity Log System - Hasik Health Center",
+  "short_name": "Ambulance Log",
+  "description": "Ambulance Activity Log System - Directorate General of Health Services - Dhofar - Hasik Health Center",
+  "start_url": "./login.html?lang=en",
   "scope": "./",
   "display": "standalone",
   "background_color": "#1e40af",
@@ -22,6 +22,6 @@
       "purpose": "any maskable"
     }
   ],
-  "lang": "ar",
-  "dir": "rtl"
+  "lang": "en",
+  "dir": "ltr"
 }

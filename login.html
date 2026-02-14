@@ -42,7 +42,7 @@
     <meta name="twitter:title" content="Ambulance Reg System | نظام سجل الإسعاف - Ministry of Health">
     <meta name="twitter:description" content="Ministry of Health - Hasik Health Center | Ambulance Activity Log System | وزارة الصحة - مركز حاسك الصحي | نظام سجل رحلات الإسعاف">
     <meta name="twitter:image" content="https://officerhasikhc-design.github.io/Register-ambulance-Transfer/moh-photo_Page_1.png">
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="manifest-ar.json" id="app-manifest">
     <link rel="icon" type="image/png" href="moh-logo.png">
     <link rel="apple-touch-icon" href="moh-logo.png">
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Cairo:wght@400;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -93,18 +93,21 @@
             width: 100%;
             max-width: 420px;
             box-shadow: var(--shadow-xl);
+            position: relative;
         }
 
         .login-header {
             text-align: center;
             margin-bottom: 32px;
+            margin-top: 20px;
         }
 
         .login-logo {
             width: 80px;
             height: 80px;
             object-fit: contain;
-            margin-bottom: 16px;
+            margin: 0 auto 16px auto;
+            display: block;
         }
 
         .login-title {
@@ -139,17 +142,24 @@
         }
 
         .lang-switch {
+            position: absolute;
+            top: 16px;
+            right: 16px;
             display: flex;
-            justify-content: center;
             gap: 4px;
             background: var(--lighter-blue);
             padding: 4px;
             border-radius: 10px;
-            margin-bottom: 24px;
+            z-index: 10;
+        }
+
+        [dir="ltr"] .lang-switch {
+            right: auto;
+            left: 16px;
         }
 
         .lang-btn {
-            padding: 8px 20px;
+            padding: 6px 12px;
             border: none;
             background: transparent;
             color: var(--text-secondary);
@@ -157,8 +167,9 @@
             cursor: pointer;
             border-radius: 8px;
             transition: all 0.2s;
-            font-size: 14px;
+            font-size: 12px;
             font-family: inherit;
+            min-width: 36px;
         }
 
         .lang-btn.active {
@@ -321,28 +332,6 @@
             position: relative;
         }
 
-        .input-icon .form-input {
-            padding-right: 44px;
-        }
-
-        [dir="ltr"] .input-icon .form-input {
-            padding-right: 16px;
-            padding-left: 44px;
-        }
-
-        .input-icon-symbol {
-            position: absolute;
-            right: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-secondary);
-            font-size: 18px;
-        }
-
-        [dir="ltr"] .input-icon-symbol {
-            right: auto;
-            left: 14px;
-        }
 
         .loading-spinner {
             display: inline-block;
@@ -364,28 +353,39 @@
             to { transform: rotate(360deg); }
         }
 
+
         @media (max-width: 480px) {
             .login-container {
                 padding: 24px;
+                padding-top: 32px;
             }
 
             .login-title {
                 font-size: 20px;
+            }
+            
+            .lang-switch {
+                top: 12px;
+                right: 12px;
+            }
+            
+            [dir="ltr"] .lang-switch {
+                left: 12px;
             }
         }
     </style>
 </head>
 <body>
     <div class="login-container">
+        <div class="lang-switch">
+            <button class="lang-btn active" onclick="setLanguage('ar')">ع</button>
+            <button class="lang-btn" onclick="setLanguage('en')">EN</button>
+        </div>
+
         <div class="login-header">
             <img src="moh-logo.png" alt="Logo" class="login-logo">
             <h1 class="login-title" data-ar="نظام سجل نشاط الإسعاف" data-en="Ambulance Activity Log System">نظام سجل نشاط الإسعاف</h1>
             <p class="login-subtitle" data-ar="المديرية العامة للخدمات الصحية بمحافظة ظفار<br>مركز حاسك الصحي" data-en="Directorate General of Health Services - Dhofar<br>Hasik Health Center">المديرية العامة للخدمات الصحية بمحافظة ظفار<br>مركز حاسك الصحي</p>
-        </div>
-
-        <div class="lang-switch">
-            <button class="lang-btn active" onclick="setLanguage('ar')">العربية</button>
-            <button class="lang-btn" onclick="setLanguage('en')">English</button>
         </div>
 
         <div class="error-message" id="errorMessage"></div>
@@ -393,14 +393,11 @@
         <form id="loginForm" onsubmit="handleLogin(event)">
             <div class="form-group">
                 <label class="form-label" data-ar="الرقم الوظيفي أو المدني" data-en="Staff Number or Civil ID">الرقم الوظيفي أو المدني</label>
-                <div class="input-icon">
-                    <input type="text" class="form-input" id="staffNumber" 
-                           placeholder="أدخل الرقم الوظيفي أو المدني" 
-                           data-placeholder-ar="أدخل الرقم الوظيفي أو المدني"
-                           data-placeholder-en="Enter Staff Number or Civil ID"
-                           required autocomplete="off">
-                    <span class="input-icon-symbol">👤</span>
-                </div>
+                <input type="text" class="form-input" id="staffNumber" 
+                       placeholder="أدخل الرقم الوظيفي أو المدني" 
+                       data-placeholder-ar="أدخل الرقم الوظيفي أو المدني"
+                       data-placeholder-en="Enter Staff Number or Civil ID"
+                       required autocomplete="off">
             </div>
 
             <div class="remember-me">
@@ -596,11 +593,17 @@
             document.documentElement.lang = lang;
             document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
             
+            // Update manifest based on language
+            const manifestLink = document.getElementById('app-manifest');
+            if (manifestLink) {
+                manifestLink.href = lang === 'ar' ? 'manifest-ar.json' : 'manifest-en.json';
+            }
+            
             // Update language buttons
             document.querySelectorAll('.lang-btn').forEach(btn => {
                 btn.classList.remove('active');
-                if ((lang === 'ar' && btn.textContent === 'العربية') || 
-                    (lang === 'en' && btn.textContent === 'English')) {
+                if ((lang === 'ar' && btn.textContent === 'ع') || 
+                    (lang === 'en' && btn.textContent === 'EN')) {
                     btn.classList.add('active');
                 }
             });
