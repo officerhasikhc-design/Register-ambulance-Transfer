@@ -1837,7 +1837,6 @@
         </div>
     </div>
 
-    <script src="data-cache.js"></script>
     <script>
         // ============================================
         // CONFIGURATION - UPDATE THIS URL
@@ -2473,19 +2472,6 @@
         })();
         updateRecordsTitle();
 
-        // Show skeleton while loading
-        showTripsSkeleton();
-        
-        // Try to load trips from cache instantly
-        const cachedTrips = DataCache.get(DataCache.KEYS.PENDING_TRIPS, DataCache.EXPIRY.PENDING_TRIPS);
-        if (cachedTrips && cachedTrips.data) {
-            // Show cached data immediately
-            applyTrips(cachedTrips.data);
-        }
-        
-        // Initialize — single combined request for fast page display
-        loadAdminData();
-
         // Load pending trips from drivers — split into pending & approved
         let pendingTripsArr = [];
         let approvedTripsArr = [];
@@ -2539,6 +2525,19 @@
             if (currentPage < 1) currentPage = 1;
             displayRecordsWithPagination();
         }
+
+        // Show skeleton while loading
+        showTripsSkeleton();
+        
+        // Try to load trips from cache instantly
+        const cachedTrips = DataCache.get(DataCache.KEYS.PENDING_TRIPS, DataCache.EXPIRY.PENDING_TRIPS);
+        if (cachedTrips && cachedTrips.data) {
+            // Show cached data immediately
+            applyTrips(cachedTrips.data);
+        }
+        
+        // Initialize — single combined request for fast page display
+        loadAdminData();
 
         async function loadAdminData() {
             const search = document.getElementById('searchInput').value;
