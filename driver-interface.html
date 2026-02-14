@@ -1674,7 +1674,7 @@
             document.getElementById('pendingTrip').style.display = 'none';
             
             // Reload trip history to show the completed trip
-            loadDriverHistory();
+            loadPendingTrip();
             
             // Reset buttons
             document.getElementById('btnDeparture').disabled = false;
@@ -1863,11 +1863,9 @@
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js')
                 .then(reg => {
-                    console.log('Service Worker registered');
-                    // Request background sync
-                    if ('sync' in reg) {
-                        reg.sync.register('sync-offline-data');
-                    }
+                    console.log('[App] Service Worker registered successfully');
+                    // Note: We use manual sync via connection monitoring instead of Background Sync API
+                    // Background Sync API may not be available in all browsers
                 })
                 .catch(err => console.log('Service Worker registration failed:', err));
         }
