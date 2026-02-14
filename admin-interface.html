@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة الإدارة - سجل نشاط الإسعاف</title>
+    
+    <!-- Performance Optimization Scripts - Load First -->
+    <script src="request-optimizer.js"></script>
+    <script src="ui-optimizer.js"></script>
+    <script src="connection-monitor.js"></script>
+    <script src="data-cache.js"></script>
+    
     <script src="session-manager.js"></script>
     
     <!-- Open Graph Meta Tags for WhatsApp, Email, etc -->
@@ -2466,6 +2473,16 @@
         })();
         updateRecordsTitle();
 
+        // Show skeleton while loading
+        showTripsSkeleton();
+        
+        // Try to load trips from cache instantly
+        const cachedTrips = DataCache.get(DataCache.KEYS.PENDING_TRIPS, DataCache.EXPIRY.PENDING_TRIPS);
+        if (cachedTrips && cachedTrips.data) {
+            // Show cached data immediately
+            applyTrips(cachedTrips.data);
+        }
+        
         // Initialize — single combined request for fast page display
         loadAdminData();
 
@@ -2497,6 +2514,22 @@
             document.getElementById('approvedTripsContainer').parentElement.querySelector('.trip-section-pagination')?.remove();
             renderTripSection('pendingTripsContainer', pendingTripsArr, pendingPage, 'pending');
             renderTripSection('approvedTripsContainer', approvedTripsArr, approvedPage, 'approved');
+        }
+        
+        // Show skeleton loading for trips on first load
+        function showTripsSkeleton() {
+            const skeletonHTML = `
+                <div class="trip-card" style="opacity: 0.6;">
+                    <div class="trip-status-dot" style="background: #e5e7eb;"></div>
+                    <div class="trip-info" style="flex: 1;">
+                        <div style="height: 16px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; width: 60%; margin-bottom: 8px;"></div>
+                        <div style="height: 12px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; width: 90%; margin-bottom: 4px;"></div>
+                        <div style="height: 12px; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; width: 80%;"></div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('pendingTripsContainer').innerHTML = skeletonHTML.repeat(2);
+            document.getElementById('approvedTripsContainer').innerHTML = skeletonHTML.repeat(2);
         }
 
         function applyRecords(records) {

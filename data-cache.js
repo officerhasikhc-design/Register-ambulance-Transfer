@@ -20,17 +20,44 @@ const DataCache = {
         VEHICLES: 'cache_vehicles',
         NOTIFICATIONS: 'cache_notifications',
         TIMESTAMPS: 'cache_timestamps',
-        ADMIN_DATA: 'cache_admin_data'
+        ADMIN_DATA: 'cache_admin_data',
+        DRIVERS: 'cache_drivers',
+        NURSES: 'cache_nurses'
     },
 
-    // Cache expiry times (milliseconds)
+    // Cache expiry times (milliseconds) - Optimized for slow connections
     EXPIRY: {
-        PENDING_TRIPS: 5 * 60 * 1000,   // 5 minutes
-        RECORDS: 10 * 60 * 1000,          // 10 minutes
+        PENDING_TRIPS: 3 * 60 * 1000,     // 3 minutes (more frequent updates)
+        RECORDS: 15 * 60 * 1000,          // 15 minutes (longer for stability)
         STATS: 5 * 60 * 1000,             // 5 minutes
-        VEHICLES: 30 * 60 * 1000,         // 30 minutes
+        VEHICLES: 60 * 60 * 1000,         // 60 minutes (rarely changes)
         NOTIFICATIONS: 5 * 60 * 1000,     // 5 minutes
-        ADMIN_DATA: 5 * 60 * 1000         // 5 minutes
+        ADMIN_DATA: 5 * 60 * 1000,        // 5 minutes
+        DRIVERS: 60 * 60 * 1000,          // 60 minutes (rarely changes)
+        NURSES: 60 * 60 * 1000            // 60 minutes (rarely changes)
+    },
+
+    // Max cache size (5MB per entry)
+    MAX_CACHE_SIZE: 5 * 1024 * 1024,
+
+    /**
+     * Simple compression using JSON stringification optimization
+     */
+    compress(data) {
+        try {
+            const str = JSON.stringify(data);
+            // Check size
+            if (str.length > this.MAX_CACHE_SIZE) {
+                console.warn('DataCache: Data too large, truncating');
+                // If array, keep only recent items
+                if (Array.isArray(data)) {
+                    return data.slice(0, Math.floor(data.length / 2));
+                }
+            }
+            return data;
+        } catch (e) {
+            return data;
+        }
     },
 
     /**
@@ -38,16 +65,23 @@ const DataCache = {
      */
     set(key, data) {
         try {
+            const compressed = this.compress(data);
             const entry = {
-                data: data,
-                timestamp: Date.now()
+                data: compressed,
+                timestamp: Date.now(),
+                size: JSON.stringify(compressed).length
             };
             localStorage.setItem(key, JSON.stringify(entry));
         } catch (e) {
             console.warn('DataCache: Storage full, clearing old cache');
-            this.clearAll();
+            this.clearOldest();
             try {
-                localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
+                const compressed = this.compress(data);
+                localStorage.setItem(key, JSON.stringify({ 
+                    data: compressed, 
+                    timestamp: Date.now(),
+                    size: JSON.stringify(compressed).length
+                }));
             } catch (e2) {
                 console.error('DataCache: Cannot save to storage');
             }
@@ -97,6 +131,40 @@ const DataCache = {
             }
         }
         keysToRemove.forEach(key => localStorage.removeItem(key));
+    },
+
+    /**
+     * Clear oldest cache entries to free up space
+     */
+    clearOldest() {
+        const cacheEntries = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('cache_')) {
+                try {
+                    const entry = JSON.parse(localStorage.getItem(key));
+                    cacheEntries.push({
+                        key: key,
+                        timestamp: entry.timestamp || 0,
+                        size: entry.size || 0
+                    });
+                } catch (e) {
+                    // Invalid entry, remove it
+                    localStorage.removeItem(key);
+                }
+            }
+        }
+
+        // Sort by timestamp (oldest first)
+        cacheEntries.sort((a, b) => a.timestamp - b.timestamp);
+
+        // Remove oldest 30% of entries
+        const removeCount = Math.ceil(cacheEntries.length * 0.3);
+        for (let i = 0; i < removeCount; i++) {
+            localStorage.removeItem(cacheEntries[i].key);
+        }
+
+        console.log(`DataCache: Cleared ${removeCount} oldest entries`);
     },
 
     /**

@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ambulance Reg System | نظام سجل الإسعاف - تسجيل الدخول</title>
     
+    <!-- Performance Optimization Scripts -->
+    <script src="request-optimizer.js"></script>
+    <script src="ui-optimizer.js"></script>
+    <script src="connection-monitor.js"></script>
+    <script src="data-cache.js"></script>
+    
     <!-- HTML Meta Tags -->
     <meta name="description" content="Ambulance Reg System - Ambulance Activity Log | نظام سجل الإسعاف - سجل رحلات الإسعاف | Ministry of Health - Hasik Health Center | وزارة الصحة - مركز حاسك الصحي">
     <meta name="theme-color" content="#1e40af">
@@ -446,24 +452,28 @@
             // Drivers
             '39121': { 
                 type: 'driver', 
+                employeeType: 'employee',
                 nameAr: 'سعد زايد الجنيبي', 
                 nameEn: 'SAAD ZAID AL-JUNAIBI',
                 redirect: 'driver-interface.html'
             },
             '222975657': { 
                 type: 'driver', 
+                employeeType: 'daily-paid',
                 nameAr: 'حسان ثابت رجب', 
                 nameEn: 'HASSAN THABIT RAJAB',
                 redirect: 'driver-interface.html'
             },
             '39634': { 
                 type: 'driver', 
+                employeeType: 'employee',
                 nameAr: 'محمد الرضه علي', 
                 nameEn: 'MOHAMMED AL-RUDHA ALI',
                 redirect: 'driver-interface.html'
             },
             '65870': { 
                 type: 'driver', 
+                employeeType: 'employee',
                 nameAr: 'عبدالعزيز مسلم النقش', 
                 nameEn: 'ABDULAZIZ MUSALLEM AL-NAQSH',
                 redirect: 'driver-interface.html'
@@ -631,6 +641,7 @@
                 const sessionData = {
                     staffNumber: staffNumber,
                     type: user.type,
+                    employeeType: user.employeeType || 'employee',
                     nameAr: user.nameAr,
                     nameEn: user.nameEn,
                     vehicleNumber: user.vehicleNumber || '',

@@ -3,6 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- Performance Optimization Scripts - Load First -->
+    <script src="request-optimizer.js"></script>
+    <script src="ui-optimizer.js"></script>
+    <script src="connection-monitor.js"></script>
+    <script src="data-cache.js"></script>
+    
     <script src="session-manager.js"></script>
     <meta name="theme-color" content="#1e40af">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1092,7 +1099,7 @@
             // Update UI
             if (pendingTrip && pendingTrip.status !== 'complete' && pendingTrip.status !== 'submitted') {
                 pendingDiv.style.display = 'block';
-                document.getElementById('pendingDate').textContent = pendingTrip.departureDate || '-';
+                document.getElementById('pendingDate').textContent = (pendingTrip.departureDate || '-').toString().split('T')[0];
                 document.getElementById('pendingTime').textContent = pendingTrip.departureTime || '-';
             } else {
                 pendingDiv.style.display = 'none';
