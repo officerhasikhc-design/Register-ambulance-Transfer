@@ -1266,6 +1266,33 @@
                 // Update buttons to disable departure and enable return
                 updateButtons();
                 
+                // Immediately add the new trip to trip history list (Optimistic UI)
+                const newTripEntry = {
+                    tripId: '',
+                    driverName: selectedDriver.nameEn,
+                    driverNameAr: selectedDriver.nameAr,
+                    staffNumber: selectedDriver.staffNumber,
+                    departureDate: date,
+                    departureTime: time,
+                    returnDate: '',
+                    returnTime: '',
+                    status: 'pending',
+                    offlineSaved: !isOnline
+                };
+                
+                // Add to allDriverHistory at the top and re-render
+                const existsInHistory = allDriverHistory.some(t => 
+                    t.departureDate === date && t.departureTime === time
+                );
+                if (!existsInHistory) {
+                    allDriverHistory.unshift(newTripEntry);
+                    driverHistoryPage = 1;
+                    renderDriverHistoryPage();
+                }
+                
+                // Invalidate cache so next background fetch gets fresh data with tripId
+                DataCache.invalidate(DataCache.KEYS.PENDING_TRIPS);
+                
                 // Reset button text
                 btn.innerHTML = '<span>→ تسجيل وقت الذهاب</span>';
                 btn.disabled = false;
