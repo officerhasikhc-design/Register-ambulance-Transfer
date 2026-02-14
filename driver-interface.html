@@ -696,6 +696,9 @@
             <div class="offline-badge" id="offlineBadge" style="display: none;">
                 ⚠️ وضع عدم الاتصال - سيتم الحفظ محلياً
             </div>
+            <div class="offline-badge" id="offlineBadge" style="display: none;">
+                ⚠️ وضع عدم الاتصال - سيتم الحفظ محلياً
+            </div>
         </div>
 
         <!-- Driver Info (when logged in) -->
@@ -1197,11 +1200,12 @@
                 departureTime: time
             };
 
-            // Save locally first (always)
+            // Save locally first (always) - with status 'pending'
             pendingTrip = {
                 ...tripData,
                 departureTimestamp: now.getTime(),
-                offlineSaved: !isOnline
+                offlineSaved: !isOnline,
+                status: 'pending' // Critical: Mark as pending to prevent duplicate
             };
             const key = `pending_trip_${selectedDriver.staffNumber}`;
             localStorage.setItem(key, JSON.stringify(pendingTrip));
@@ -1218,25 +1222,26 @@
                 } catch (error) {
                     console.error('Fetch failed, saving offline:', error);
                     queueOfflineData(tripData);
-                    showSuccess('تم الحفظ محلياً', `${date} - ${time}\nسيتم الإرسال عند توفر الإنترنت`);
+                    showSuccess('⚠️ لا يوجد اتصال - تم الحفظ محلياً', `${date} - ${time}\nسيتم الإرسال عند توفر الإنترنت`);
                 }
             } else {
                 // Offline - queue for later
                 queueOfflineData(tripData);
-                showSuccess('تم الحفظ محلياً', `${date} - ${time}\n⚠️ سيتم الإرسال عند توفر الإنترنت`);
+                showSuccess('⚠️ لا يوجد اتصال - تم الحفظ محلياً', `${date} - ${time}\nسيتم الإرسال عند توفر الإنترنت`);
             }
 
-            // Update UI immediately
-            updateButtons();
-            
-            // Show pending trip info
+            // Update UI immediately - show pending trip
             const pendingDiv = document.getElementById('pendingTrip');
             pendingDiv.style.display = 'block';
             document.getElementById('pendingDate').textContent = date;
             document.getElementById('pendingTime').textContent = time;
             
+            // Update buttons to disable departure and enable return
+            updateButtons();
+            
             // Reset button text
             btn.innerHTML = '<span>→ تسجيل وقت الذهاب</span>';
+            btn.disabled = false;
         }
 
         async function recordReturn() {
@@ -1278,10 +1283,8 @@
             // Update pending_trips_for_nurse in localStorage
             updatePendingTripForNurseWithReturn(selectedDriver.staffNumber, date, time);
 
-            // Clear pending
+            // Clear pending trip after return
             const key = `pending_trip_${selectedDriver.staffNumber}`;
-            localStorage.removeItem(key);
-            pendingTrip = null;
 
             if (isOnline) {
                 try {
@@ -1519,22 +1522,7 @@
             container.innerHTML = html;
         }
 
-        function changeDriverHistoryPage(delta) {
-            const totalPages = Math.ceil(allDriverHistory.length / DRIVER_TRIPS_PER_PAGE);
-            const newPage = driverHistoryPage + delta;
-            if (newPage >= 1 && newPage <= totalPages) {
-                driverHistoryPage = newPage;
-                renderDriverHistoryPage();
-            }
-        }
-
-        function showSuccess(title, text) {
-            const msg = document.getElementById('successMessage');
-            document.getElementById('successTitle').textContent = title;
-            document.getElementById('successText').textContent = text;
-            msg.classList.add('show');
-
-            setTimeout(() => {
+        function changeDriverHistoryPage(delta) =SdEln   setTimeout(() => {
                 msg.classList.remove('show');
             }, 3000);
         }
@@ -1608,12 +1596,10 @@
         function updateConnectionStatus() {
             const statusBar = document.getElementById('connectionStatus');
             const statusText = document.getElementById('connectionText');
-            const offlineBadge = document.getElementById('offlineBadge');
             
             if (navigator.onLine) {
                 isOnline = true;
                 document.body.classList.remove('offline-mode');
-                offlineBadge.style.display = 'none';
                 
                 // Check if we have queued data to sync
                 const queue = JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]');
@@ -1627,7 +1613,6 @@
             } else {
                 isOnline = false;
                 document.body.classList.add('offline-mode');
-                offlineBadge.style.display = 'inline-block';
                 statusBar.className = 'connection-status offline';
                 statusText.textContent = '⚠️ لا يوجد اتصال بالإنترنت - سيتم حفظ البيانات محلياً';
             }
