@@ -1,6 +1,6 @@
 // Service Worker for Ambulance Log PWA
 // نظام سجل الإسعاف - دعم العمل بدون إنترنت
-const CACHE_NAME = 'ambulance-log-v20-tripid-fix';
+const CACHE_NAME = 'ambulance-log-v21-button-fix';
 const OFFLINE_QUEUE_KEY = 'offline_queue';
 
 const urlsToCache = [
@@ -22,7 +22,7 @@ const urlsToCache = [
 
 // Install event - Skip waiting to activate immediately
 self.addEventListener('install', event => {
-  console.log('[SW] Installing Service Worker v20-tripid-fix...');
+  console.log('[SW] Installing Service Worker v21-button-fix...');
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -176,7 +176,7 @@ function getAllFromStore(store) {
 
 // Activate event - Take control immediately and clean old caches
 self.addEventListener('activate', event => {
-  console.log('[SW] Activating Service Worker v20-tripid-fix...');
+  console.log('[SW] Activating Service Worker v21-button-fix...');
   event.waitUntil(
     Promise.all([
       self.clients.claim(),
