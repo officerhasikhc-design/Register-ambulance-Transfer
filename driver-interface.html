@@ -875,56 +875,63 @@
         // Load user session from login
         function loadUserSession() {
             const session = localStorage.getItem('userSession');
-            if (session) {
-                try {
-                    const userData = JSON.parse(session);
-                    
-                    // Check if user is admin with driver access
-                    if (userData.type === 'admin' && userData.canAccessDriver) {
-                        // Admin can select any driver - show dropdown
-                        document.getElementById('driverSelection').style.display = 'block';
-                        document.getElementById('driverInfoSection').style.display = 'none';
-                        window.loggedInUser = userData;
-                        return;
-                    }
-                    
-                    if (userData.type === 'driver') {
-                        // Determine employee type from session or DRIVERS_DATA
-                        let empType = userData.employeeType || 'employee';
-                        const matchedDriver = DRIVERS_DATA.find(d => d.staffNumber === userData.staffNumber);
-                        if (matchedDriver) {
-                            empType = matchedDriver.type || empType;
-                        }
-                        
-                        // Hide dropdown and show driver info
-                        document.getElementById('driverSelection').style.display = 'none';
-                        document.getElementById('driverInfoSection').style.display = 'block';
-                        document.getElementById('loggedInDriverName').textContent = userData.nameAr;
-                        document.getElementById('loggedInStaffNumber').textContent = userData.staffNumber;
-                        document.getElementById('staffNumberLabel').textContent = empType === 'daily-paid' ? 'الرقم المدني' : 'الرقم الوظيفي';
-                        
-                        // Set selected driver from session
-                        selectedDriver = {
-                            nameAr: userData.nameAr,
-                            nameEn: userData.nameEn,
-                            staffNumber: userData.staffNumber,
-                            type: empType
-                        };
-                        
-                        document.getElementById('staffNumber').value = userData.staffNumber;
-                        document.getElementById('actionButtons').style.display = 'flex';
-                        
-                        // Load pending trip and history
-                        loadPendingTrip();
-                        updateButtons();
-                        
-                        window.loggedInUser = userData;
-                        return;
-                    }
-                    
-                } catch (e) {
-                    console.log('No valid session found');
+            if (!session) {
+                console.log('No session found');
+                return;
+            }
+            
+            try {
+                const userData = JSON.parse(session);
+                console.log('Loading session for:', userData.nameAr, userData.staffNumber);
+                
+                // Check if user is admin with driver access
+                if (userData.type === 'admin' && userData.canAccessDriver) {
+                    // Admin can select any driver - show dropdown
+                    document.getElementById('driverSelection').style.display = 'block';
+                    document.getElementById('driverInfoSection').style.display = 'none';
+                    window.loggedInUser = userData;
+                    return;
                 }
+                
+                if (userData.type === 'driver') {
+                    // Determine employee type from session or DRIVERS_DATA
+                    let empType = userData.employeeType || 'employee';
+                    const matchedDriver = DRIVERS_DATA.find(d => d.staffNumber === userData.staffNumber);
+                    if (matchedDriver) {
+                        empType = matchedDriver.type || empType;
+                    }
+                    
+                    console.log('Setting up driver UI for:', userData.nameAr);
+                    
+                    // Hide dropdown and show driver info
+                    document.getElementById('driverSelection').style.display = 'none';
+                    document.getElementById('driverInfoSection').style.display = 'block';
+                    document.getElementById('loggedInDriverName').textContent = userData.nameAr || 'غير محدد';
+                    document.getElementById('loggedInStaffNumber').textContent = userData.staffNumber || '';
+                    document.getElementById('staffNumberLabel').textContent = empType === 'daily-paid' ? 'الرقم المدني' : 'الرقم الوظيفي';
+                    
+                    // Set selected driver from session
+                    selectedDriver = {
+                        nameAr: userData.nameAr,
+                        nameEn: userData.nameEn,
+                        staffNumber: userData.staffNumber,
+                        type: empType
+                    };
+                    
+                    document.getElementById('staffNumber').value = userData.staffNumber;
+                    document.getElementById('actionButtons').style.display = 'flex';
+                    
+                    // Load pending trip and history
+                    loadPendingTrip();
+                    updateButtons();
+                    
+                    window.loggedInUser = userData;
+                    console.log('Driver UI setup complete');
+                    return;
+                }
+                
+            } catch (e) {
+                console.error('Error loading session:', e);
             }
         }
 
@@ -1522,7 +1529,28 @@
             container.innerHTML = html;
         }
 
-        function changeDriverHistoryPage(delta) =SdEln   setTimeout(() => {
+        function changeDriverHistoryPage(delta) {
+            const totalPages = Math.ceil(allDriverHistory.length / DRIVER_TRIPS_PER_PAGE);
+            const newPage = driverHistoryPage + delta;
+            if (newPage >= 1 && newPage <= totalPages) {
+                driverHistoryPage = newPage;
+                renderDriverHistory();
+            }
+        }
+
+        function showSuccess(title, text) {
+            const msg = document.getElementById('successMessage');
+            document.getElementById('successTitle').textContent = title;
+            document.getElementById('successText').textContent = text;
+            msg.classList.add('show');
+
+            // Vibrate if supported
+            if (navigator.vibrate) {
+                navigator.vibrate([100, 50, 100]);
+            }
+
+            // Hide success message after 3 seconds
+            setTimeout(() => {
                 msg.classList.remove('show');
             }, 3000);
         }
